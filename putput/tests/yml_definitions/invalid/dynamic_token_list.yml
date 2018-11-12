@@ -1,0 +1,6 @@
+tokens:
+  - dynamic:
+    - [PLAY, TYPE_OF_SPEAKER]
+utterances:
+  - [PLAY]
+  - [TYPE_OF_SPEAKER]

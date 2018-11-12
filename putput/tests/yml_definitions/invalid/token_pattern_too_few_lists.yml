@@ -1,0 +1,6 @@
+tokens:
+  - static:
+    - PLAY:
+      - ["play"]
+utterances:
+  - [PLAY]

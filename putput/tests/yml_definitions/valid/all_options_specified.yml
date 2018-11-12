@@ -1,0 +1,10 @@
+tokens:
+  - static:
+    - START:
+      - [["he", "she"], [will"], ["want"]]
+    - PLAY:
+      - [["to"], ["play", "listen"]]
+  - dynamic:
+    - ARTIST
+utterances:
+  - [START, PLAY, ARTIST]

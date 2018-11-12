@@ -1,0 +1,4 @@
+pyyaml
+pylint
+nose2
+mypy

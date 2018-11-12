@@ -1,0 +1,8 @@
+tokens:
+  - static:
+    - START:
+      - [["he", "she"], [will"], ["want"]]
+    - PLAY:
+      - [["to"], ["play", "listen"]]
+utterances:
+  - [START, PLAY]

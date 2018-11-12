@@ -1,0 +1,10 @@
+tokens:
+  - static:
+    - PLAY:
+      - [["play"]]
+  - dynamic:
+    - SPEAKER
+  - extra_key:
+    - EXTRA
+utterances:
+  - [PLAY]

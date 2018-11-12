@@ -1,0 +1,5 @@
+tokens:
+  - dynamic:
+    - ARTIST
+utterances:
+  - [ARTIST]

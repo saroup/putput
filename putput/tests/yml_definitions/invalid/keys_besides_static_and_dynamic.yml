@@ -1,0 +1,6 @@
+tokens:
+  - bad_key:
+    - PLAY:
+      - [["play"]]
+utterances:
+  - [PLAY]
