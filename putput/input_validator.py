@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
 
 class YmlValidationException(Exception):
@@ -13,15 +13,19 @@ class InputValidator:
     def _raise_validation_exception(message: str = 'Invalid yml') -> None:
         raise YmlValidationException(message)
 
-    def _validate_instance(self, item: Any, instance: Any, err_msg: str = 'lol') -> None:
+    def _validate_instance(self, item: Any, instance: Any, err_msg: Optional[str] = None) -> None:
         if not item or not isinstance(item, instance):
-            self._raise_validation_exception(err_msg)
+            if err_msg:
+                self._raise_validation_exception(err_msg)
+            else:
+                self._raise_validation_exception()
 
     def _validate_tokens(self) -> None:
-        if ((not 'tokens' in self._input_dict) or (not self._input_dict['tokens'])
-                or (not len(self._input_dict['tokens']) <= 2) or (not isinstance(self._input_dict['tokens'], list))):
+        if ((not 'tokens' in self._input_dict) or
+                (not self._input_dict['tokens']) or
+                (not len(self._input_dict['tokens']) <= 2) or
+                (not isinstance(self._input_dict['tokens'], list))):
             self._raise_validation_exception()
-
         for token_type_dict in self._input_dict['tokens']:
             self._validate_instance(token_type_dict, dict)
             for token_type in token_type_dict:
@@ -60,22 +64,30 @@ class InputValidator:
 
     def _get_static_tokens(self) -> List[str]:
         return [
-            token for token_type_dict in self._input_dict['tokens'] for token_type in token_type_dict
-            if token_type == 'static' for token_patterns_dict in token_type_dict['static']
+            token
+            for token_type_dict in self._input_dict['tokens']
+            for token_type in token_type_dict
+            if token_type == 'static'
+            for token_patterns_dict in token_type_dict['static']
             for token in token_patterns_dict.keys()
         ]
 
     def _get_dynamic_tokens(self) -> List[str]:
         return [
-            token for token_type_dict in self._input_dict['tokens'] for token_type in token_type_dict
-            if token_type == 'dynamic' for token in token_type_dict['dynamic']
+            token
+            for token_type_dict in self._input_dict['tokens']
+            for token_type in token_type_dict
+            if token_type == 'dynamic'
+            for token in token_type_dict['dynamic']
         ]
 
     def _validate_utterance_tokens_in_static_and_dynamic(self) -> None:
         static_tokens = self._get_static_tokens()
         dynamic_tokens = self._get_dynamic_tokens()
         all_utterance_pattern_tokens = [
-            token for utterance_pattern_tokens in self._input_dict['utterances'] for token in utterance_pattern_tokens
+            token
+            for utterance_pattern_tokens in self._input_dict['utterances']
+            for token in utterance_pattern_tokens
         ]
 
         for token in all_utterance_pattern_tokens:

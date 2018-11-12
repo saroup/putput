@@ -19,7 +19,7 @@ class TestInputProcessorInvalidInputYml(unittest.TestCase):
                          dynamic_token_patterns_dict: Optional[Dict[str, List[TokenPattern]]] = None) -> None:
         input_file = os.path.join(self._base_dir, input_file_name)
         with self.assertRaises(exception) as cm:
-            input_processor = InputProcessor(input_file, {})
+            input_processor = InputProcessor(input_file, dynamic_token_patterns_dict)
             input_processor.generate_utterance_pattern_and_tokens()
         self.assertIsInstance(cm.exception, exception)
 

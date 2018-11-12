@@ -24,11 +24,11 @@ class UtteranceCreator:
         self._seed = seed
         self._token_creator_factory = TokenCreatorFactory(token_handlers)
 
-    def create_utterance_and_tokens(
-            self, utterance_pattern: UtterancePattern,
-            utterance_pattern_tokens: UtterancePatternTokens) -> Tuple[Utterance, UtterancePatternTokens]:
+    def create_utterance_and_tokens(self,
+                                    utterance_pattern: UtterancePattern,
+                                    utterance_pattern_tokens: UtterancePatternTokens) -> Tuple[Utterance,
+                                                                                               UtterancePatternTokens]:
         original_combinations = copy.deepcopy(utterance_pattern)
-
         @no_type_check
         def _combine(combinations: _Combinations):
             if self._is_token_pattern(combinations):
@@ -39,7 +39,6 @@ class UtteranceCreator:
                                       for words, pattern in zip(joined_combinations, utterance_pattern_tokens)]
                 return _combine(joined_combinations), _combine(token_combinations)
             return list(itertools.chain.from_iterable(joined_combinations))
-
         return _combine(utterance_pattern)
 
     @staticmethod

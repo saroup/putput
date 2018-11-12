@@ -11,7 +11,10 @@ class TestTokenPatternJoiner(unittest.TestCase):
     # takes in a token_pattern -> List[List[str]]
     # TODO: Mkae them all call one function instead of repeating constantly
 
-    def _test_join(self, pattern: TokenPattern, max_sample_size: int, max_retry: int,
+    def _test_join(self,
+                   pattern: TokenPattern,
+                   max_sample_size: int,
+                   max_retry: int,
                    expected_output: List[str]) -> None:
         joiner = TokenPatternJoiner(pattern, max_sample_size, max_retry)
         actual_output = joiner.join()

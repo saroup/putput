@@ -7,7 +7,8 @@ from putput.types import TokenPattern, UtterancePattern, UtterancePatternTokens
 
 
 class InputProcessor:
-    def __init__(self, input_fname: str,
+    def __init__(self,
+                 input_fname: str,
                  dynamic_token_patterns_dict: Optional[Dict[str, List[TokenPattern]]] = None) -> None:
         self._dynamic_token_patterns_dict = dynamic_token_patterns_dict or {}
         with open(input_fname, encoding='utf-8') as f:
@@ -26,4 +27,7 @@ class InputProcessor:
     def generate_utterance_pattern_and_tokens(self) -> List[Tuple[UtterancePattern, UtterancePatternTokens]]:
         static_token_patterns_dict = self._get_static_token_patterns_dict()
         token_patterns_dict = {**static_token_patterns_dict, **self._dynamic_token_patterns_dict}
-        return [([token_patterns_dict[token] for token in tokens], tokens) for tokens in self._input_dict['utterances']]
+        return [
+            ([token_patterns_dict[token] for token in tokens], tokens)
+            for tokens in self._input_dict['utterances']
+        ]
