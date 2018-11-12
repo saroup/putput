@@ -19,8 +19,10 @@ class InputProcessor:
     def _get_static_token_patterns_dict(self) -> dict:
         return {
             token: token_patterns
-            for token_type_dict in self._input_dict['tokens'] for token_type in token_type_dict
-            if token_type == 'static' for token_patterns_dict in token_type_dict['static']
+            for token_type_dict in self._input_dict['tokens']
+            for token_type in token_type_dict
+            if token_type == 'static'
+            for token_patterns_dict in token_type_dict['static']
             for token, token_patterns in token_patterns_dict.items()
         }
 
