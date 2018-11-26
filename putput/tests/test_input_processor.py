@@ -1,6 +1,6 @@
 import os
 import unittest
-from typing import Dict, List, Optional, Type
+from typing import List, Mapping, Optional, Type
 
 from putput.input_processor import generate_utterance_pattern_and_tokens
 from putput.types import TokenPattern
@@ -16,7 +16,7 @@ class TestInputProcessorInvalidInputYml(unittest.TestCase):
     def _raise_exception(self,
                          input_file_name: str,
                          exception: Type[Exception],
-                         dynamic_token_patterns_dict: Optional[Dict[str, List[TokenPattern]]] = None) -> None:
+                         dynamic_token_patterns_dict: Optional[Mapping[str, List[TokenPattern]]] = None) -> None:
         input_file = os.path.join(self._base_dir, input_file_name)
         with self.assertRaises(exception) as cm:
             generate_utterance_pattern_and_tokens(input_file, dynamic_token_patterns_dict)

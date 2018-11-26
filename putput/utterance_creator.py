@@ -1,6 +1,6 @@
 import copy
 import itertools
-from typing import Any, Callable, Dict, List, Optional, Tuple, no_type_check
+from typing import Any, Callable, List, Mapping, Optional, Tuple, no_type_check
 
 from putput.token_pattern_joiner import join_token_pattern
 from putput.types import Token, Utterance, UtterancePattern
@@ -11,7 +11,7 @@ def create_utterance_and_tokens(utterance_pattern: UtterancePattern,
                                 max_sample_size: int,
                                 max_retries: int,
                                 seed: int = 0,
-                                token_handlers: Optional[Dict[str, Callable[[str], str]]] = None
+                                token_handlers: Optional[Mapping[str, Callable[[str], str]]] = None
                                 ) -> Tuple[Utterance, List[Token]]:
     # pylint: disable=too-many-arguments
     original_combinations = copy.deepcopy(utterance_pattern)
@@ -34,7 +34,7 @@ def _is_token_pattern(combinations: Any) -> bool:
 
 
 def _get_token_handler(token: Token,
-                       token_handlers: Optional[Dict[str, Callable[[str], str]]] = None) -> Callable[[str], str]:
+                       token_handlers: Optional[Mapping[str, Callable[[str], str]]] = None) -> Callable[[str], str]:
     if token_handlers:
         token_handler = token_handlers.get(token) or token_handlers.get("DEFAULT")
     return token_handler or (lambda _: "[" + token + "]")

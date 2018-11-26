@@ -18,12 +18,12 @@ def _validate_instance(item: Any, instance: Any, err_msg: Optional[str] = None) 
 
 
 def _validate_tokens(input_dict: dict) -> None:
-    if ((not 'tokens' in input_dict) or
-            (not input_dict['tokens']) or
-            (not len(input_dict['tokens']) <= 2) or
-            (not isinstance(input_dict['tokens'], list))):
+    if ((not 'token_patterns' in input_dict) or
+            (not input_dict['token_patterns']) or
+            (not len(input_dict['token_patterns']) <= 2) or
+            (not isinstance(input_dict['token_patterns'], list))):
         _raise_validation_exception()
-    for token_type_dict in input_dict['tokens']:
+    for token_type_dict in input_dict['token_patterns']:
         _validate_instance(token_type_dict, dict)
         for token_type in token_type_dict:
             if token_type not in ['static', 'dynamic']:
@@ -35,9 +35,9 @@ def _validate_tokens(input_dict: dict) -> None:
 
 
 def _validate_utterances(input_dict: dict) -> None:
-    if not 'utterances' in input_dict or not input_dict['utterances']:
+    if not 'utterance_patterns' in input_dict or not input_dict['utterance_patterns']:
         _raise_validation_exception()
-    for utterance_pattern_tokens in input_dict['utterances']:
+    for utterance_pattern_tokens in input_dict['utterance_patterns']:
         _validate_instance(utterance_pattern_tokens, list)
         for token in utterance_pattern_tokens:
             _validate_instance(token, str)
@@ -66,7 +66,7 @@ def _validate_dynamic_tokens(dynamic_dicts: list) -> None:
 def _get_static_tokens(input_dict: dict) -> List[str]:
     return [
         token
-        for token_type_dict in input_dict['tokens']
+        for token_type_dict in input_dict['token_patterns']
         for token_type in token_type_dict
         if token_type == 'static'
         for token_patterns_dict in token_type_dict['static']
@@ -77,7 +77,7 @@ def _get_static_tokens(input_dict: dict) -> List[str]:
 def _get_dynamic_tokens(input_dict: dict) -> List[str]:
     return [
         token
-        for token_type_dict in input_dict['tokens']
+        for token_type_dict in input_dict['token_patterns']
         for token_type in token_type_dict
         if token_type == 'dynamic'
         for token in token_type_dict['dynamic']
@@ -89,7 +89,7 @@ def _validate_utterance_tokens_in_static_and_dynamic(input_dict: dict) -> None:
     dynamic_tokens = _get_dynamic_tokens(input_dict)
     all_utterance_pattern_tokens = [
         token
-        for utterance_pattern_tokens in input_dict['utterances']
+        for utterance_pattern_tokens in input_dict['utterance_patterns']
         for token in utterance_pattern_tokens
     ]
 
@@ -105,7 +105,7 @@ def _validate_at_least_dynamic_tokens_or_static_tokens_exist(input_dict: dict) -
 
 def _validate_only_tokens_and_utterances(input_dict: dict) -> None:
     for key in input_dict.keys():
-        if key not in ['tokens', 'utterances']:
+        if key not in ['token_patterns', 'utterance_patterns']:
             _raise_validation_exception()
 
 

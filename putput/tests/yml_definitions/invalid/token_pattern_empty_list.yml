@@ -1,6 +1,6 @@
-tokens:
+token_patterns:
   - static:
     - PLAY:
       - [[]]
-utterances:
+utterance_patterns:
   - [PLAY]

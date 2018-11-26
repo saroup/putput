@@ -1,5 +1,5 @@
-tokens:
+token_patterns:
   - dynamic:
     - ARTIST
-utterances:
+utterance_patterns:
   - [ARTIST]

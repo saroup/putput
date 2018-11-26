@@ -1,8 +1,8 @@
-tokens:
+token_patterns:
   - static:
     - PLAY:
       - [["play"]]
-utterances:
+utterance_patterns:
   - [PLAY]
 extra_key:
   - EXTRA
