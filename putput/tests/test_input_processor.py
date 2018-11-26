@@ -2,7 +2,7 @@ import os
 import unittest
 from typing import Dict, List, Optional, Type
 
-from putput.input_processor import InputProcessor
+from putput.input_processor import generate_utterance_pattern_and_tokens
 from putput.types import TokenPattern
 
 
@@ -19,8 +19,7 @@ class TestInputProcessorInvalidInputYml(unittest.TestCase):
                          dynamic_token_patterns_dict: Optional[Dict[str, List[TokenPattern]]] = None) -> None:
         input_file = os.path.join(self._base_dir, input_file_name)
         with self.assertRaises(exception) as cm:
-            input_processor = InputProcessor(input_file, dynamic_token_patterns_dict)
-            input_processor.generate_utterance_pattern_and_tokens()
+            generate_utterance_pattern_and_tokens(input_file, dynamic_token_patterns_dict)
         self.assertIsInstance(cm.exception, exception)
 
     def test_malformed_yml(self) -> None:
@@ -87,16 +86,14 @@ class TestInputProcessorValidInputYml(unittest.TestCase):
     def test_without_static_token_patterns(self) -> None:
         dynamic_token_patterns_dict = {"ARTIST": [[["the beatles", "kanye"]]]}
         input_file = os.path.join(self._base_dir, 'without_static_token_patterns.yml')
-        input_processor = InputProcessor(input_file, dynamic_token_patterns_dict)
-        actual_result = input_processor.generate_utterance_pattern_and_tokens()
+        actual_result = generate_utterance_pattern_and_tokens(input_file, dynamic_token_patterns_dict)
         expected_result = [([[[['the beatles', 'kanye']]]], ['ARTIST'])]
         # TODO: because of random seeds, this equal should be replaced with in and length
         self.assertEqual(actual_result, expected_result)
 
     def test_without_dynamic_token_patterns(self) -> None:
         input_file = os.path.join(self._base_dir, 'without_dynamic_token_patterns.yml')
-        input_processor = InputProcessor(input_file, {})
-        actual_result = input_processor.generate_utterance_pattern_and_tokens()
+        actual_result = generate_utterance_pattern_and_tokens(input_file, {})
         expected_result = [([[[['he', 'she'], ['will"'], ['want']]], [[['to'], ['play', 'listen']]]], ['START',
                                                                                                        'PLAY'])]
         self.assertEqual(actual_result, expected_result)
@@ -104,8 +101,7 @@ class TestInputProcessorValidInputYml(unittest.TestCase):
     def test_all_options_specified(self) -> None:
         dynamic_token_patterns_dict = {"ARTIST": [[["the beatles", "kanye"]]]}
         input_file = os.path.join(self._base_dir, 'all_options_specified.yml')
-        input_processor = InputProcessor(input_file, dynamic_token_patterns_dict)
-        actual_result = input_processor.generate_utterance_pattern_and_tokens()
+        actual_result = generate_utterance_pattern_and_tokens(input_file, dynamic_token_patterns_dict)
         expected_result = [([[[['he', 'she'], ['will"'], ['want']]], [[['to'], ['play', 'listen']]],
                              [[['the beatles', 'kanye']]]], ['START', 'PLAY', 'ARTIST'])]
         self.assertEqual(actual_result, expected_result)
