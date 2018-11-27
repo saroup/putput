@@ -50,9 +50,14 @@ Note: Although some of the utterances are not valid (for example, "here comes th
 Even with just a few patterns, it is possible to generate millions of utterances and tokens. Don't worry -- putput can be configured to generate as few utterances as you'd like, so you will not run into the issue of running out of computational power.
 
 # Usage
-Sample applications can be found in ```samples/```. Each sample exists in its own directory, with a ```main.py``` module. To run a sample, execute ```python -m samples.specific_sample.main```. For instance, to run the smart speaker example from the README, execute ```python -m samples.smart_speaker.main```.
+* clone this repo
+* ```cd``` into the top level directory
+* execute ```pip install -r requirements.txt```
+* execute ```pip install -e putput```
+* Sample applications can be found in ```samples/```. Each sample exists in its own directory, with a ```main.py``` module. To run a sample, execute ```python -m samples.specific_sample.main```. For instance, to run the smart speaker example from the README, execute ```python -m samples.smart_speaker.main```
+* to run tests, execute ```nose2 putput --with-coverage```
 
-The following notes provide context for trickier parts of the samples.
+The following notes provide context for trickier parts of the samples:
 
 ## Static vs dynamic token patterns
 Not every token pattern can be specified before runtime. Inside the YAML file, underneath ```token_patterns```, you may specify ```static``` or ```dynamic``` token patterns. Static means all of the token patterns can be specified before the application runs. For instance, there are only a few ways to tell a smart speaker to wake. Dynamic means the token patterns will be specified at runtime. For instance, you may have thousands of songs that change daily, so you could not specify them as part of a YAML file. Instead, you can load them at runtime, perhaps after calling a web service, and pass them to the input processor.
