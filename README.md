@@ -66,6 +66,3 @@ Not every token pattern can be specified before runtime. Inside the YAML file, u
 Applications using putput should have the ability to specify how to create a token. Consider two smart speakers. A simpler speaker can only wake on the phrase "hey speaker". A more advanced speaker can wake on "hey speaker" and "ok speaker", and it performs slightly different actions depending on the phrase. For the simpler speaker, tokenizing "hey speaker" to ```WAKE``` is enough. For the advanced speaker, tokenizing "hey speaker" and "ok speaker" to ```WAKE``` is not enough because the difference between the two phrases would be lost. Therefore, token handlers, or functions that accept as input the phrase to be tokenized, can be specified. For instance, a token handler could be specified for ```WAKE``` so output tokens could look like ```[WAKE(hey speaker)]``` and ```[WAKE(ok speaker)]```.
 
 By default, phrases are tokenized to ```[token]```. Default behavior can be overridden with a token handler just like an any other token. To do so, specify the token ```DEFAULT``` in the token handler dictionary.
-
-# Tests
-To run tests, clone this repo and run ```pip install -r requirements.txt```, followed by ```nose2```. To see a coverage report, run ```nose2 --with-coverage```.
