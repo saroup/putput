@@ -1,68 +1,74 @@
 # About
 [![Build Status](https://travis-ci.org/michaelperel/putput.svg?branch=master)](https://travis-ci.org/michaelperel/putput)
 
-In NLP, and especially when working with chatbots, it is useful to map utterances to tokens for further processing. For example, if you tell a smart speaker to "play Summer Hits on Spotify", a tokenizer may convert that utterance to the 3 tokens, ```[ACTION(play)] [PLAYLIST(Summer Hits)] [MUSIC_SERVICE(Spotify)]```. Given these tokens, the speaker can process your request.
+```putput``` (pattern-utterance-tokens, pattern-utterance-tokens) is a library that generates inputs and labels for NLP tokenizers. Specifically, you define **patterns** in YAML and ```putput``` generates **utterances** (inputs to a tokenizer) and **tokens** (labels for the utterances). ```putput``` is memory efficient, relying on generators and sampling, so it can handle the majority of workloads on a commodity computer.
 
-While building or testing a tokenizer, it's likely that you do not have enough utterances and corresponding tokens. Often, it is not possible to source them organically. Therefore, you have to come up with them yourself.
+```putput``` should be used to:
+* generate utterances and tokens to train a machine learning based tokenizer in scenarios where you do not have access to real data.
+* generate utterances and tokens to augment training specific patterns in a machine learning based tokenizer.
+* generate utterances and tokens to test tokenizers for specific patterns.
 
-putput (pattern-utterance, repeated in a pattern) makes it trivial to create utterances and tokens in abundance by defining simple patterns via a YAML file.
+# Installation
+```putput``` currently supports python >= 3.4. To install the production release, execute ```pip install putput```.
 
-# Algorithm
-With only two types of patterns, all utterances and tokens can be created. Once again, let's consider the example of a smart speaker.
-
-The first type of pattern, a **token pattern**, describes the combinations of words that make up a token. For instance, one example of the ```PLAY``` token could be described with the pattern ```[[he, she], [wants], [to play, to listen to]]```. This pattern means that all ordered permutations, (he wants to play, she wants to play, he wants to listen to, she wants to listen to) describe the ```PLAY``` token.
-
-The second type of pattern, an **utterance pattern**, describes the structure of an utterance as a combination of tokens. Examples of utterance patterns include ```[WAKE]```, ```[WAKE, PLAY, SONG, INDICATOR, ARTIST]```, and so forth.
-
-
-By defining these two types of patterns in a YAML file, putput can create utterances and associated tokens by:
-* combining the ordered permutations of words to create phrases described by token patterns
-* combining phrases described by token patterns to create utterances described by utterance patterns
-
-For illustrative purposes, the YAML file may look like:
+# Example
+Here is a sample **pattern definition**:
 ```
-tokens:
+token_patterns:
   - static:
     - WAKE:
       - [[hey, ok], [speaker, sound system]]
     - PLAY:
       - [[he, she], [wants, needs], [to play, to listen to]]
       - [[play, turn on]]
-    - SONG:
-      - [[here comes the sun, stronger]]
     - INDICATOR:
       - [[by, performed by]]
     - ARTIST:
       - [[the beatles, kanye west]]
-utterances:
-  - [WAKE]
+  - dynamic:
+    - SONG
+utterance_patterns:
+  - [WAKE, PLAY, SONG]
   - [WAKE, PLAY, SONG, INDICATOR, ARTIST]
 ```
 
-For the utterance pattern ```[WAKE]```, putput will generate the utterances:
-```[hey speaker, hey sound system, ok sound system, ok speaker]```.
-
-For the utterance pattern ```[WAKE, PLAY, SONG, INDICATOR, ARTIST]```, putput can generate 320 utterances. Here is a sample of 5 of them:
-```[ok speaker he wants to play here comes the sun by kanye west, ok sound system she needs to play stronger by the beatles, ok sound system play here comes the sun by the beatles, hey speaker she needs to play here comes the sun performed by kanye west, hey sound system play here comes the sun by kanye west]```.
-
-Note: Although some of the utterances are not valid (for example, "here comes the sun" is not by kanye west), they can still provide utility in testing.
-
-Even with just a few patterns, it is possible to generate millions of utterances and tokens. Don't worry -- putput can be configured to generate as few utterances as you'd like, so you will not run into the issue of running out of computational power.
+Focusing on the last utterance pattern, ```putput``` could generate hundreds of utterances and tokens of the form:
+* utterance:  hey speaker he wants to play here comes the sun by the beatles
+* tokens:  [WAKE(hey speaker)] [PLAY(he wants to play)] [SONG(here comes the sun)] [INDICATOR(by)] [ARTIST(the beatles)]
+* utterance:  ok sound system she needs to listen to stronger by kanye west
+* tokens:  [WAKE(ok sound system)] [PLAY(she needs to listen to)] [SONG(stronger)] [INDICATOR(by)] [ARTIST(kanye west)]
 
 # Usage
-* clone this repo
-* ```cd``` into the top level directory
-* execute ```pip install -r requirements.txt```
-* execute ```pip install -e putput```
-* Sample applications can be found in ```samples/```. Each sample exists in its own directory, with a ```main.py``` module. To run a sample, execute ```python -m samples.specific_sample.main```. For instance, to run the smart speaker example from the README, execute ```python -m samples.smart_speaker.main```
-* to run tests, execute ```nose2 putput --with-coverage```
+## Samples
+* Fetch the code:
+  ```git clone https://github.com/michaelperel/putput.git```
+* Move into the project directory:
+  ```cd putput```
+* Ensure docker is running:
+  ```docker --version```
+* Build the runtime environment:
+  ```docker build -t putput .```
+* The project ships with several usage samples which you can execute, for example:
+  ```docker run putput smart_speaker```
 
-The following notes provide context for trickier parts of the samples:
+## Development
+There are various checks that Travis (our CI server) executes to ensure code quality.
+You can also run the checks locally:
 
-## Static vs dynamic token patterns
-Not every token pattern can be specified before runtime. Inside the YAML file, underneath ```token_patterns```, you may specify ```static``` or ```dynamic``` token patterns. Static means all of the token patterns can be specified before the application runs. For instance, there are only a few ways to tell a smart speaker to wake. Dynamic means the token patterns will be specified at runtime. For instance, you may have thousands of songs that change daily, so you could not specify them as part of a YAML file. Instead, you can load them at runtime, perhaps after calling a web service, and pass them to the input processor.
+1. Install the development dependencies via: ```pip install -e .[dev]```
+2. Run the linter: ```python setup.py pylint```
+3. Run the type checker: ```python setup.py mypy```
+4. Run the tests: ```python setup.py test```
 
-## Token handlers
-Applications using putput should have the ability to specify how to create a token. Consider two smart speakers. A simpler speaker can only wake on the phrase "hey speaker". A more advanced speaker can wake on "hey speaker" and "ok speaker", and it performs slightly different actions depending on the phrase. For the simpler speaker, tokenizing "hey speaker" to ```WAKE``` is enough. For the advanced speaker, tokenizing "hey speaker" and "ok speaker" to ```WAKE``` is not enough because the difference between the two phrases would be lost. Therefore, token handlers, or functions that accept as input the phrase to be tokenized, can be specified. For instance, a token handler could be specified for ```WAKE``` so output tokens could look like ```[WAKE(hey speaker)]``` and ```[WAKE(ok speaker)]```.
+Alternatively, you can run all the steps via Docker: ```docker build --target=build -t putput .```
 
-By default, phrases are tokenized to ```[token]```. Default behavior can be overridden with a token handler just like an any other token. To do so, specify the token ```DEFAULT``` in the token handler dictionary.
+## Pattern Definition
+### Token Patterns and Utterance Patterns
+```putput``` requires you to define two types of patterns. A **token pattern** describes the product of words that constitutes a token, and an **utterance pattern** describes the product of phrases described by token patterns that constitutes an utterance.
+
+Using the smart speaker example from above, one token pattern for the ```PLAY``` token would be ```[[he, she], [wants], [to play, to listen to]]```. Each element of the product of the token pattern (```[he wants to play, he wants to listen to, she wants to play, she wants to listen to]```) describes a valid ```PLAY``` token.
+
+One utterance pattern would be ```[WAKE, PLAY, SONG]```. The product of phrases described by token patterns (```[[hey speaker, hey sound system, ok speaker, ok sound system], [he wants to play, he wants to listen to, she wants to play, she wants to listen to, play, turn on], [here comes the sun, stronger]]```) describes a valid ```[WAKE, PLAY, SONG]``` utterance pattern. One example of such a product would be ```hey speaker he wants to play here comes the sun```.
+
+### Static vs Dynamic Token Patterns
+Not every token pattern can be specified before runtime. Inside the YAML file, underneath ```token_patterns```, you may specify ```static``` or ```dynamic``` token patterns. Static means all of the token patterns can be specified before the application runs. For instance, there are only a few ways to tell a smart speaker to wake. Dynamic means the token patterns will be specified at runtime. For instance, you may have thousands of songs that change daily, so you could not specify them as part of a YAML file. Instead, you can load them at runtime, perhaps after calling a web service that retrieves an updated list of songs, and pass those to the pattern definition processor.

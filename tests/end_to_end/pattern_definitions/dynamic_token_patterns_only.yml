@@ -1,0 +1,5 @@
+token_patterns:
+  - dynamic:
+    - WAKE
+utterance_patterns:
+  - [WAKE]

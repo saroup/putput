@@ -1,6 +1,0 @@
-extra:
-  - static:
-    - PLAY:
-      - [["play"]]
-another_extra:
-  - [PLAY]

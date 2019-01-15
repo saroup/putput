@@ -14,6 +14,5 @@ token_patterns:
   - dynamic:
     - ACTION
 utterance_patterns:
-  - [WAKE]
   - [WAKE, PLAY, SONG, INDICATOR, ARTIST]
-  - [WAKE, ACTION]
+  - [WAKE, PLAY, SONG, INDICATOR, ARTIST]

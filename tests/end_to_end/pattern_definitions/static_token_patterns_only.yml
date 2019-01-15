@@ -1,0 +1,6 @@
+token_patterns:
+  - static:
+    - WAKE:
+      - [[hey, ok], [speaker]]
+utterance_patterns:
+  - [WAKE]

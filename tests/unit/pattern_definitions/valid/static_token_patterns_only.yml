@@ -1,0 +1,8 @@
+token_patterns:
+  - static:
+    - START:
+      - [[he, she], [will], [want]]
+    - PLAY:
+      - [[to], [play, listen]]
+utterance_patterns:
+  - [START, PLAY]

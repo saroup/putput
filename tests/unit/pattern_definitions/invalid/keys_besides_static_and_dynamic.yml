@@ -1,0 +1,6 @@
+token_patterns:
+  - bad_key:
+    - PLAY:
+      - [[play]]
+utterance_patterns:
+  - [PLAY]
