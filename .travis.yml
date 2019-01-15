@@ -1,19 +1,22 @@
 language: python
-
 python:
-  - 3.6
-
+- 3.6
 services:
-  - docker
-
+- docker
 env:
-  - DOCKER_PYTHON_VERSION=3.4
-  - DOCKER_PYTHON_VERSION=3.5
-  - DOCKER_PYTHON_VERSION=3.6
-  - DOCKER_PYTHON_VERSION=3.7
-
+- DOCKER_PYTHON_VERSION=3.4
+- DOCKER_PYTHON_VERSION=3.5
+- DOCKER_PYTHON_VERSION=3.6
+- DOCKER_PYTHON_VERSION=3.7
 install:
-  - docker build --build-arg PYTHON_VERSION="${DOCKER_PYTHON_VERSION}" -t "putput-py${DOCKER_PYTHON_VERSION}" .
-
+- docker build --build-arg PYTHON_VERSION="${DOCKER_PYTHON_VERSION}" -t "putput-py${DOCKER_PYTHON_VERSION}"
+  .
 script:
-  - docker run "putput-py${DOCKER_PYTHON_VERSION}"
+- docker run "putput-py${DOCKER_PYTHON_VERSION}"
+deploy:
+  skip_cleanup: true
+  user: michaelperel
+  password:
+    secure: J6dPu8kDFOIwTqiCyzHBnyX5lC2jFMKdAI2t0XMwpLmYI2yLb+9ZwcyXykcS3ptokqSXByuTBwa8O+xLSTjVZ6aPBk1EEdTW4dvCMXCizsAiio38DObiqk0wT46TaslQaS8Wy895ijxizjvhlVQz9GwJwIdi6Ytju0vJvyy9RKRJV8RPObruFSzassRT7W0qDYSkDe28Vep5fxemrM/1fY5sDv3MF9LzIeIcyV3Je3ssc4puc1IAzdztROXBqukbJ3rAczmNzEEg543sMx1SvCMv2z6AZwIp8wLv632NslndaQ0W+iI+fhkERzR9aO0e62u0UeDbhoEMOjp1PmSAlhLcFl7YeOoL2aIgjhmZ9iQs5wuW6itRn+YJdAj1VFT5CXYG/Q18C/v2NKplImQu9vooT9F9Ou26ZajD7emd3zP7aD7gjSy7voVlrehPEtwQ2BwZYaUctIqfORxSAG2b8Ew08DFIUo2S4/LhjxzWRTJ7XlRGChVucGrKrvC0XsPTgodePLw/98hK7ADUUWb0JJCzNIdS0QqDvFZaVAtIIcq0jlqtDqfyURqMj3Y+xxLEFMnruDYlkfe+rdToJ/FE/UUijK158zKXf3K2kyKenZ70/e8xEj0eWmuTj/4s098j8Z9ItQQn3sZGPhKW6H0Nj4OMkrgFm+UGntvDG3Dbd/Y=
+  on:
+    tags: true
