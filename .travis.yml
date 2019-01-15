@@ -14,11 +14,11 @@ install:
 script:
 - docker run "putput-py${DOCKER_PYTHON_VERSION}"
 deploy:
-  skip_cleanup: true
   skip_existing: true
   provider: pypi
   user: michaelperel
   password:
     secure: Y/6xWyFFCGIMMZgBkzDgb3EKbflp31vwLSqUt5vgtLPenuAgxcEs+nkJuzdI2FBbA7nULcJjD+CFSqS2HMDOhKceD0onwYqDdkvwrELGPuIlyDF1YxAiwexMTzcpXrMMBrGiUPJVJDwGbvitkZ6lJDxyfbIwddTgxmUTBgWu6yL6GwvKFUJRTjeYpl76OhNRVsfZ5Kun65hVXpfW3e+Jx4Lq5NWak5DhepeBf7oijqSDwuoDrC7TlR5lruf0mYCwN0L+dczhWF4QGfjZqn6wYjvnWRk/Czz+FsVL5Kr7nvnWEDJzc9q/Tl5DuXQiyvpgnLfJ/99JZhBmJWb3tvK5jpIGJRcZcwydxIgwMCg4Ehfkx5c5J+kZQ2UT3pxYE/8XqgDrfkgn7ier0Nqu/CdZ3xjlZk9vzy1hF5uXNyUf9/htqVx426vDTTBLvCxrK7vOiL3Be0f6wOb0I2xui193SqjvAza+eog5E8kZd+2LstGauovceRunvnHtN//AsqxLs7ImIKmI571s0+iNTFJ8JbaEJDGMphCHX+D7QMpMblG4uaJPzeCOKgV+pzEEglm3qgAacgQcrvxXANjrAZPX62XKIOc9hcruoJ0cAR6l032dnpOAsg0FT2QJqr+OGyi4y/cBQclTIebS3ZW0/zaju2ZY0UeNUI+qCDwqC6Yfx38=
+  distributions: sdist bdist_wheel
   on:
     tags: true

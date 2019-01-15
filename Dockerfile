@@ -6,7 +6,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt \
  && pip install --no-cache-dir -r /app/requirements-dev.txt
 COPY . /app
 WORKDIR /app
-RUN ["python", "setup.py", "mypy", "pylint", "test", "sdist"]
+RUN ["python", "setup.py", "mypy", "pylint", "test", "sdist", "bdist_wheel"]
 
 FROM python:${PYTHON_VERSION}-slim AS samples
 COPY --from=build /app/samples /samples
