@@ -1,4 +1,8 @@
+[run]
+source=putput
+
 [report]
 show_missing = True
 omit =
     samples/*
+    setup.py
