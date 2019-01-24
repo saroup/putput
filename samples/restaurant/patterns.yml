@@ -1,0 +1,45 @@
+token_patterns:
+  - static:
+    - ADD_TO_ORDER:
+      - [["can", "may", "could"], ["i", "he", "she", "we", "they"], ["get", "have", "order", "take", "do"]]
+      - [["i", "he", "she", "we", "they"], ["'d", "'ll"], ["like", "have", "take", "get", "want", "need", "order"]]
+      - [["set", "hook"], ["me", "him", "her", "us"], ["up with"]]
+      - [["me", "him", "her", "us"], ["give", "order"]]
+      - [["i", "he", "she", "we", "they"], ["'d", "'ll"], ["like", "have", "want", "need"], ["to get", "to have", "to take", "to order", "to do"]]
+      - [["i", "he", "she", "we", "they"], ["need", "would need", "will need", "would like", "would want", "want", "will have", "will want"], ["to get", "to have", "to take", "to order", "to do"]]
+      - [["i", "he", "she", "we", "they"], ["will", "would"], ["get", "have", "take", "order", "do", "like", "want"]]
+      - [["i", "he", "she", "we", "they"], ["want", "like"]]
+    - CONJUNCTION:
+      - [["and"]]
+    - END_OF_ORDER:
+      - [["bye", "okay"]]
+      - [["i"], ["am", "'m"], ["done", "ready", "fine", "good", "okay", "finished", "all good", "all okay", "all done", "all finished", "all ready", "all fine", "all good"]]
+      - [["they", "we"], ["are", "'re"], ["done", "ready", "fine", "good", "okay", "finished", "all good", "all okay", "all done", "all finished", "all ready", "all fine", "all good"]]
+      - [["he", "she", "everyone", "everybody", "everything"], ["is", "'s"], ["done", "ready", "fine", "good", "okay", "finished", "all good", "all okay", "all done", "all finished", "all ready", "all fine", "all good"]]
+      - [["thank you", "thanks", "thanks so much", "thanks a lot", "thank you so much", "thanks for your help", "thanks, I appreciate it", "thanks appreciate it", "I really appreciate it", "thanks a bunch"]]
+      - [["is", "'s", "'ll be", "will be", "'ll do", "should be", "will do", "should do"], ["all", "everything", "it", "good", "fine", "okay"]]
+    - REMOVE_ITEM:
+      - [["lose", "remove", "drop", "forget", "skip", "cancel", "leave off", "without", "sans"], ["the", "those"]]
+      - [["lose", "remove", "drop", "forget", "skip", "cancel", "leave off", "without", "sans"]]
+  - dynamic:
+    - ITEM
+    - QUANTITY
+utterance_patterns:
+  - [ADD_TO_ORDER, QUANTITY, ITEM, CONJUNCTION, QUANTITY, ITEM]
+  - [REMOVE_ITEM, ITEM]
+  - [ADD_TO_ORDER, ITEM]
+  - [ADD_TO_ORDER, ITEM, REMOVE_ITEM, ITEM, ADD_TO_ORDER, ITEM]
+  - [REMOVE_ITEM, ITEM, ADD_TO_ORDER, ITEM, END_OF_ORDER]
+  - [ADD_TO_ORDER, QUANTITY, ITEM, REMOVE_ITEM, ITEM, CONJUNCTION, ADD_TO_ORDER, ITEM]
+  - [QUANTITY, ITEM]
+  - [ITEM, ITEM]
+  - [QUANTITY, ITEM, QUANTITY, ITEM]
+  - [ITEM, ITEM, CONJUNCTION, ITEM]
+  - [ADD_TO_ORDER, QUANTITY, ITEM]
+  - [ADD_TO_ORDER, ITEM, REMOVE_ITEM, ITEM]
+  - [ADD_TO_ORDER, ITEM, CONJUNCTION, REMOVE_ITEM, ITEM]
+  - [REMOVE_ITEM, QUANTITY, ITEM]
+  - [REMOVE_ITEM, ITEM, ADD_TO_ORDER, ITEM]
+  - [QUANTITY, ITEM, REMOVE_ITEM, ITEM]
+  - [QUANTITY, ITEM, REMOVE_ITEM, ITEM, CONJUNCTION, ADD_TO_ORDER, ITEM]
+  - [QUANTITY, ITEM, QUANTITY, ITEM, CONJUNCTION, QUANTITY, ITEM]
