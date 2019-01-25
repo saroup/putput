@@ -1,5 +1,7 @@
 # About
 [![Build Status](https://travis-ci.org/michaelperel/putput.svg?branch=master)](https://travis-ci.org/michaelperel/putput)
+[![codecov](https://codecov.io/gh/michaelperel/putput/branch/master/graph/badge.svg)](https://codecov.io/gh/michaelperel/putput)
+[![PyPI version](https://badge.fury.io/py/putput.svg)](https://badge.fury.io/py/putput)
 
 ```putput``` (pattern-utterance-tokens, pattern-utterance-tokens) is a library that generates inputs and labels for NLP tokenizers. Specifically, you define **patterns** in YAML and ```putput``` generates **utterances** (inputs to a tokenizer) and **tokens** (labels for the utterances). ```putput``` is memory efficient, relying on generators and sampling, so it can handle the majority of workloads on a commodity computer.
 
