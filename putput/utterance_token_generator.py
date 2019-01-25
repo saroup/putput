@@ -25,12 +25,9 @@ def generate_utterances_and_tokens(utterance_pattern: UtterancePattern,
             are (token, tokenized_phrase). A token handler function determines how its corresponding
             token should be tokenized. By default, a token is tokenized to '[TOKEN]'. To change
             the default behavior for every token, specify a mapping of 'DEFAULT' -> token handler function.
-        combination_options: Options for randomly sampling utterance-token pairs
-            using reservior sampling. Useful for limiting the output number of utterance-token
-            pairs. NOTE: reservior sampling does not increase speed - rather it uniformly samples
-            the possible utterance-token pairs without holding them all in memory. While it is space efficient,
-            if speed is a concern, do not specify combination_options. Instead, only consume part of the
-            generator returned by this function, a choice that sacrifices uniform randomness in favor of speed.
+        combination_options: Options for randomly sampling utterance-token pairs. Useful for limiting the
+            output number of utterance-token pairs and speeding up the consumption time of the
+            generator.
 
     Yields:
         utterance-token pairs.

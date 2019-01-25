@@ -110,7 +110,7 @@ class TestUtteranceTokenGenerator(unittest.TestCase):
 
         expected_utterances = ('hey speaker', 'ok speaker') # type: Tuple[str, ...]
         expected_tokens_iterable = ('[WAKE]', '[WAKE]') # type: Tuple[str, ...]
-        combination_options = CombinationOptions(max_sample_size=1, seed=0)
+        combination_options = CombinationOptions(max_sample_size=1, with_replacement=False, seed=0)
         self._verify(utterance_pattern,
                      tokens,
                      expected_utterances,

@@ -19,7 +19,7 @@ def main() -> None:
     for utterance_pattern, tokens in generate_utterance_pattern_and_tokens(input_path,
                                                                            dynamic_token_patterns_definition):
         # set options specific to each utterance_pattern
-        combination_options = CombinationOptions(max_sample_size=5, seed=0)
+        combination_options = CombinationOptions(max_sample_size=5, with_replacement=False, seed=0)
         for utterance, token_str in generate_utterances_and_tokens(utterance_pattern,
                                                                    tokens,
                                                                    token_handlers,
