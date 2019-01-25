@@ -24,15 +24,14 @@ def generate_utterance_pattern_and_tokens(pattern_definition_path: Path,
     Yields:
         UtterancePattern-token pairs.
     """
+    validate_pattern_definition(pattern_definition_path)
     with pattern_definition_path.open(encoding='utf-8') as pattern_definition_file:
         pattern_definition = yaml.load(pattern_definition_file)
-    validate_pattern_definition(pattern_definition)
     static_token_patterns_dict = _get_static_token_patterns_dict(pattern_definition)
     token_patterns_dict = dict(static_token_patterns_dict)
     token_patterns_dict.update(dynamic_token_patterns_definition or {})
     return (
-        (tuple(token_patterns_dict[token]
-               for token in tokens), tuple(tokens))
+        (tuple(token_patterns_dict[token] for token in tokens), tuple(tokens))
         for tokens in pattern_definition['utterance_patterns']
     )
 

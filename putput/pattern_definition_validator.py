@@ -1,51 +1,40 @@
 """This module provides functionality to validate the pattern definition."""
-from typing import Any, List
+from pathlib import Path
+from typing import Any, Set
+
+import yaml
 
 
-class PatternDefinitionValidationException(Exception):
+class PatternDefinitionValidationError(Exception):
     """Exception that describes invalid pattern defintions"""
 
 
-def _raise_validation_exception(message: str = 'Invalid Pattern Definition') -> None:
-    raise PatternDefinitionValidationException(message)
-
 def _validate_instance(item: Any, instance: Any, err_msg: str) -> None:
     if not item or not isinstance(item, instance):
-        _raise_validation_exception(err_msg)
+        raise PatternDefinitionValidationError(err_msg)
 
-def _validate_tokens(pattern_definition_dict: dict) -> None:
-    if 'token_patterns' not in pattern_definition_dict:
-        _raise_validation_exception('token_patterns key does not exist')
-    if not pattern_definition_dict['token_patterns']:
-        _raise_validation_exception('token_patterns do not exist')
-    if len(pattern_definition_dict['token_patterns']) > 2:
-        _raise_validation_exception('more than two keys under token_patterns exist. Only use "static" and "dynamic"')
-    if not isinstance(pattern_definition_dict['token_patterns'], list):
-        _raise_validation_exception('invalid token_patterns')
+def _check_for_overlap(static_tokens: Set[str], dynamic_tokens: Set[str]) -> None:
+    overlap = static_tokens & dynamic_tokens
+    if overlap:
+        err_msg = ('{} cannot be defined as both static and dynamic tokens'.format(overlap))
+        raise PatternDefinitionValidationError(err_msg)
 
-    for token_type_dict in pattern_definition_dict['token_patterns']:
-        _validate_instance(token_type_dict, dict, 'invalid token_patterns')
-        for token_type in token_type_dict:
-            if token_type not in ['static', 'dynamic']:
-                err_msg = 'token_patterns key {} found. Only use "static" and "dynamic"'.format(token_type)
-                _raise_validation_exception(err_msg)
-            if token_type == 'static':
-                _validate_static_tokens(token_type_dict['static'])
-            if token_type == 'dynamic':
-                _validate_dynamic_tokens(token_type_dict['dynamic'])
+def _check_for_undefined_utterance_pattern_tokens(static_tokens: Set[str],
+                                                  dynamic_tokens: Set[str],
+                                                  utterance_pattern_tokens: Set[str]) -> None:
+    undefined_tokens = utterance_pattern_tokens - (static_tokens | dynamic_tokens)
+    if undefined_tokens:
+        err_msg = '{} utterance_patterns must be defined as as a static or dynamic tokens.'.format(undefined_tokens)
+        raise PatternDefinitionValidationError(err_msg)
 
-def _validate_utterances(pattern_definition_dict: dict) -> None:
-    if not 'utterance_patterns' in pattern_definition_dict or not pattern_definition_dict['utterance_patterns']:
-        _raise_validation_exception('utterance_patterns key does not exist')
-    err_msg = 'invalid utterance_patterns'
-    for utterance_pattern_tokens in pattern_definition_dict['utterance_patterns']:
-        _validate_instance(utterance_pattern_tokens, list, err_msg)
+def _validate_utterances(pattern_definition: dict) -> None:
+    for utterance_pattern_tokens in pattern_definition['utterance_patterns']:
+        _validate_instance(utterance_pattern_tokens, list, 'utterance_patterns must contain a list')
         for token in utterance_pattern_tokens:
-            _validate_instance(token, str, err_msg)
+            _validate_instance(token, str, 'utterance_pattern tokens must be strings')
 
 def _validate_static_tokens(static_dicts: list) -> None:
     err_msg = 'invalid static token_patterns'
-    _validate_instance(static_dicts, list, err_msg)
     for token_patterns_dict in static_dicts:
         _validate_instance(token_patterns_dict, dict, err_msg)
         for token_patterns in token_patterns_dict.values():
@@ -57,65 +46,59 @@ def _validate_static_tokens(static_dicts: list) -> None:
                     for word in component:
                         _validate_instance(word, str, err_msg)
 
-def _validate_dynamic_tokens(dynamic_dicts: list) -> None:
-    err_msg = 'invalid dynamic token_patterns'
-    _validate_instance(dynamic_dicts, list, err_msg)
-    for token in dynamic_dicts:
-        _validate_instance(token, str, err_msg)
+def _validate_token_patterns(pattern_definition: dict) -> None:
+    _validate_instance(pattern_definition['token_patterns'], list, 'invalid token_patterns')
+    for token_type_dict in pattern_definition['token_patterns']:
+        _validate_instance(token_type_dict, dict, 'invalid token_patterns')
+        if len(token_type_dict) > 1:
+            raise PatternDefinitionValidationError('invalid token_patterns')
+        if 'static' in token_type_dict:
+            _validate_static_tokens(token_type_dict['static'])
+        elif 'dynamic' in token_type_dict:
+            for token in token_type_dict['dynamic']:
+                _validate_instance(token, str, 'invalid dynamic token_patterns')
+        else:
+            raise PatternDefinitionValidationError('token type must be either dynamic or static')
 
-def _get_static_tokens(pattern_definition_dict: dict) -> List[str]:
-    return [
-        token
-        for token_type_dict in pattern_definition_dict['token_patterns']
-        for token_type in token_type_dict
-        if token_type == 'static'
-        for token_patterns_dict in token_type_dict['static']
-        for token in token_patterns_dict.keys()
-    ]
-
-def _get_dynamic_tokens(pattern_definition_dict: dict) -> List[str]:
-    return [
-        token
-        for token_type_dict in pattern_definition_dict['token_patterns']
-        for token_type in token_type_dict
-        if token_type == 'dynamic'
-        for token in token_type_dict['dynamic']
-    ]
-
-def _validate_utterance_tokens_in_static_and_dynamic(pattern_definition_dict: dict) -> None:
-    static_tokens = _get_static_tokens(pattern_definition_dict)
-    dynamic_tokens = _get_dynamic_tokens(pattern_definition_dict)
-    all_utterance_pattern_tokens = [
-        token
-        for utterance_pattern_tokens in pattern_definition_dict['utterance_patterns']
-        for token in utterance_pattern_tokens
-    ]
-
-    err_msg = 'An utterance_pattern uses an undefined token. Include the token in static or dynamic token_patterns.'
-    for token in all_utterance_pattern_tokens:
-        if token not in static_tokens + dynamic_tokens:
-            _raise_validation_exception(err_msg)
-
-def _validate_at_least_dynamic_tokens_or_static_tokens_exist(pattern_definition_dict: dict) -> None:
-    if not (_get_dynamic_tokens(pattern_definition_dict) or _get_static_tokens(pattern_definition_dict)):
-        _raise_validation_exception('Either static or dynamic token_patterns must exist')
-
-def _validate_only_tokens_and_utterances(pattern_definition_dict: dict) -> None:
-    for key in pattern_definition_dict.keys():
-        if key not in ['token_patterns', 'utterance_patterns']:
-            _raise_validation_exception('At the top level, a key besides token_patterns or utterance_patterns exists')
-
-def validate_pattern_definition(pattern_definition: dict) -> None:
+def validate_pattern_definition(pattern_definition_path: Path) -> None:
     """Validates pattern definitions.
 
     Args:
         pattern_definition: The pattern definition file converted to a python dictionary.
 
     Raises:
-        PatternDefinitionValidationException: If the pattern definition file is invalid.
+        PatternDefinitionValidationError: If the pattern definition file is invalid.
     """
-    _validate_only_tokens_and_utterances(pattern_definition)
-    _validate_at_least_dynamic_tokens_or_static_tokens_exist(pattern_definition)
-    _validate_tokens(pattern_definition)
-    _validate_utterances(pattern_definition)
-    _validate_utterance_tokens_in_static_and_dynamic(pattern_definition)
+    try:
+        with pattern_definition_path.open(encoding='utf-8') as pattern_definition_file:
+            pattern_definition = yaml.load(pattern_definition_file)
+        if not {'token_patterns', 'utterance_patterns'} == set(pattern_definition):
+            err_msg = 'At the top level, token_patterns and utterance_patterns must exist. No other keys may exist.'
+            raise PatternDefinitionValidationError(err_msg)
+        _validate_token_patterns(pattern_definition)
+        _validate_utterances(pattern_definition)
+
+        static_tokens = {
+            token
+            for token_type_dict in pattern_definition['token_patterns']
+            for token_type in token_type_dict
+            if token_type == 'static'
+            for token_patterns_dict in token_type_dict['static']
+            for token in token_patterns_dict.keys()
+        }
+        dynamic_tokens = {
+            token
+            for token_type_dict in pattern_definition['token_patterns']
+            for token_type in token_type_dict
+            if token_type == 'dynamic'
+            for token in token_type_dict['dynamic']
+        }
+        utterance_pattern_tokens = {
+            token
+            for utterance_pattern_tokens in pattern_definition['utterance_patterns']
+            for token in utterance_pattern_tokens
+        }
+        _check_for_overlap(static_tokens, dynamic_tokens)
+        _check_for_undefined_utterance_pattern_tokens(static_tokens, dynamic_tokens, utterance_pattern_tokens)
+    except Exception as e:
+        raise PatternDefinitionValidationError(e)
