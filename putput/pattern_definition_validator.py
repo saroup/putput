@@ -1,6 +1,6 @@
 """This module provides functionality to validate the pattern definition."""
 from pathlib import Path
-from typing import Any, Set
+from typing import Any, Mapping, Set
 
 import yaml
 
@@ -24,7 +24,7 @@ def _check_for_undefined_utterance_pattern_tokens(static_tokens: Set[str],
                                                   utterance_pattern_tokens: Set[str]) -> None:
     undefined_tokens = utterance_pattern_tokens - (static_tokens | dynamic_tokens)
     if undefined_tokens:
-        err_msg = '{} utterance_patterns must be defined as as a static or dynamic tokens.'.format(undefined_tokens)
+        err_msg = '{} utterance_pattern tokens are not defined in "static" or "dynamic".'.format(undefined_tokens)
         raise PatternDefinitionValidationError(err_msg)
 
 def _validate_utterances(pattern_definition: dict) -> None:
@@ -33,7 +33,7 @@ def _validate_utterances(pattern_definition: dict) -> None:
         for token in utterance_pattern_tokens:
             _validate_instance(token, str, 'utterance_pattern tokens must be strings')
 
-def _validate_static_tokens(static_dicts: list) -> None:
+def _validate_static(static_dicts: list) -> None:
     err_msg = 'invalid static token_patterns'
     for token_patterns_dict in static_dicts:
         _validate_instance(token_patterns_dict, dict, err_msg)
@@ -53,21 +53,24 @@ def _validate_token_patterns(pattern_definition: dict) -> None:
         if len(token_type_dict) > 1:
             raise PatternDefinitionValidationError('invalid token_patterns')
         if 'static' in token_type_dict:
-            _validate_static_tokens(token_type_dict['static'])
+            _validate_static(token_type_dict['static'])
         elif 'dynamic' in token_type_dict:
             for token in token_type_dict['dynamic']:
                 _validate_instance(token, str, 'invalid dynamic token_patterns')
         else:
             raise PatternDefinitionValidationError('token type must be either dynamic or static')
 
-def validate_pattern_definition(pattern_definition_path: Path) -> None:
-    """Validates pattern definitions.
+def validate_pattern_definition(pattern_definition_path: Path) -> Mapping:
+    """Validates pattern definition.
 
     Args:
-        pattern_definition: The pattern definition file converted to a python dictionary.
+        pattern_definition_path: Path to the pattern definition file.
 
     Raises:
         PatternDefinitionValidationError: If the pattern definition file is invalid.
+
+    Returns:
+        A valid pattern definition.
     """
     try:
         with pattern_definition_path.open(encoding='utf-8') as pattern_definition_file:
@@ -79,26 +82,28 @@ def validate_pattern_definition(pattern_definition_path: Path) -> None:
         _validate_utterances(pattern_definition)
 
         static_tokens = {
-            token
+            static_token
             for token_type_dict in pattern_definition['token_patterns']
             for token_type in token_type_dict
             if token_type == 'static'
-            for token_patterns_dict in token_type_dict['static']
-            for token in token_patterns_dict.keys()
+            for static_token_to_token_patterns in token_type_dict['static']
+            for static_token in static_token_to_token_patterns.keys()
         }
         dynamic_tokens = {
-            token
+            dynamic_token
             for token_type_dict in pattern_definition['token_patterns']
             for token_type in token_type_dict
             if token_type == 'dynamic'
-            for token in token_type_dict['dynamic']
+            for dynamic_token in token_type_dict['dynamic']
         }
         utterance_pattern_tokens = {
-            token
+            utterance_pattern_token
             for utterance_pattern_tokens in pattern_definition['utterance_patterns']
-            for token in utterance_pattern_tokens
+            for utterance_pattern_token in utterance_pattern_tokens
         }
         _check_for_overlap(static_tokens, dynamic_tokens)
         _check_for_undefined_utterance_pattern_tokens(static_tokens, dynamic_tokens, utterance_pattern_tokens)
     except Exception as e:
         raise PatternDefinitionValidationError(e)
+    return pattern_definition
+    

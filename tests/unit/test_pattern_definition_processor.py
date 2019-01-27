@@ -29,3 +29,6 @@ class TestPatternDefinitionProcessor(unittest.TestCase):
         expected_result = [((((('he', 'she'), ('will',), ('want',)),), ((('to',), ('play', 'listen')),),
                              ((('the beatles', 'kanye'),),)), ('START', 'PLAY', 'ARTIST'))]
         self.assertEqual(list(actual_result), expected_result)
+
+if __name__ == '__main__':
+    unittest.main()

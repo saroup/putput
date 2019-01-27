@@ -17,7 +17,8 @@ class TestPatternDefinitionValidator(unittest.TestCase):
                          ) -> None:
         input_file = self._base_dir / input_file_name
         with self.assertRaises(exception) as cm:
-            generate_utterance_pattern_and_tokens(input_file, dynamic_token_patterns_definition)
+            for _ in generate_utterance_pattern_and_tokens(input_file, dynamic_token_patterns_definition):
+                break
         self.assertIsInstance(cm.exception, exception)
 
     def test_token_pattern_too_few_lists(self) -> None:
@@ -71,3 +72,6 @@ class TestPatternDefinitionValidator(unittest.TestCase):
     def test_malformed_yml(self) -> None:
         input_file_name = 'malformed_yml.yml'
         self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+if __name__ == '__main__':
+    unittest.main()

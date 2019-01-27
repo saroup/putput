@@ -155,3 +155,6 @@ class TestUtteranceTokenGenerator(unittest.TestCase):
                                                                               token_handlers=token_handlers):
             self.assertIn(actual_utterance, expected_utterances)
             self.assertIn(actual_tokens, expected_tokens_iterable)
+
+if __name__ == '__main__':
+    unittest.main()
