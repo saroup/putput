@@ -1,8 +1,5 @@
 """This module provides functionality to validate the pattern definition."""
-from pathlib import Path
 from typing import Any, Mapping, Set
-
-import yaml
 
 
 class PatternDefinitionValidationError(Exception):
@@ -27,7 +24,7 @@ def _check_for_undefined_utterance_pattern_tokens(static_tokens: Set[str],
         err_msg = '{} utterance_pattern tokens are not defined in "static" or "dynamic".'.format(undefined_tokens)
         raise PatternDefinitionValidationError(err_msg)
 
-def _validate_utterances(pattern_definition: dict) -> None:
+def _validate_utterances(pattern_definition: Mapping) -> None:
     for utterance_pattern_tokens in pattern_definition['utterance_patterns']:
         _validate_instance(utterance_pattern_tokens, list, 'utterance_patterns must contain a list')
         for token in utterance_pattern_tokens:
@@ -46,7 +43,7 @@ def _validate_static(static_dicts: list) -> None:
                     for word in component:
                         _validate_instance(word, str, err_msg)
 
-def _validate_token_patterns(pattern_definition: dict) -> None:
+def _validate_token_patterns(pattern_definition: Mapping) -> None:
     _validate_instance(pattern_definition['token_patterns'], list, 'invalid token_patterns')
     for token_type_dict in pattern_definition['token_patterns']:
         _validate_instance(token_type_dict, dict, 'invalid token_patterns')
@@ -60,7 +57,7 @@ def _validate_token_patterns(pattern_definition: dict) -> None:
         else:
             raise PatternDefinitionValidationError('token type must be either dynamic or static')
 
-def validate_pattern_definition(pattern_definition_path: Path) -> Mapping:
+def validate_pattern_definition(pattern_definition: Mapping) -> None:
     """Validates pattern definition.
 
     Args:
@@ -73,11 +70,10 @@ def validate_pattern_definition(pattern_definition_path: Path) -> Mapping:
         A valid pattern definition.
     """
     try:
-        with pattern_definition_path.open(encoding='utf-8') as pattern_definition_file:
-            pattern_definition = yaml.load(pattern_definition_file)
-        if not {'token_patterns', 'utterance_patterns'} == set(pattern_definition):
-            err_msg = 'At the top level, token_patterns and utterance_patterns must exist. No other keys may exist.'
+        if not ({'token_patterns', 'utterance_patterns'} <= set(pattern_definition)):
+            err_msg = 'At the top level, token_patterns and utterance_patterns must exist.'
             raise PatternDefinitionValidationError(err_msg)
+
         _validate_token_patterns(pattern_definition)
         _validate_utterances(pattern_definition)
 
@@ -103,7 +99,8 @@ def validate_pattern_definition(pattern_definition_path: Path) -> Mapping:
         }
         _check_for_overlap(static_tokens, dynamic_tokens)
         _check_for_undefined_utterance_pattern_tokens(static_tokens, dynamic_tokens, utterance_pattern_tokens)
+    except PatternDefinitionValidationError as e:
+        raise
     except Exception as e:
         raise PatternDefinitionValidationError(e)
-    return pattern_definition
     

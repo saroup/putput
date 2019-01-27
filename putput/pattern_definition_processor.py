@@ -2,6 +2,8 @@
 from pathlib import Path
 from typing import Iterable, List, Mapping, Optional, Tuple
 
+import yaml
+
 from putput.pattern_definition_validator import validate_pattern_definition
 
 TokenPattern = Tuple[Tuple[str, ...], ...]
@@ -22,7 +24,8 @@ def generate_utterance_pattern_and_tokens(pattern_definition_path: Path,
     Yields:
         UtterancePattern-token pairs.
     """
-    pattern_definition = validate_pattern_definition(pattern_definition_path)
+    pattern_definition = load_pattern_definition(pattern_definition_path)
+    validate_pattern_definition(pattern_definition)
     token_to_token_patterns = _get_token_to_token_patterns(pattern_definition, dynamic_token_to_token_patterns)
 
     for tokens in pattern_definition['utterance_patterns']:
@@ -30,6 +33,16 @@ def generate_utterance_pattern_and_tokens(pattern_definition_path: Path,
         for token in tokens:
             token_patterns.append(token_to_token_patterns[token])
         yield tuple(token_patterns), tuple(tokens)
+
+def load_pattern_definition(pattern_definition_path: Path) -> Mapping:
+    """Loads pattern definition into a mapping.
+
+    Returns:
+        pattern definition mapping.
+    """
+    with pattern_definition_path.open(encoding='utf-8') as pattern_definition_file:
+        pattern_definition = yaml.load(pattern_definition_file)
+    return pattern_definition
 
 def _get_token_to_token_patterns(pattern_definition: Mapping,
                                  dynamic_token_to_token_patterns: Optional[_TokenToTokenPatterns] = None

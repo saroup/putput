@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 
-from putput.pattern_definition_processor import generate_utterance_pattern_and_tokens
+from putput.pattern_definition_processor import generate_utterance_pattern_and_tokens, load_pattern_definition
 
 
 class TestPatternDefinitionProcessor(unittest.TestCase):
@@ -9,9 +9,9 @@ class TestPatternDefinitionProcessor(unittest.TestCase):
         self._base_dir = Path(__file__).parent / 'pattern_definitions' / 'valid'
 
     def test_dynamic_token_patterns_only(self) -> None:
-        dynamic_token_patterns_definition = {'ARTIST': ((('the beatles', 'kanye'),),)}
+        dynamic_token_to_token_patterns = {'ARTIST': ((('the beatles', 'kanye'),),)}
         input_file = self._base_dir / 'dynamic_token_patterns_only.yml'
-        actual_result = generate_utterance_pattern_and_tokens(input_file, dynamic_token_patterns_definition)
+        actual_result = generate_utterance_pattern_and_tokens(input_file, dynamic_token_to_token_patterns)
         expected_result = [((((('the beatles', 'kanye'),),),), ('ARTIST', ))]
         self.assertEqual(list(actual_result), expected_result)
 
@@ -23,12 +23,22 @@ class TestPatternDefinitionProcessor(unittest.TestCase):
         self.assertEqual(list(actual_result), expected_result)
 
     def test_dynamic_and_static_token_patterns(self) -> None:
-        dynamic_token_patterns_definition = {'ARTIST': ((('the beatles', 'kanye'),),)}
+        dynamic_token_to_token_patterns = {'ARTIST': ((('the beatles', 'kanye'),),)}
         input_file = self._base_dir / 'dynamic_and_static_token_patterns.yml'
-        actual_result = generate_utterance_pattern_and_tokens(input_file, dynamic_token_patterns_definition)
+        actual_result = generate_utterance_pattern_and_tokens(input_file, dynamic_token_to_token_patterns)
         expected_result = [((((('he', 'she'), ('will',), ('want',)),), ((('to',), ('play', 'listen')),),
                              ((('the beatles', 'kanye'),),)), ('START', 'PLAY', 'ARTIST'))]
         self.assertEqual(list(actual_result), expected_result)
+
+    def test_keys_in_addition_to_utterance_patterns_token_patterns(self) -> None:
+        dynamic_token_to_token_patterns = {'ARTIST': ((('the beatles', 'kanye'),),)}
+        input_file = self._base_dir / 'keys_in_addition_to_utterance_patterns_tokens_patterns.yml'
+        actual_result = generate_utterance_pattern_and_tokens(input_file, dynamic_token_to_token_patterns)
+        expected_result = [((((('he', 'she'), ('will',), ('want',)),), ((('to',), ('play', 'listen')),),
+                             ((('the beatles', 'kanye'),),)), ('START', 'PLAY', 'ARTIST'))]
+        self.assertEqual(list(actual_result), expected_result)
+        pattern_definition = load_pattern_definition(input_file)
+        self.assertIn('random_words', pattern_definition)
 
 if __name__ == '__main__':
     unittest.main()

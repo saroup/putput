@@ -2,6 +2,8 @@ import unittest
 from pathlib import Path
 from typing import Mapping, Optional, Tuple, Type
 
+from yaml.scanner import ScannerError
+
 from putput.pattern_definition_processor import TokenPattern, generate_utterance_pattern_and_tokens
 from putput.pattern_definition_validator import PatternDefinitionValidationError
 
@@ -12,7 +14,7 @@ class TestPatternDefinitionValidator(unittest.TestCase):
 
     def _raise_exception(self,
                          input_file_name: str,
-                         exception: Type[PatternDefinitionValidationError],
+                         exception: Type[Exception],
                          dynamic_token_patterns_definition: Optional[Mapping[str, Tuple[TokenPattern, ...]]] = None
                          ) -> None:
         input_file = self._base_dir / input_file_name
@@ -49,10 +51,6 @@ class TestPatternDefinitionValidator(unittest.TestCase):
         input_file_name = 'keys_besides_tokens_and_utterances.yml'
         self._raise_exception(input_file_name, PatternDefinitionValidationError)
 
-    def test_keys_in_addition_to_tokens_and_utterances(self) -> None:
-        input_file_name = 'keys_in_addition_to_tokens_and_utterances.yml'
-        self._raise_exception(input_file_name, PatternDefinitionValidationError)
-
     def test_keys_besides_static_and_dynamic(self) -> None:
         input_file_name = 'keys_besides_static_and_dynamic.yml'
         self._raise_exception(input_file_name, PatternDefinitionValidationError)
@@ -71,7 +69,7 @@ class TestPatternDefinitionValidator(unittest.TestCase):
 
     def test_malformed_yml(self) -> None:
         input_file_name = 'malformed_yml.yml'
-        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+        self._raise_exception(input_file_name, ScannerError)
 
 if __name__ == '__main__':
     unittest.main()
