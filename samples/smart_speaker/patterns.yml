@@ -5,14 +5,13 @@ token_patterns:
     - PLAY:
       - [[he, she], [wants, needs], [to play, to listen to]]
       - [[play, turn on]]
-    - SONG:
-      - [[here comes the sun, stronger]]
     - INDICATOR:
       - [[by, performed by]]
     - ARTIST:
       - [[the beatles, kanye west]]
   - dynamic:
-    - ACTION
+    - SONG
 utterance_patterns:
-  - [WAKE, PLAY, SONG, INDICATOR, ARTIST]
+  - [WAKE, PLAY, SONG]
+  - [PLAY, ARTIST]
   - [WAKE, PLAY, SONG, INDICATOR, ARTIST]
