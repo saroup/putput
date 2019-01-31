@@ -2,12 +2,11 @@ import unittest
 from typing import List, Optional, Tuple
 
 from putput.joiner import CombinationOptions, join_combination
-from putput.pattern_definition_processor import TokenPattern
 
 
 class TestJoiner(unittest.TestCase):
     def _test_join_combination(self,
-                               pattern: TokenPattern,
+                               pattern: Tuple[Tuple[str, ...], ...],
                                expected_output: Tuple[Tuple[str, ...], ...],
                                all_options: Optional[List[CombinationOptions]] = None,
                                ) -> None:
@@ -105,7 +104,7 @@ class TestJoiner(unittest.TestCase):
         self._test_join_combination(pattern, expected_output, all_options)
 
     def test_same_seed_same_result(self) -> None:
-        pattern = (('1', '2', '3'), ('4',), ('5', '6', '7', '8', '9', '10'), ('11',), ('12',)) # type: TokenPattern
+        pattern = (('1', '2', '3'), ('4',), ('5', '6', '7', '8', '9', '10'), ('11',), ('12',)) # type: Tuple[Tuple[str, ...], ...]
         all_options = [CombinationOptions(max_sample_size=3, with_replacement=False, seed=0),
                        CombinationOptions(max_sample_size=3, with_replacement=True, seed=0)]
         for opts in all_options:
@@ -114,7 +113,7 @@ class TestJoiner(unittest.TestCase):
             self.assertEqual(joined1, joined2)
 
     def test_different_seed_different_result(self) -> None:
-        pattern = (('1', '2', '3'), ('4',), ('5', '6', '7', '8', '9', '10'), ('11',), ('12',)) # type: TokenPattern
+        pattern = (('1', '2', '3'), ('4',), ('5', '6', '7', '8', '9', '10'), ('11',), ('12',)) # type: Tuple[Tuple[str, ...], ...]
         all_options = [
             (
                 CombinationOptions(max_sample_size=3, with_replacement=False, seed=10),

@@ -1,0 +1,13 @@
+base_tokens:
+  - SUBJECT_PERSONAL_PRONOUN:
+    - ["i", "he", "she", "we", "they"]
+token_patterns:
+  - static:
+    - START:
+      - [[SUBJECT_PERSONAL_PRONOUN], [will], [want]]
+    - PLAY:
+      - [[to], [play, listen]]
+  - dynamic:
+    - ARTIST
+utterance_patterns:
+  - [SUBJECT_PERSONAL_PRONOUN, ARTIST]

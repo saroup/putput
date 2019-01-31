@@ -1,9 +1,12 @@
+base_tokens:
+  - SUBJECT_PERSONAL_PRONOUN:
+    - ["i", "he", "she", "we", "they"]
 token_patterns:
   - static:
     - WAKE:
       - [[hey, ok], [speaker, sound system]]
     - PLAY:
-      - [[he, she], [wants, needs], [to play, to listen to]]
+      - [[SUBJECT_PERSONAL_PRONOUN], [wants, needs], [to play, to listen to]]
       - [[play, turn on]]
     - INDICATOR:
       - [[by, performed by]]

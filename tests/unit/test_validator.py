@@ -4,22 +4,22 @@ from typing import Mapping, Optional, Tuple, Type
 
 from yaml.scanner import ScannerError
 
-from putput.pattern_definition_processor import TokenPattern, generate_utterance_pattern_and_tokens
-from putput.pattern_definition_validator import PatternDefinitionValidationError
+from putput.generator import process_pattern_definition
+from putput.validator import PatternDefinitionValidationError
 
 
-class TestPatternDefinitionValidator(unittest.TestCase):
+class TestValidator(unittest.TestCase):
     def setUp(self) -> None:
         self._base_dir = Path(__file__).parent / 'pattern_definitions' / 'invalid'
 
     def _raise_exception(self,
                          input_file_name: str,
                          exception: Type[Exception],
-                         dynamic_token_patterns_definition: Optional[Mapping[str, Tuple[TokenPattern, ...]]] = None
+                         dynamic_token_patterns_definition: Optional[Mapping[str, Tuple[Tuple[Tuple[str, ...], ...], ...]]] = None
                          ) -> None:
         input_file = self._base_dir / input_file_name
         with self.assertRaises(exception) as cm:
-            for _ in generate_utterance_pattern_and_tokens(input_file, dynamic_token_patterns_definition):
+            for _ in process_pattern_definition(input_file, dynamic_token_patterns_definition):
                 break
         self.assertIsInstance(cm.exception, exception)
 
@@ -70,6 +70,18 @@ class TestPatternDefinitionValidator(unittest.TestCase):
     def test_malformed_yml(self) -> None:
         input_file_name = 'malformed_yml.yml'
         self._raise_exception(input_file_name, ScannerError)
+
+    def test_base_tokens_not_defined(self) -> None:
+        input_file_name = 'base_tokens_not_defined.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_base_tokens_used_in_utterance_patterns(self) -> None:
+        input_file_name = 'base_tokens_used_in_utterance_patterns.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_static_and_base_tokens_overlap(self) -> None:
+        input_file_name = 'static_and_base_tokens_overlap.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
 
 if __name__ == '__main__':
     unittest.main()

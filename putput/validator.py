@@ -10,8 +10,8 @@ def _validate_instance(item: Any, instance: Any, err_msg: str) -> None:
     if not item or not isinstance(item, instance):
         raise PatternDefinitionValidationError(err_msg)
 
-def _check_for_overlap(static_tokens: Set[str], dynamic_tokens: Set[str]) -> None:
-    overlap = static_tokens & dynamic_tokens
+def _check_for_overlap(static_tokens: Set[str], dynamic_tokens: Set[str], base_tokens: Set[str]) -> None:
+    overlap = (static_tokens & dynamic_tokens & base_tokens) | (static_tokens & dynamic_tokens) | (dynamic_tokens & base_tokens) | (static_tokens & base_tokens)
     if overlap:
         err_msg = ('{} cannot be defined as both static and dynamic tokens'.format(overlap))
         raise PatternDefinitionValidationError(err_msg)
@@ -23,6 +23,20 @@ def _check_for_undefined_utterance_pattern_tokens(static_tokens: Set[str],
     if undefined_tokens:
         err_msg = '{} utterance_pattern tokens are not defined in "static" or "dynamic".'.format(undefined_tokens)
         raise PatternDefinitionValidationError(err_msg)
+
+def _validate_base_tokens(pattern_definition: Mapping) -> None:
+    _validate_instance(pattern_definition['base_tokens'], list, 'invalid base_tokens')
+    for base_token_dict in pattern_definition['base_tokens']:
+        _validate_instance(base_token_dict, dict, 'invalid base_tokens')
+        if len(base_token_dict) > 1:
+            raise PatternDefinitionValidationError('invalid base_tokens')
+        base_token_group_name = next(iter(base_token_dict.keys()))
+        if len(base_token_dict[base_token_group_name]) > 1:
+            raise PatternDefinitionValidationError('invalid base_tokens. Can only have one list per base token.')
+        for base_tokens in base_token_dict[base_token_group_name]:
+            _validate_instance(base_tokens, list, 'invalid base_token, not a list')
+            for base_token in base_tokens:
+                _validate_instance(base_token, str, 'invalid base_token, not a string')
 
 def _validate_utterances(pattern_definition: Mapping) -> None:
     for utterance_pattern_tokens in pattern_definition['utterance_patterns']:
@@ -76,7 +90,14 @@ def validate_pattern_definition(pattern_definition: Mapping) -> None:
 
         _validate_token_patterns(pattern_definition)
         _validate_utterances(pattern_definition)
+        if 'base_tokens' in pattern_definition:
+            _validate_base_tokens(pattern_definition)
 
+        base_tokens = set()
+        if 'base_tokens' in pattern_definition:
+            for base_tokens_dict in pattern_definition['base_tokens']:
+                for base_token in base_tokens_dict:
+                    base_tokens.add(base_token)
         static_tokens = {
             static_token
             for token_type_dict in pattern_definition['token_patterns']
@@ -97,10 +118,9 @@ def validate_pattern_definition(pattern_definition: Mapping) -> None:
             for utterance_pattern_tokens in pattern_definition['utterance_patterns']
             for utterance_pattern_token in utterance_pattern_tokens
         }
-        _check_for_overlap(static_tokens, dynamic_tokens)
+        _check_for_overlap(static_tokens, dynamic_tokens, base_tokens)
         _check_for_undefined_utterance_pattern_tokens(static_tokens, dynamic_tokens, utterance_pattern_tokens)
     except PatternDefinitionValidationError as e:
         raise
     except Exception as e:
         raise PatternDefinitionValidationError(e)
-    

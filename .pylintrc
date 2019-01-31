@@ -1,5 +1,2 @@
 [MESSAGES CONTROL]
-disable=invalid-name, missing-docstring, unnecessary-lambda
-
-[FORMAT]
-max-line-length=120
+disable=invalid-name, line-too-long, missing-docstring, unnecessary-lambda
