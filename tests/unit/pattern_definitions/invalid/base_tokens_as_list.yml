@@ -1,5 +1,6 @@
 base_tokens:
-  - SUBJECT_PERSONAL_PRONOUN: ["i", "he", "she", "we", "they"]
+  - SUBJECT_PERSONAL_PRONOUN:
+    - ["i", "he", "she", "we", "they"]
 token_patterns:
   - static:
     - START:
@@ -9,4 +10,4 @@ token_patterns:
   - dynamic:
     - ARTIST
 utterance_patterns:
-  - [SUBJECT_PERSONAL_PRONOUN, ARTIST]
+  - [ARTIST]

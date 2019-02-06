@@ -1,7 +1,13 @@
 """This module provides functionality to join combinations."""
 import itertools
 import random
-from typing import Iterable, List, Optional, Tuple, TypeVar # pylint: disable=unused-import
+from typing import List # pylint: disable=unused-import
+from typing import Optional
+from typing import TypeVar
+
+from putput.types import COMBINATION
+from putput.types import COMBINATION_PRODUCT
+from putput.types import COMPONENT # pylint: disable=unused-import
 
 T = TypeVar('T')
 
@@ -10,10 +16,10 @@ class CombinationOptions:
     """Options for join_combination via random sampling.
 
     Attributes:
-        max_sample_size: Ceiling for number of elements to sample.
+        max_sample_size: Ceiling for number of components to sample.
         with_replacement: Option to include duplicates when randomly sampling. If False, sample <=
-            max_sample_size elements using reservior sampling over the product of each element of the
-            joined combination. If True, sample exactly max_sample_size elements from the product, allowing
+            max_sample_size components using reservior sampling over the product of each component of the
+            joined combination. If True, sample exactly max_sample_size components from the product, allowing
             duplicates. Note: reservior sampling requires iterating through the entire joined combination,
             so it should not be used if the joined combination could be very large. In contrast,
             sampling with replacement does not require iterating through the joined combination,
@@ -44,15 +50,11 @@ class CombinationOptions:
         """Read only attribute."""
         return self._seed
 
-    def __hash__(self):
-        """Ensures instances of the class with the same attributes hash to the same value."""
-        return hash((self._max_sample_size, self._with_replacement, self._seed))
-
-def join_combination(combination: Tuple[Tuple[T, ...], ...],
-                     options: Optional[CombinationOptions] = None) -> Iterable[Tuple[T, ...]]:
+def join_combination(combination: COMBINATION,
+                     options: Optional[CombinationOptions] = None) -> COMBINATION_PRODUCT:
     """Generates a joined combination.
 
-    A joined combination is the product, or random sampling of the product, of each element
+    A joined combination is the product, or random sampling of the product, of each component
     of a combination.
 
     Args:
@@ -64,28 +66,28 @@ def join_combination(combination: Tuple[Tuple[T, ...], ...],
     """
     return _join_with_sampling(combination, options) if options else _join_without_sampling(combination)
 
-def _join_without_sampling(combination: Tuple[Tuple[T, ...], ...]) -> Iterable[Tuple[T, ...]]:
+def _join_without_sampling(combination: COMBINATION) -> COMBINATION_PRODUCT:
     return itertools.product(*combination)
 
-def _join_with_sampling(combination: Tuple[Tuple[T, ...], ...],
-                        options: CombinationOptions) -> Iterable[Tuple[T, ...]]:
+def _join_with_sampling(combination: COMBINATION,
+                        options: CombinationOptions) -> COMBINATION_PRODUCT:
     random.seed(options.seed)
     if options.with_replacement:
         return _join_with_replacement(combination, options.max_sample_size)
     return _join_without_replacement(combination, options.max_sample_size)
 
-def _join_with_replacement(combination: Tuple[Tuple[T, ...], ...], max_sample_size: int) -> Iterable[Tuple[T, ...]]:
+def _join_with_replacement(combination: COMBINATION, max_sample_size: int) -> COMBINATION_PRODUCT:
     for _ in range(max_sample_size):
         component_items = []
         for component in combination:
             component_items.append(random.choice(tuple(component)))
         yield tuple(component_items)
 
-def _join_without_replacement(combination: Tuple[Tuple[T, ...], ...],
-                              max_sample_size: int) -> Tuple[Tuple[T, ...], ...]:
+def _join_without_replacement(combination: COMBINATION,
+                              max_sample_size: int) -> COMBINATION_PRODUCT:
     # https://stackoverflow.com/questions/2612648/reservoir-sampling
     joined_combination = _join_without_sampling(combination)
-    result = [] # type: List[Tuple[T, ...]]
+    result = [] # type: List[COMPONENT]
     N = 0
     for item in joined_combination:
         N += 1
@@ -95,4 +97,4 @@ def _join_without_replacement(combination: Tuple[Tuple[T, ...], ...],
             s = int(random.random() * N)
             if s < max_sample_size:
                 result[s] = item
-    return tuple(result)
+    return (i for i in result)

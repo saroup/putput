@@ -6,3 +6,4 @@ show_missing = True
 omit =
     samples/*
     setup.py
+    tests/**/*

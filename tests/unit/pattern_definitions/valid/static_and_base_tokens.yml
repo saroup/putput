@@ -1,10 +1,9 @@
 base_tokens:
-  - SUBJECT_PERSONAL_PRONOUN:
-    - [he, she]
+  - SUBJECT_PERSONAL_PRONOUN: [he, she]
 token_patterns:
   - static:
     - START:
-      - [[SUBJECT_PERSONAL_PRONOUN], [will], [want]]
+      - [SUBJECT_PERSONAL_PRONOUN, [will], [want]]
     - PLAY:
       - [[to], [play, listen]]
 utterance_patterns:

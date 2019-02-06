@@ -1,15 +1,21 @@
 import unittest
-from typing import List, Optional, Tuple
+from typing import List
+from typing import Optional
+from typing import Tuple # pylint: disable=unused-import
 
-from putput.joiner import CombinationOptions, join_combination
+from putput.joiner import CombinationOptions
+from putput.joiner import join_combination
+from putput.types import COMBINATION
+from putput.types import COMBINATION_PRODUCT
 
 
 class TestJoiner(unittest.TestCase):
     def _test_join_combination(self,
-                               pattern: Tuple[Tuple[str, ...], ...],
-                               expected_output: Tuple[Tuple[str, ...], ...],
+                               pattern: COMBINATION,
+                               expected_output: COMBINATION_PRODUCT,
                                all_options: Optional[List[CombinationOptions]] = None,
                                ) -> None:
+        expected_output = tuple(expected_output)
         if not all_options:
             all_options = [CombinationOptions(max_sample_size=len(expected_output), with_replacement=False, seed=0),
                            CombinationOptions(max_sample_size=len(expected_output), with_replacement=True, seed=0)]
@@ -104,7 +110,7 @@ class TestJoiner(unittest.TestCase):
         self._test_join_combination(pattern, expected_output, all_options)
 
     def test_same_seed_same_result(self) -> None:
-        pattern = (('1', '2', '3'), ('4',), ('5', '6', '7', '8', '9', '10'), ('11',), ('12',)) # type: Tuple[Tuple[str, ...], ...]
+        pattern = (('1', '2', '3'), ('4',), ('5', '6', '7', '8', '9', '10'), ('11',), ('12',))
         all_options = [CombinationOptions(max_sample_size=3, with_replacement=False, seed=0),
                        CombinationOptions(max_sample_size=3, with_replacement=True, seed=0)]
         for opts in all_options:
@@ -113,7 +119,7 @@ class TestJoiner(unittest.TestCase):
             self.assertEqual(joined1, joined2)
 
     def test_different_seed_different_result(self) -> None:
-        pattern = (('1', '2', '3'), ('4',), ('5', '6', '7', '8', '9', '10'), ('11',), ('12',)) # type: Tuple[Tuple[str, ...], ...]
+        pattern = (('1', '2', '3'), ('4',), ('5', '6', '7', '8', '9', '10'), ('11',), ('12',))
         all_options = [
             (
                 CombinationOptions(max_sample_size=3, with_replacement=False, seed=10),
