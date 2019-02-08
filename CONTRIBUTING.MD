@@ -15,6 +15,18 @@
 * Explicit names, even if verbose, are preferred over abbreviations.
 * At its core, ```putput``` reshapes input to output. There are many intermediate steps, which can be found here (TODO: Doc). Please choose names that follow this structure. If a new concept is introduced, update the doc if it would be conceptually helpful.
 
+## Style
+* Optional arguments must be named. For instance:
+```
+def func(arg_1: str, *, arg_2: Optional[bool] = True) -> None:
+```
+* If a function must be split across multiple lines to meet the linter's line length requirements, every argument and the return type must be on separate lines. For instance:
+```
+def func(arg_1: str,
+         arg_2: str
+         ) -> None:
+```
+
 ## Typing
 * ```putput``` uses [mypy](http://mypy-lang.org/) for static type analysis. The conventions we follow are:
     * All functions must have types for arguments and return values.
