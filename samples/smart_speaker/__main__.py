@@ -1,91 +1,132 @@
 import random
 from pathlib import Path
-from typing import Mapping # pylint: disable=unused-import
+from typing import Sequence
 from typing import Tuple
-from typing import Union # pylint: disable=unused-import
-
-from putput import CombinationOptions
+from putput import ComboOptions
 from putput import Pipeline
-from putput.types import AFTER_FLOW_HOOKS # pylint: disable=unused-import
-from putput.types import BEFORE_FLOW_HOOKS # pylint: disable=unused-import
-from putput.types import HANDLED_TOKEN
-from putput.types import HANDLED_TOKENS
-from putput.types import HASHABLE_TOKENS # pylint: disable=unused-import
-from putput.types import TOKEN
-from putput.types import TOKEN_PHRASE
-from putput.types import TOKENS
-from putput.types import UTTERANCE
-from putput.types import UTTERANCE_COMBINATION
+from putput.types import COMBO
+
+def main() -> None:
+    pattern_def_path = Path(__file__).parent / 'patterns.yml'
+    dynamic_token_patterns_map = {
+        'SONG': ((('here comes the sun', 'stronger'),),)
+    }
+
+    combo_options_map = {
+        'DEFAULT': ComboOptions(max_sample_size=5, with_replacement=False, seed=0)
+    }
+
+    # default format
+    print('*' * 50 + 'DEFAULT' + '*' * 50)
+    p = Pipeline()
+    for utterance, tokens, groups in p.flow(pattern_def_path,
+                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
+                                            combo_options_map=combo_options_map):
+        print('utterance:', utterance)
+        print('tokens:', tokens)
+        print('groups:', groups)
+    print('*' * 50 + 'DEFAULT' + '*' * 50)
+    print('\n' * 2)
+
+    # default format with before joining hook
+    print('*' * 50 + 'BEFORE JOINING HOOK' + '*' * 50)
+    before_flow_hooks = {
+        ('WAKE', 'PLAY', 'ARTIST'): (_sample_play, _sample_play)
+    }
+
+    p = Pipeline()
+    p.register_hooks(before_flow_hooks, 'BEFORE_JOINING')
+    for utterance, tokens, groups in p.flow(pattern_def_path,
+                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
+                                            combo_options_map=combo_options_map):
+        print('utterance:', utterance)
+        print('tokens:', tokens)
+        print('groups:', groups)
+    print('*' * 50 + 'BEFORE JOINING HOOK' + '*' * 50)
+    print('\n' * 2)
 
 
-def _include_phrase(token: TOKEN, phrase: TOKEN_PHRASE) -> HANDLED_TOKEN:
-    return '[{token}({phrase})]'.format(token=token, phrase=phrase)
+    # default format with after joining hook
+    print('*' * 50 + 'AFTER JOINING HOOK' + '*' * 50)
+    after_flow_hooks = {
+        ('WAKE', 'PLAY', 'ARTIST'): (_add_random_words_to_utterance,)
+    }
 
-def _sample_utterance_combination(utterance_combination: UTTERANCE_COMBINATION,
-                                  tokens: TOKENS,
-                                  token_to_sample: TOKEN,
-                                  sample_size: int,
-                                  ) -> Tuple[UTTERANCE_COMBINATION, TOKENS]:
-    TOKEN_INDEX = tokens.index(token_to_sample)
-    utterance_combination_list = list(utterance_combination)
-    sampled_combinations = tuple(random.sample(utterance_combination_list.pop(TOKEN_INDEX), sample_size))
-    utterance_combination_list.insert(TOKEN_INDEX, sampled_combinations)
-    utterance_combination = tuple(utterance_combination_list)
-    return utterance_combination, tokens
+    p = Pipeline()
+    p.register_hooks(after_flow_hooks, 'AFTER_JOINING')
+    for utterance, tokens, groups in p.flow(pattern_def_path,
+                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
+                                            combo_options_map=combo_options_map):
+        print('utterance:', utterance)
+        print('tokens:', tokens)
+        print('groups:', groups)
 
-def _sample_play(utterance_combination: UTTERANCE_COMBINATION,
-                 tokens: TOKENS,
-                 ) -> Tuple[UTTERANCE_COMBINATION, TOKENS]:
-    return _sample_utterance_combination(utterance_combination, tokens, 'PLAY', 2)
+    print('*' * 50 + 'AFTER JOINING HOOK' + '*' * 50)
+    print('\n' * 2)
 
-def _sample_artist(utterance_combination: UTTERANCE_COMBINATION,
-                   tokens: TOKENS,
-                   ) -> Tuple[UTTERANCE_COMBINATION, TOKENS]:
-    return _sample_utterance_combination(utterance_combination, tokens, 'ARTIST', 1)
 
-def _add_random_words(utterance: UTTERANCE,
-                      handled_tokens: HANDLED_TOKENS
-                      ) -> Tuple[UTTERANCE, HANDLED_TOKENS]:
+    token_handler_map = {
+        'DEFAULT': _bio_token_handler
+    }
+
+    group_handler_map = {
+        'DEFAULT': _bio_group_handler
+    }
+
+    # BIO format
+    print('*' * 50 + 'BIO' + '*' * 50)
+    p = Pipeline()
+    for utterance, tokens, groups in p.flow(pattern_def_path,
+                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
+                                            token_handler_map=token_handler_map,
+                                            group_handler_map=group_handler_map,
+                                            combo_options_map=combo_options_map):
+        print('utterance:', utterance)
+        print('tokens:', tokens)
+        print('groups:', groups)
+    print('*' * 50 + 'BIO' + '*' * 50)
+
+def _add_random_words_to_utterance(utterance: str,
+                                   handled_tokens: Sequence[str],
+                                   handled_groups: Sequence[str]
+                                   ) -> Tuple[str, Sequence[str], Sequence[str]]:
     utterances = utterance.split()
     random_words = ['hmmmm', 'uh', 'um', 'please']
     insert_index = random.randint(0, len(utterances))
     random_word = random.choice(random_words)
     utterances.insert(insert_index, random_word)
     utterance = ' '.join(utterances)
-    return utterance, handled_tokens
+    return utterance, handled_tokens, handled_groups
 
-def main() -> None:
-    pattern_definition_path = Path(__file__).parent / 'patterns.yml'
-    dynamic_token_patterns_map = {
-        'SONG': ((('here comes the sun', 'stronger'),),)
-    }
-    token_handler_map = {
-        'WAKE': _include_phrase,
-        'SONG': _include_phrase,
-    }
+def _bio_token_handler(token: str, phrase: str) -> str:
+    tokens = ['{}-{}'.format('B' if i == 0 else 'I', token)
+              for i, _ in enumerate(phrase.replace(" '", "'").split())]
+    return ' '.join(tokens)
 
-    utterance_pattern_tokens_to_combination_options = {
-        'DEFAULT': CombinationOptions(max_sample_size=5, with_replacement=False, seed=0)
-    } # type: Mapping[Union[TOKEN, HASHABLE_TOKENS], CombinationOptions]
+def _bio_group_handler(group_name: str, handled_tokens: Sequence[str]) -> str:
+    num_tokens = 0
+    for tokenized_phrase in handled_tokens:
+        num_tokens += len(tokenized_phrase.split())
+    groups = ['{}-{}'.format('B' if i == 0 else 'I', group_name)
+              for i in range(num_tokens)]
+    return ' '.join(groups)
 
-    before_flow_hooks = {
-        ('PLAY', 'ARTIST'): (_sample_play, _sample_artist)
-    } # type: Mapping[Union[TOKEN, HASHABLE_TOKENS], BEFORE_FLOW_HOOKS]
+def _sample_play(utterance_combination: COMBO,
+                 tokens: Sequence[str],
+                 ) -> Tuple[COMBO, Sequence[str]]:
+    return _sample_utterance_component(utterance_combination, tokens, 'PLAY', 1)
 
-    after_flow_hooks = {
-        'DEFAULT' : (_add_random_words, _add_random_words)
-    } # type: Mapping[Union[TOKEN, HASHABLE_TOKENS], AFTER_FLOW_HOOKS]
-
-    p = Pipeline()
-    p.register_hooks(before_flow_hooks, stage='BEFORE_FLOW')
-    p.register_hooks(after_flow_hooks, stage='AFTER_FLOW')
-    for utterance, tokens in p.flow(pattern_definition_path,
-                                    dynamic_token_patterns_map,
-                                    token_handler_map,
-                                    utterance_pattern_tokens_to_combination_options):
-        print('utterance:', utterance)
-        print('tokens:', tokens)
-
+def _sample_utterance_component(utterance_combination: COMBO,
+                                tokens: Sequence[str],
+                                token_to_sample: str,
+                                sample_size: int,
+                                ) -> Tuple[COMBO, Sequence[str]]:
+    token_index = tokens.index(token_to_sample)
+    utterance_combination_list = list(utterance_combination)
+    sampled_combinations = tuple(random.sample(utterance_combination_list.pop(token_index), sample_size))
+    utterance_combination_list.insert(token_index, sampled_combinations)
+    utterance_combination = tuple(utterance_combination_list)
+    return utterance_combination, tokens
 
 if __name__ == '__main__':
     main()

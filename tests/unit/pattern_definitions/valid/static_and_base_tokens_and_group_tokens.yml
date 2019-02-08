@@ -1,12 +1,14 @@
 base_tokens:
-  - SUBJECT_PERSONAL_PRONOUN: ["i", "he", "she", "we", "they"]
+  - SUBJECT_PERSONAL_PRONOUN: [he, she]
 token_patterns:
   - static:
     - START:
       - [SUBJECT_PERSONAL_PRONOUN, [will], [want]]
     - PLAY:
       - [[to], [play, listen]]
-  - dynamic:
-    - ARTIST
+    - WAKE:
+      - [[hi]]
+base_groups:
+  - PLAY_PHRASE: [START, PLAY]
 utterance_patterns:
-  - [SUBJECT_PERSONAL_PRONOUN, ARTIST]
+  - [WAKE, PLAY_PHRASE]

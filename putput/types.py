@@ -1,49 +1,11 @@
 from typing import Callable
-from typing import Iterable
+from typing import Mapping
 from typing import Sequence
 from typing import Tuple
-from typing import TypeVar
-from typing import Union
 
-# TODO: DELETE THIS LINK, BUT INCLUDE IT AS A GRAPHIC:
-# https://docs.google.com/document/d/1VQ-H-JhdJo2WUf0K1b8z_sURqbvwCFFNYlawDoktMxE/edit?usp=sharing
-
-WORD = str
-TOKEN_PATTERN_COMPONENT = Sequence[WORD]
-TOKEN_PATTERN = Sequence[TOKEN_PATTERN_COMPONENT]
-TOKEN_PATTERNS = Sequence[TOKEN_PATTERN]
-HASHABLE_TOKEN_PATTERN = Tuple[Tuple[WORD, ...], ...]
-HASHABLE_TOKEN_PATTERNS = Tuple[HASHABLE_TOKEN_PATTERN, ...]
-EXPANDED_UTTERANCE_PATTERN = Sequence[TOKEN_PATTERNS]
-
-UTTERANCE_COMPONENT = Sequence[str]
-UTTERANCE_COMBINATION = Sequence[UTTERANCE_COMPONENT]
-TOKEN_COMPONENT = Sequence[str]
-TOKEN_COMBINATION = Sequence[TOKEN_COMPONENT]
-
-UTTERANCE = str
-TOKEN = str
-BASE_TOKEN = str
-TOKEN_PATTERNS_WITH_BASE_TOKENS = Sequence[Sequence[Union[BASE_TOKEN, Sequence[TOKEN]]]]
-TOKENS = Sequence[TOKEN]
-HASHABLE_TOKENS = Tuple[TOKEN, ...]
-HANDLED_TOKEN = str
-HANDLED_TOKENS = str
-TOKEN_PHRASE = str
-
-TOKEN_HANDLER = Callable[[TOKEN, TOKEN_PHRASE], HANDLED_TOKEN]
-
-T = TypeVar('T')
-COMPONENT = Sequence[T]
-COMBINATION = Sequence[COMPONENT]
-COMBINATION_PRODUCT = Iterable[COMPONENT]
-
-BEFORE_FLOW_HOOK_ARGS = Tuple[UTTERANCE_COMBINATION, TOKENS]
-BEFORE_FLOW_HOOK = Callable[[UTTERANCE_COMBINATION, TOKENS], BEFORE_FLOW_HOOK_ARGS]
-BEFORE_FLOW_HOOKS = Sequence[BEFORE_FLOW_HOOK]
-
-AFTER_FLOW_HOOK_ARGS = Tuple[UTTERANCE, HANDLED_TOKENS]
-AFTER_FLOW_HOOK = Callable[[UTTERANCE, HANDLED_TOKENS], AFTER_FLOW_HOOK_ARGS]
-AFTER_FLOW_HOOKS = Sequence[AFTER_FLOW_HOOK]
-
-EXPANDED_TOKEN_PATTERN = Sequence[str]
+COMBO = Sequence[Sequence[str]]
+GROUP = Tuple[str, int]
+TOKEN_PATTERN = Sequence[Sequence[str]]
+TOKEN_HANDLER = Callable[[str, str], str]
+TOKEN_PATTERNS_MAP = Mapping[str, Sequence[TOKEN_PATTERN]]
+TOKEN_HANDLER_MAP = Mapping[str, TOKEN_HANDLER]

@@ -1,20 +1,26 @@
 base_tokens:
-  - SUBJECT_PERSONAL_PRONOUN: ["i", "he", "she", "we", "they"]
-  - OTHER: ["i", "he", "she", "we", "they"]
+  - SINGULAR_PRONOUNS: [i, we, they]
+  - PLURAL_PRONOUNS: [he, she]
 token_patterns:
   - static:
     - WAKE:
       - [[hey, ok], [speaker, sound system]]
     - PLAY:
-      - [SUBJECT_PERSONAL_PRONOUN, [wants, needs], [to play, to listen to]]
+      - [SINGULAR_PRONOUNS, [want, need], [to play, to listen to]]
+      - [PLURAL_PRONOUNS, [wants, needs], [to play, to listen to]]
       - [[play, turn on]]
     - INDICATOR:
       - [[by, performed by]]
     - ARTIST:
       - [[the beatles, kanye west]]
+    - QUEUE:
+      - [[then, and then, and after]]
   - dynamic:
     - SONG
+base_groups:
+  - PLAY_SONG: [PLAY, SONG]
+  - PLAY_ARTIST: [PLAY, ARTIST]
 utterance_patterns:
-  - [WAKE, PLAY, SONG]
-  - [PLAY, ARTIST]
-  - [WAKE, PLAY, SONG, INDICATOR, ARTIST]
+  - [WAKE, PLAY_SONG]
+  - [WAKE, PLAY_ARTIST, QUEUE, PLAY_SONG, QUEUE, ARTIST]
+  - [WAKE, PLAY_ARTIST]

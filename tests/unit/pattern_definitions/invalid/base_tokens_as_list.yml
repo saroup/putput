@@ -4,7 +4,7 @@ base_tokens:
 token_patterns:
   - static:
     - START:
-      - [[SUBJECT_PERSONAL_PRONOUN], [will], [want]]
+      - [SUBJECT_PERSONAL_PRONOUN, [will], [want]]
     - PLAY:
       - [[to], [play, listen]]
   - dynamic:

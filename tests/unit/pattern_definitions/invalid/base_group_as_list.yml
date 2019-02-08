@@ -1,12 +1,15 @@
-base_tokens:
-  - SUBJECT_PERSONAL_PRONOUN:
+
 token_patterns:
   - static:
     - START:
-      - [SUBJECT_PERSONAL_PRONOUN, [will], [want]]
+      - [['i'], [will], [want]]
     - PLAY:
       - [[to], [play, listen]]
   - dynamic:
     - ARTIST
+base_groups:
+  - PLAY_SONG: 
+    - [PLAY, SONG]
+  - PLAY_ARTIST: [PLAY, ARTIST]
 utterance_patterns:
   - [ARTIST]
