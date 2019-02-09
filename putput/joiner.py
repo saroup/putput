@@ -94,13 +94,10 @@ def _join_without_replacement(combo: _COMBO, max_sample_size: int) -> _COMBO_PRO
     flattened_components_length = reduce(lambda x, y: x * y, component_lengths)
     # TODO: This method could handle random sampling with or without replacement
     sample_size = min(max_sample_size, flattened_components_length)
-    item_indices_arr = np.random.choice(flattened_components_length, sample_size, replace=False)
-    combo_shaped_arr = np.arange(flattened_components_length).reshape(*component_lengths)
+    item_indices_arr = random.sample(range(sample_size), sample_size)
 
     for item_indices in item_indices_arr:
-        combo_indices = np.unravel_index(np.ravel_multi_index((item_indices,),
-                                                              (flattened_components_length,)),
-                                         combo_shaped_arr.shape)
+        combo_indices = np.unravel_index(item_indices, tuple(component_lengths))
         combo_components = [combo[component_index][item_index]
                             for component_index, item_index in enumerate(combo_indices)]
         yield tuple(combo_components)
