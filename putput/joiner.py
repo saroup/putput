@@ -1,11 +1,14 @@
 """This module provides functionality to join combos."""
 import itertools
 import random
+from functools import reduce
 from typing import Iterable
 from typing import List  # pylint: disable=unused-import
 from typing import Optional
 from typing import Sequence
 from typing import TypeVar
+
+import numpy as np
 
 T = TypeVar('T')
 
@@ -70,6 +73,7 @@ def _join_without_sampling(combo: _COMBO) -> _COMBO_PRODUCT:
 
 def _join_with_sampling(combo: _COMBO, combo_options: ComboOptions) -> _COMBO_PRODUCT:
     random.seed(combo_options.seed)
+    np.random.seed(combo_options.seed)
     if combo_options.with_replacement:
         return _join_with_replacement(combo, combo_options.max_sample_size)
     return _join_without_replacement(combo, combo_options.max_sample_size)
@@ -82,16 +86,21 @@ def _join_with_replacement(combo: _COMBO, max_sample_size: int) -> _COMBO_PRODUC
         yield tuple(component_items)
 
 def _join_without_replacement(combo: _COMBO, max_sample_size: int) -> _COMBO_PRODUCT:
-    # https://stackoverflow.com/questions/2612648/reservoir-sampling
-    joined_combo = _join_without_sampling(combo)
-    result = [] # type: List[Sequence[str]]
-    N = 0
-    for item in joined_combo:
-        N += 1
-        if len(result) < max_sample_size:
-            result.append(item)
-        else:
-            s = int(random.random() * N)
-            if s < max_sample_size:
-                result[s] = item
-    return (i for i in result)
+    # https://stackoverflow.com/questions/41841354/keeping-track-of-indices-change-in-numpy-reshape
+    # combo = ((0, 1, 2, 3), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21), (0, 1))
+    # think of this as sampling from a 1d list, mapping that 1d list back into an
+    # array of multi-dimensions, and choosing the item that corresponds to that multi dimension
+    component_lengths = [len(item) for item in combo]
+    flattened_components_length = reduce(lambda x, y: x * y, component_lengths)
+    # TODO: This method could handle random sampling with or without replacement
+    sample_size = min(max_sample_size, flattened_components_length)
+    item_indices_arr = np.random.choice(flattened_components_length, sample_size, replace=False)
+    combo_shaped_arr = np.arange(flattened_components_length).reshape(*component_lengths)
+
+    for item_indices in item_indices_arr:
+        combo_indices = np.unravel_index(np.ravel_multi_index((item_indices,),
+                                                              (flattened_components_length,)),
+                                         combo_shaped_arr.shape)
+        combo_components = [combo[component_index][item_index]
+                            for component_index, item_index in enumerate(combo_indices)]
+        yield tuple(combo_components)
