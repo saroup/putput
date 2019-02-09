@@ -20,13 +20,9 @@ class ComboOptions:
 
     Attributes:
         max_sample_size: Ceiling for number of components to sample.
-        with_replacement: Option to include duplicates when randomly sampling. If False, sample <=
-            max_sample_size components using reservior sampling over the product of each component of the
-            joined combo. If True, sample exactly max_sample_size components from the product, allowing
-            duplicates. Note: reservior sampling requires iterating through the entire joined combo,
-            so it should not be used if the joined combo could be very large. In contrast,
-            sampling with replacement does not require iterating through the joined combo,
-            so it should be used if the joined combo could be very large.
+        with_replacement: Option to include duplicates when randomly sampling. If True,
+            will sample max_sample_size. If False, will sample
+            min(max_sample_size, number of unique samples).
         seed: initializer for random generator.
     Raises:
         ValueError: If max_sample_size <= 0.
@@ -66,7 +62,9 @@ def join_combo(combo: _COMBO, *, combo_options: Optional[ComboOptions] = None) -
     Yields:
         A joined combo.
     """
-    return _join_with_sampling(combo, combo_options) if combo_options else _join_without_sampling(combo)
+    if combo_options:
+        return _join_with_sampling(combo, combo_options)
+    return _join_without_sampling(combo)
 
 def _join_without_sampling(combo: _COMBO) -> _COMBO_PRODUCT:
     return itertools.product(*combo)
@@ -74,30 +72,18 @@ def _join_without_sampling(combo: _COMBO) -> _COMBO_PRODUCT:
 def _join_with_sampling(combo: _COMBO, combo_options: ComboOptions) -> _COMBO_PRODUCT:
     random.seed(combo_options.seed)
     np.random.seed(combo_options.seed)
+
+    component_lengths = tuple(len(item) for item in combo)
+    num_possible_unique_samples = reduce(lambda x, y: x * y, component_lengths)
     if combo_options.with_replacement:
-        return _join_with_replacement(combo, combo_options.max_sample_size)
-    return _join_without_replacement(combo, combo_options.max_sample_size)
+        flat_item_indices = tuple(random.randint(0, num_possible_unique_samples - 1)
+                                  for _ in range(combo_options.max_sample_size))
+    else:
+        sample_size = min(combo_options.max_sample_size, num_possible_unique_samples)
+        flat_item_indices = tuple(random.sample(range(num_possible_unique_samples), sample_size))
 
-def _join_with_replacement(combo: _COMBO, max_sample_size: int) -> _COMBO_PRODUCT:
-    for _ in range(max_sample_size):
-        component_items = []
-        for component in combo:
-            component_items.append(random.choice(tuple(component)))
-        yield tuple(component_items)
-
-def _join_without_replacement(combo: _COMBO, max_sample_size: int) -> _COMBO_PRODUCT:
-    # https://stackoverflow.com/questions/41841354/keeping-track-of-indices-change-in-numpy-reshape
-    # combo = ((0, 1, 2, 3), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21), (0, 1))
-    # think of this as sampling from a 1d list, mapping that 1d list back into an
-    # array of multi-dimensions, and choosing the item that corresponds to that multi dimension
-    component_lengths = [len(item) for item in combo]
-    flattened_components_length = reduce(lambda x, y: x * y, component_lengths)
-    # TODO: This method could handle random sampling with or without replacement
-    sample_size = min(max_sample_size, flattened_components_length)
-    item_indices_arr = random.sample(range(flattened_components_length), sample_size)
-
-    for item_indices in item_indices_arr:
-        combo_indices = np.unravel_index(item_indices, tuple(component_lengths))
-        combo_components = [combo[component_index][item_index]
-                            for component_index, item_index in enumerate(combo_indices)]
-        yield tuple(combo_components)
+    for flat_item_index in flat_item_indices:
+        component_indices = np.unravel_index(flat_item_index, component_lengths)
+        combo_components = tuple(combo[component_index][item_index]
+                                 for component_index, item_index in enumerate(component_indices))
+        yield combo_components
