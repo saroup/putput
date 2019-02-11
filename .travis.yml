@@ -13,7 +13,9 @@ env:
 install:
   - docker build --target=build --build-arg PYTHON_VERSION="${DOCKER_PYTHON_VERSION}" -t "putput-py${DOCKER_PYTHON_VERSION}" .
 script:
-  - docker run $ci_env "putput-py${DOCKER_PYTHON_VERSION}" .
+    # Overwrite variable for codecov
+  - export TRAVIS_PYTHON_VERSION=${DOCKER_PYTHON_VERSION}
+  - docker run $ci_env "putput-py${DOCKER_PYTHON_VERSION}"
 deploy:
   skip_existing: true
   provider: pypi
