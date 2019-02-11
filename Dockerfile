@@ -2,9 +2,8 @@ ARG PYTHON_VERSION=3.7
 
 FROM python:${PYTHON_VERSION} AS build
 COPY requirements*.txt /app/
-RUN pip install --no-cache-dir -r /app/requirements.txt \
- && pip install --no-cache-dir -r /app/requirements-dev.txt \
- && pip install --no-cache-dir -r /app/requirements-dev-ml.txt
+COPY samples/**/requirements*.txt /app/
+RUN for reqs in /app/requirements*.txt; do pip install --no-cache-dir -r $reqs; done
 COPY . /app
 WORKDIR /app
 RUN python setup.py mypy pylint \
