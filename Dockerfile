@@ -14,6 +14,7 @@ RUN python setup.py mypy pylint \
  && export CI=True \
  && set -e \
  && for sample in samples/**/*.py; do python $sample; done
+CMD ["/bin/bash", "-c", "bash <(curl -s https://codecov.io/bash)"]
 
 FROM python:${PYTHON_VERSION}-slim AS samples
 COPY --from=build /app/samples /samples
