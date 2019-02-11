@@ -496,12 +496,12 @@ class TestPipeline(unittest.TestCase):
                            combo_options_map=combo_options_map)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
         expected_utterances = ('she will want to listen the beatles', 'she will want to listen the beatles',
-                               'she will want to listen the beatles', 'he will want to play the beatles',
-                               'he will want to play the beatles')
-        expected_tokens_list = ('[START(he will want)] [PLAY(to play)] [ARTIST(the beatles)]',
+                               'he will want to play the beatles', 'she will want to play the beatles',
+                               'she will want to listen the beatles')
+        expected_tokens_list = ('[START(she will want)] [PLAY(to listen)] [ARTIST(the beatles)]',
+                                '[START(she will want)] [PLAY(to listen)] [ARTIST(the beatles)]',
                                 '[START(he will want)] [PLAY(to play)] [ARTIST(the beatles)]',
-                                '[START(she will want)] [PLAY(to listen)] [ARTIST(the beatles)]',
-                                '[START(she will want)] [PLAY(to listen)] [ARTIST(the beatles)]',
+                                '[START(she will want)] [PLAY(to play)] [ARTIST(the beatles)]',
                                 '[START(she will want)] [PLAY(to listen)] [ARTIST(the beatles)]')
         expected_groups = _generate_no_groups(expected_tokens_list)
 
@@ -525,13 +525,15 @@ class TestPipeline(unittest.TestCase):
                            dynamic_token_patterns_map=dynamic_token_patterns_map,
                            combo_options_map=combo_options_map)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
-        expected_utterances = ('she will want to listen the beatles', 'she will want to listen the beatles',
-                               'she will want to listen the beatles', 'he will want to play the beatles',
-                               'he will want to play the beatles')
-        expected_tokens_list = ('[START(he will want)] [PLAY(to play)] [ARTIST(the beatles)]',
+        expected_utterances = ('she will want to listen the beatles',
+                               'she will want to listen the beatles',
+                               'he will want to play the beatles',
+                               'she will want to play the beatles',
+                               'she will want to listen the beatles')
+        expected_tokens_list = ('[START(she will want)] [PLAY(to listen)] [ARTIST(the beatles)]',
+                                '[START(she will want)] [PLAY(to listen)] [ARTIST(the beatles)]',
                                 '[START(he will want)] [PLAY(to play)] [ARTIST(the beatles)]',
-                                '[START(she will want)] [PLAY(to listen)] [ARTIST(the beatles)]',
-                                '[START(she will want)] [PLAY(to listen)] [ARTIST(the beatles)]',
+                                '[START(she will want)] [PLAY(to play)] [ARTIST(the beatles)]',
                                 '[START(she will want)] [PLAY(to listen)] [ARTIST(the beatles)]')
         expected_groups = _generate_no_groups(expected_tokens_list)
 
@@ -555,12 +557,12 @@ class TestPipeline(unittest.TestCase):
                            dynamic_token_patterns_map=dynamic_token_patterns_map,
                            combo_options_map=combo_options_map)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
-        expected_utterances = ('she will want to listen the beatles', 'she will want to listen kanye',
-                               'she will want to listen kanye', 'kanye')
-        expected_tokens_list = ('[ARTIST(kanye)]',
+        expected_utterances = ('she will want to listen the beatles', 'she will want to listen the beatles',
+                               'he will want to play the beatles', 'kanye')
+        expected_tokens_list = ('[START(she will want)] [PLAY(to listen)] [ARTIST(the beatles)]',
                                 '[START(she will want)] [PLAY(to listen)] [ARTIST(the beatles)]',
-                                '[START(she will want)] [PLAY(to listen)] [ARTIST(kanye)]',
-                                '[START(she will want)] [PLAY(to listen)] [ARTIST(kanye)]')
+                                '[START(he will want)] [PLAY(to play)] [ARTIST(the beatles)]',
+                                '[ARTIST(kanye)]')
         expected_groups = _generate_no_groups(expected_tokens_list)
 
         pairs = [(actual_utterances, expected_utterances),

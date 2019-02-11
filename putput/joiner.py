@@ -1,11 +1,14 @@
 """This module provides functionality to join combos."""
 import itertools
 import random
+from functools import reduce
 from typing import Iterable
 from typing import List  # pylint: disable=unused-import
 from typing import Optional
 from typing import Sequence
 from typing import TypeVar
+
+import numpy as np
 
 T = TypeVar('T')
 
@@ -17,13 +20,9 @@ class ComboOptions:
 
     Attributes:
         max_sample_size: Ceiling for number of components to sample.
-        with_replacement: Option to include duplicates when randomly sampling. If False, sample <=
-            max_sample_size components using reservior sampling over the product of each component of the
-            joined combo. If True, sample exactly max_sample_size components from the product, allowing
-            duplicates. Note: reservior sampling requires iterating through the entire joined combo,
-            so it should not be used if the joined combo could be very large. In contrast,
-            sampling with replacement does not require iterating through the joined combo,
-            so it should be used if the joined combo could be very large.
+        with_replacement: Option to include duplicates when randomly sampling. If True,
+            will sample max_sample_size. If False, will sample
+            min(max_sample_size, number of unique samples).
         seed: initializer for random generator.
     Raises:
         ValueError: If max_sample_size <= 0.
@@ -63,35 +62,28 @@ def join_combo(combo: _COMBO, *, combo_options: Optional[ComboOptions] = None) -
     Yields:
         A joined combo.
     """
-    return _join_with_sampling(combo, combo_options) if combo_options else _join_without_sampling(combo)
+    if combo_options:
+        return _join_with_sampling(combo, combo_options)
+    return _join_without_sampling(combo)
 
 def _join_without_sampling(combo: _COMBO) -> _COMBO_PRODUCT:
     return itertools.product(*combo)
 
 def _join_with_sampling(combo: _COMBO, combo_options: ComboOptions) -> _COMBO_PRODUCT:
     random.seed(combo_options.seed)
+    np.random.seed(combo_options.seed)
+
+    component_lengths = tuple(len(item) for item in combo)
+    num_possible_unique_samples = reduce(lambda x, y: x * y, component_lengths)
     if combo_options.with_replacement:
-        return _join_with_replacement(combo, combo_options.max_sample_size)
-    return _join_without_replacement(combo, combo_options.max_sample_size)
+        flat_item_indices = tuple(random.randint(0, num_possible_unique_samples - 1)
+                                  for _ in range(combo_options.max_sample_size))
+    else:
+        sample_size = min(combo_options.max_sample_size, num_possible_unique_samples)
+        flat_item_indices = tuple(random.sample(range(num_possible_unique_samples), sample_size))
 
-def _join_with_replacement(combo: _COMBO, max_sample_size: int) -> _COMBO_PRODUCT:
-    for _ in range(max_sample_size):
-        component_items = []
-        for component in combo:
-            component_items.append(random.choice(tuple(component)))
-        yield tuple(component_items)
-
-def _join_without_replacement(combo: _COMBO, max_sample_size: int) -> _COMBO_PRODUCT:
-    # https://stackoverflow.com/questions/2612648/reservoir-sampling
-    joined_combo = _join_without_sampling(combo)
-    result = [] # type: List[Sequence[str]]
-    N = 0
-    for item in joined_combo:
-        N += 1
-        if len(result) < max_sample_size:
-            result.append(item)
-        else:
-            s = int(random.random() * N)
-            if s < max_sample_size:
-                result[s] = item
-    return (i for i in result)
+    for flat_item_index in flat_item_indices:
+        component_indices = np.unravel_index(flat_item_index, component_lengths)
+        combo_components = tuple(combo[component_index][item_index]
+                                 for component_index, item_index in enumerate(component_indices))
+        yield combo_components

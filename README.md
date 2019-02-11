@@ -11,7 +11,7 @@
 * generate utterances and tokens to test tokenizers for specific patterns.
 
 # Installation
-```putput``` currently supports python >= 3.4. To install the production release, execute ```pip install putput```.
+```putput``` currently supports python >= 3.5. To install the production release, execute ```pip install putput```.
 
 # Example
 Here is a sample **pattern definition**:

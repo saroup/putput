@@ -171,7 +171,7 @@ class TestGenerateUtterancesHandledTokens(unittest.TestCase):
         pairs = [(actual_utterances, expected_utterances), (actual_handled_tokens, expected_handled_tokens)]
         compare_all_pairs(self, pairs)
 
-    def test_combo_options_with_replacement(self) -> None:
+    def test_combo_options_without_replacement(self) -> None:
         utterance_combo = (('he will want', 'she will want'), ('to play', 'to listen'))
         tokens = ('START', 'PLAY')
         combo_options = ComboOptions(max_sample_size=6, with_replacement=False, seed=0)
@@ -188,7 +188,7 @@ class TestGenerateUtterancesHandledTokens(unittest.TestCase):
         pairs = [(actual_utterances, expected_utterances), (actual_handled_tokens, expected_handled_tokens)]
         compare_all_pairs(self, pairs)
 
-    def test_combo_options_without_replacement(self) -> None:
+    def test_combo_options_with_replacement(self) -> None:
         utterance_combo = (('he will want', 'she will want'), ('to play', 'to listen'))
         tokens = ('START', 'PLAY')
         combo_options = ComboOptions(max_sample_size=6, with_replacement=True, seed=0)
@@ -196,15 +196,15 @@ class TestGenerateUtterancesHandledTokens(unittest.TestCase):
                                                            tokens,
                                                            combo_options=combo_options)
         actual_utterances, actual_handled_tokens = zip(*generator)
-        expected_utterances = ('she will want to listen', 'he will want to listen',
-                               'she will want to listen', 'she will want to listen',
-                               'she will want to play', 'he will want to listen')
-        expected_handled_tokens = (('[START(he will want)]', '[PLAY(to listen)]',),
-                                   ('[START(he will want)]', '[PLAY(to listen)]',),
-                                   ('[START(she will want)]', '[PLAY(to play)]',),
-                                   ('[START(she will want)]', '[PLAY(to listen)]',),
-                                   ('[START(she will want)]', '[PLAY(to listen)]',),
-                                   ('[START(she will want)]', '[PLAY(to listen)]',))
+        expected_utterances = ('she will want to listen', 'she will want to listen',
+                               'he will want to play', 'she will want to play',
+                               'she will want to listen', 'she will want to listen')
+        expected_handled_tokens = (('[START(she will want)]', '[PLAY(to listen)]'),
+                                   ('[START(she will want)]', '[PLAY(to listen)]'),
+                                   ('[START(he will want)]', '[PLAY(to play)]'),
+                                   ('[START(she will want)]', '[PLAY(to play)]'),
+                                   ('[START(she will want)]', '[PLAY(to listen)]'),
+                                   ('[START(she will want)]', '[PLAY(to listen)]'))
         pairs = [(actual_utterances, expected_utterances), (actual_handled_tokens, expected_handled_tokens)]
         compare_all_pairs(self, pairs)
 
