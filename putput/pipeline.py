@@ -15,6 +15,7 @@ from typing import no_type_check
 from putput.generator import generate_utterance_combo_tokens_and_groups
 from putput.generator import generate_utterances_and_handled_tokens
 from putput.joiner import ComboOptions
+from putput.presets.factory import get_init_preset
 from putput.types import COMBO
 from putput.types import GROUP
 from putput.types import TOKEN_HANDLER_MAP
@@ -60,9 +61,13 @@ class Pipeline:
              dynamic_token_patterns_map: Optional[TOKEN_PATTERNS_MAP] = None,
              token_handler_map: Optional[TOKEN_HANDLER_MAP] = None,
              group_handler_map: Optional[_GROUP_HANDLER_MAP] = None,
-             combo_options_map: Optional[_COMBO_OPTIONS_MAP] = None
+             combo_options_map: Optional[_COMBO_OPTIONS_MAP] = None,
+             preset: Optional[str] = None
              ) -> Iterable[Tuple[str, str, str]]:
         # pylint: disable=too-many-arguments, too-many-locals
+        if preset:
+            init_preset = get_init_preset(preset)
+            token_handler_map, group_handler_map = init_preset(token_handler_map, group_handler_map)
         before_gen = generate_utterance_combo_tokens_and_groups(pattern_def_path,
                                                                 dynamic_token_patterns_map=dynamic_token_patterns_map)
         for utterance_combo, tokens, groups in before_gen:

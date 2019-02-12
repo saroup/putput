@@ -66,15 +66,15 @@ def main() -> None:
 
 
     token_handler_map = {
-        'DEFAULT': _bio_token_handler
+        'DEFAULT': _iob_token_handler
     }
 
     group_handler_map = {
-        'DEFAULT': _bio_group_handler
+        'DEFAULT': _iob_group_handler
     }
 
-    # BIO format
-    print('*' * 50 + 'BIO' + '*' * 50)
+    # IOB format
+    print('*' * 50 + 'IOB' + '*' * 50)
     p = Pipeline()
     for utterance, tokens, groups in p.flow(pattern_def_path,
                                             dynamic_token_patterns_map=dynamic_token_patterns_map,
@@ -84,7 +84,20 @@ def main() -> None:
         print('utterance:', utterance)
         print('tokens:', tokens)
         print('groups:', groups)
-    print('*' * 50 + 'BIO' + '*' * 50)
+    print('*' * 50 + 'IOB' + '*' * 50)
+    print('\n' * 2)
+
+    # IOB preset format
+    print('*' * 50 + 'IOB (using preset)' + '*' * 50)
+    p = Pipeline()
+    for utterance, tokens, groups in p.flow(pattern_def_path,
+                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
+                                            combo_options_map=combo_options_map,
+                                            preset='IOB'):
+        print('utterance:', utterance)
+        print('tokens:', tokens)
+        print('groups:', groups)
+    print('*' * 50 + 'IOB (using preset)' + '*' * 50)
 
 def _add_random_words_to_utterance(utterance: str,
                                    handled_tokens: Sequence[str],
@@ -98,12 +111,12 @@ def _add_random_words_to_utterance(utterance: str,
     utterance = ' '.join(utterances)
     return utterance, handled_tokens, handled_groups
 
-def _bio_token_handler(token: str, phrase: str) -> str:
+def _iob_token_handler(token: str, phrase: str) -> str:
     tokens = ['{}-{}'.format('B' if i == 0 else 'I', token)
               for i, _ in enumerate(phrase.replace(" '", "'").split())]
     return ' '.join(tokens)
 
-def _bio_group_handler(group_name: str, handled_tokens: Sequence[str]) -> str:
+def _iob_group_handler(group_name: str, handled_tokens: Sequence[str]) -> str:
     num_tokens = 0
     for tokenized_phrase in handled_tokens:
         num_tokens += len(tokenized_phrase.split())
