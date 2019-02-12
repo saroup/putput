@@ -8,15 +8,11 @@ env:
   - DOCKER_PYTHON_VERSION=3.6
   - DOCKER_PYTHON_VERSION=3.7
 install:
-  - docker build --build-arg PYTHON_VERSION="${DOCKER_PYTHON_VERSION}" -t "putput-py${DOCKER_PYTHON_VERSION}" .
+  - docker build --target=build --build-arg PYTHON_VERSION="${DOCKER_PYTHON_VERSION}" -t "putput-py${DOCKER_PYTHON_VERSION}" .
+  - docker build --build-arg PYTHON_VERSION="${DOCKER_PYTHON_VERSION}" .
 script:
-  - docker run --name "coverage-py${DOCKER_PYTHON_VERSION}" "putput-py${DOCKER_PYTHON_VERSION}"
-after_success:
-  # Overwrite variable for codecov
-  - export TRAVIS_PYTHON_VERSION=${DOCKER_PYTHON_VERSION}
-  - docker cp "coverage-py${DOCKER_PYTHON_VERSION}":/.coverage ${TRAVIS_BUILD_DIR}
-  - sed -i "s|/app|${TRAVIS_BUILD_DIR}|g" .coverage
-  - pip install codecov && codecov
+  - export CODE_COV=`bash <(curl -s https://codecov.io/env)`
+  - docker run $CODE_COV "putput-py${DOCKER_PYTHON_VERSION}"
 deploy:
   skip_existing: true
   provider: pypi

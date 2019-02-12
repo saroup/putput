@@ -38,5 +38,12 @@ def func(arg_1: str,
         * One exception: for return types, of multiple items such as ```Tuple[Sequence[str], Sequence[str]]``` do not make a new type. Instead, only make new types for nested elements. For instance ```Tuple[Sequence[Sequence[str]], Sequence[str]]``` should become ```Tuple[NEW_TYPE, Sequence[str]]``` where ```NEW_TYPE = Sequence[Sequence[str]]```.
     * Define singular types, not plural types. For instance, instead of defining ```NEW_TYPES = Sequence[Sequence[Sequence[str]]]```, define ```NEW_TYPE = Sequence[Sequence[str]]``` and use ```Sequence[NEW_TYPE]``` in places where ```NEW_TYPES``` is required.
 
+## Samples
+* Place each sample in its own directory under ```samples```.
+* Samples that only use ```putput``` should reside in ```samples/my_sample/__main__.py```.
+* If a sample uses ```putput``` as part of a broader use case such as training/testing a model, create a jupyter notebook within the ```my_sample``` directory.
+* If a sample relies on external dependencies unrelated to putput (e.g. tensorflow), place them in a file named ```requirements-my_sample-dev.txt```.
+* All samples, including jupyter notebooks, will run as part of the CI pipeline. The process that runs them will set an environment variable ```CI```. If a sample take a long time to run on CPU, use this environment variable to speed up the build. For instance, if a jupyter notebook includes a deep learning model, use the ```CI``` environment variable to make sure the model is trained on a small subset of data and only for a few epochs.
+
 ## Documentation
 * Public facing APIs must have docstrings. Wherever possible, docstrings require doctests with a working example. Doctests will run with the CI.
