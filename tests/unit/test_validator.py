@@ -91,17 +91,50 @@ class TestValidator(unittest.TestCase):
         pattern_def_file_name = 'static_and_base_tokens_overlap.yml'
         self._raise_exception(pattern_def_file_name, PatternDefinitionValidationError)
 
-    def test_base_group_not_defined(self) -> None:
-        input_file_name = 'base_group_not_defined.yml'
+    def test_group_not_defined(self) -> None:
+        input_file_name = 'group_not_defined.yml'
         self._raise_exception(input_file_name, PatternDefinitionValidationError)
 
-    def test_base_group_as_list(self) -> None:
-        input_file_name = 'base_group_as_list.yml'
+    def test_group_as_list(self) -> None:
+        input_file_name = 'group_as_list.yml'
         self._raise_exception(input_file_name, PatternDefinitionValidationError)
 
-    def test_base_groups_and_base_tokens_overlap(self) -> None:
-        input_file_name = 'base_groups_and_base_tokens_overlap.yml'
+    def test_groups_and_base_tokens_overlap(self) -> None:
+        input_file_name = 'groups_and_base_tokens_overlap.yml'
         self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_just_range(self) -> None:
+        input_file_name = 'just_range.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_no_range_symbol(self) -> None:
+        input_file_name = 'no_range_symbol.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_range_max_less_than_min(self) -> None:
+        input_file_name = 'range_max_less_than_min.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_too_many_range_numbers(self) -> None:
+        input_file_name = 'too_many_range_numbers.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_too_many_ranges(self) -> None:
+        input_file_name = 'too_many_ranges.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_reserved_name_in_base_tokens(self) -> None:
+        input_file_name = 'reserved_name_in_base_tokens.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_reserved_name_in_token_patterns(self) -> None:
+        input_file_name = 'reserved_name_in_token_patterns.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_reserved_name_in_groups(self) -> None:
+        input_file_name = 'reserved_name_in_groups.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
 
 if __name__ == '__main__':
     unittest.main()

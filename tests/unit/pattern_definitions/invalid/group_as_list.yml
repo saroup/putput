@@ -1,0 +1,15 @@
+
+token_patterns:
+  - static:
+    - START:
+      - [['i'], [will], [want]]
+    - PLAY:
+      - [[to], [play, listen]]
+  - dynamic:
+    - ARTIST
+groups:
+  - PLAY_SONG: 
+    - [PLAY, SONG]
+  - PLAY_ARTIST: [PLAY, ARTIST]
+utterance_patterns:
+  - [ARTIST]

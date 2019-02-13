@@ -1,0 +1,12 @@
+token_patterns:
+  - static:
+    - START:
+      - [[she wants]]
+    - PLAY:
+      - [[to play]]
+  - dynamic:
+    - ARTIST
+groups:
+  - PLAY_ARTISTS: [PLAY, ARTIST, 1-3]
+utterance_patterns:
+  - [START, PLAY_ARTISTS]

@@ -168,11 +168,11 @@ class TestPipeline(unittest.TestCase):
                                 '[START(he will want)] [PLAY(to listen)] [ARTIST(the beatles)]',
                                 '[START(she will want)] [PLAY(to listen)] [ARTIST(the beatles)]',
                                 '[artist(the beatles)]')
-        groups = ('{NO_GROUP([START(he will want)])} {NO_GROUP([PLAY(to play)])} {NO_GROUP([ARTIST(the beatles)])}',
-                  '{NO_GROUP([START(she will want)])} {NO_GROUP([PLAY(to play)])} {NO_GROUP([ARTIST(the beatles)])}',
-                  '{NO_GROUP([START(he will want)])} {NO_GROUP([PLAY(to listen)])} {NO_GROUP([ARTIST(the beatles)])}',
-                  '{NO_GROUP([START(she will want)])} {NO_GROUP([PLAY(to listen)])} {NO_GROUP([ARTIST(the beatles)])}',
-                  '{NO_GROUP([ARTIST(the beatles)])}')
+        groups = ('{None([START(he will want)])} {None([PLAY(to play)])} {None([ARTIST(the beatles)])}',
+                  '{None([START(she will want)])} {None([PLAY(to play)])} {None([ARTIST(the beatles)])}',
+                  '{None([START(he will want)])} {None([PLAY(to listen)])} {None([ARTIST(the beatles)])}',
+                  '{None([START(she will want)])} {None([PLAY(to listen)])} {None([ARTIST(the beatles)])}',
+                  '{None([ARTIST(the beatles)])}')
 
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
@@ -260,7 +260,7 @@ class TestPipeline(unittest.TestCase):
         }
 
         after_joining_hooks_map = {
-            ('NO_GROUP', 'PLAY_PHRASE') : (_add_commas_to_groups,),
+            ('None', 'PLAY_PHRASE') : (_add_commas_to_groups,),
         }
 
         p = Pipeline(after_joining_hooks_map=after_joining_hooks_map)
@@ -273,11 +273,11 @@ class TestPipeline(unittest.TestCase):
                                 '[WAKE(hi)] [START(she will want)] [PLAY(to play)]',
                                 '[WAKE(hi)] [START(she will want)] [PLAY(to listen)]',
                                 '[WAKE(hi)]')
-        groups = ('{NO_GROUP([WAKE(hi)])}, {PLAY_PHRASE([START(he will want)] [PLAY(to play)])},',
-                  '{NO_GROUP([WAKE(hi)])}, {PLAY_PHRASE([START(he will want)] [PLAY(to listen)])},',
-                  '{NO_GROUP([WAKE(hi)])}, {PLAY_PHRASE([START(she will want)] [PLAY(to play)])},',
-                  '{NO_GROUP([WAKE(hi)])}, {PLAY_PHRASE([START(she will want)] [PLAY(to listen)])},',
-                  '{NO_GROUP([WAKE(hi)])}')
+        groups = ('{None([WAKE(hi)])}, {PLAY_PHRASE([START(he will want)] [PLAY(to play)])},',
+                  '{None([WAKE(hi)])}, {PLAY_PHRASE([START(he will want)] [PLAY(to listen)])},',
+                  '{None([WAKE(hi)])}, {PLAY_PHRASE([START(she will want)] [PLAY(to play)])},',
+                  '{None([WAKE(hi)])}, {PLAY_PHRASE([START(she will want)] [PLAY(to listen)])},',
+                  '{None([WAKE(hi)])}')
 
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
@@ -304,11 +304,11 @@ class TestPipeline(unittest.TestCase):
                                 '[WAKE(hi)] [START(she will want)] [PLAY(to play)]',
                                 '[WAKE(hi)] [START(she will want)] [PLAY(to listen)]',
                                 '[WAKE(hi)]')
-        groups = ('{no_group([wake(hi)])} {play_phrase([start(he will want)] [play(to play)])}',
-                  '{no_group([wake(hi)])} {play_phrase([start(he will want)] [play(to listen)])}',
-                  '{no_group([wake(hi)])} {play_phrase([start(she will want)] [play(to play)])}',
-                  '{no_group([wake(hi)])} {play_phrase([start(she will want)] [play(to listen)])}',
-                  '{no_group([wake(hi)])}')
+        groups = ('{none([wake(hi)])} {play_phrase([start(he will want)] [play(to play)])}',
+                  '{none([wake(hi)])} {play_phrase([start(he will want)] [play(to listen)])}',
+                  '{none([wake(hi)])} {play_phrase([start(she will want)] [play(to play)])}',
+                  '{none([wake(hi)])} {play_phrase([start(she will want)] [play(to listen)])}',
+                  '{none([wake(hi)])}')
 
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
@@ -322,7 +322,7 @@ class TestPipeline(unittest.TestCase):
         }
 
         after_joining_hooks_map = {
-            ('NO_GROUP', 'PLAY_PHRASE') : (_add_commas_to_groups,),
+            ('None', 'PLAY_PHRASE') : (_add_commas_to_groups,),
             'GROUP_DEFAULT' : (_lowercase_handled_groups,)
         }
 
@@ -336,11 +336,11 @@ class TestPipeline(unittest.TestCase):
                                 '[WAKE(hi)] [START(she will want)] [PLAY(to play)]',
                                 '[WAKE(hi)] [START(she will want)] [PLAY(to listen)]',
                                 '[WAKE(hi)]')
-        groups = ('{NO_GROUP([WAKE(hi)])}, {PLAY_PHRASE([START(he will want)] [PLAY(to play)])},',
-                  '{NO_GROUP([WAKE(hi)])}, {PLAY_PHRASE([START(he will want)] [PLAY(to listen)])},',
-                  '{NO_GROUP([WAKE(hi)])}, {PLAY_PHRASE([START(she will want)] [PLAY(to play)])},',
-                  '{NO_GROUP([WAKE(hi)])}, {PLAY_PHRASE([START(she will want)] [PLAY(to listen)])},',
-                  '{no_group([wake(hi)])}')
+        groups = ('{None([WAKE(hi)])}, {PLAY_PHRASE([START(he will want)] [PLAY(to play)])},',
+                  '{None([WAKE(hi)])}, {PLAY_PHRASE([START(he will want)] [PLAY(to listen)])},',
+                  '{None([WAKE(hi)])}, {PLAY_PHRASE([START(she will want)] [PLAY(to play)])},',
+                  '{None([WAKE(hi)])}, {PLAY_PHRASE([START(she will want)] [PLAY(to listen)])},',
+                  '{none([wake(hi)])}')
 
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
@@ -365,10 +365,10 @@ class TestPipeline(unittest.TestCase):
                                 '[WAKE(hi)] [START(he will want)] [PLAY(to listen)]',
                                 '[WAKE(hi)] [START(she will want)] [PLAY(to play)]',
                                 '[WAKE(hi)] [START(she will want)] [PLAY(to listen)]')
-        expected_groups = ('{NO_GROUP([WAKE(hi)])} {([START(he will want)] [PLAY(to play)])}',
-                           '{NO_GROUP([WAKE(hi)])} {([START(he will want)] [PLAY(to listen)])}',
-                           '{NO_GROUP([WAKE(hi)])} {([START(she will want)] [PLAY(to play)])}',
-                           '{NO_GROUP([WAKE(hi)])} {([START(she will want)] [PLAY(to listen)])}')
+        expected_groups = ('{None([WAKE(hi)])} {([START(he will want)] [PLAY(to play)])}',
+                           '{None([WAKE(hi)])} {([START(he will want)] [PLAY(to listen)])}',
+                           '{None([WAKE(hi)])} {([START(she will want)] [PLAY(to play)])}',
+                           '{None([WAKE(hi)])} {([START(she will want)] [PLAY(to listen)])}')
 
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
@@ -393,8 +393,8 @@ class TestPipeline(unittest.TestCase):
                                 '[WAKE(hi)] [START(he will want)] [PLAY(to listen)]',
                                 '[WAKE(hi)] [START(she will want)] [PLAY(to play)]',
                                 '[WAKE(hi)] [START(she will want)] [PLAY(to listen)]')
-        expected_groups = ('[NO_GROUP] [PLAY_PHRASE]', '[NO_GROUP] [PLAY_PHRASE]',
-                           '[NO_GROUP] [PLAY_PHRASE]', '[NO_GROUP] [PLAY_PHRASE]')
+        expected_groups = ('[None] [PLAY_PHRASE]', '[None] [PLAY_PHRASE]',
+                           '[None] [PLAY_PHRASE]', '[None] [PLAY_PHRASE]')
 
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
@@ -407,7 +407,7 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles',),),)
         }
         group_handler_map = {
-            'NO_GROUP': _remove_group,
+            'None': _remove_group,
             'DEFAULT': _just_groups,
         }
         p = Pipeline(group_handler_map=group_handler_map)
@@ -559,11 +559,11 @@ class TestPipeline(unittest.TestCase):
                                 'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
                                 'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
                                 'B-WAKE')
-        expected_groups = ('B-NO_GROUP B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-NO_GROUP B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-NO_GROUP B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-NO_GROUP B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-NO_GROUP')
+        expected_groups = ('B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None')
 
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
@@ -579,11 +579,11 @@ class TestPipeline(unittest.TestCase):
                                'hi she will want to play', 'hi she will want to listen', 'hi')
         expected_tokens_list = ('B-WAKE O O O O O', 'B-WAKE O O O O O',
                                 'B-WAKE O O O O O', 'B-WAKE O O O O O', 'B-WAKE')
-        expected_groups = ('B-NO_GROUP B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-NO_GROUP B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-NO_GROUP B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-NO_GROUP B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-NO_GROUP')
+        expected_groups = ('B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None')
 
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
@@ -602,11 +602,11 @@ class TestPipeline(unittest.TestCase):
                                 'O B-START I-START I-START B-PLAY I-PLAY',
                                 'O B-START I-START I-START B-PLAY I-PLAY',
                                 'O')
-        expected_groups = ('B-NO_GROUP B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-NO_GROUP B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-NO_GROUP B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-NO_GROUP B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-NO_GROUP')
+        expected_groups = ('B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None')
 
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
@@ -660,11 +660,11 @@ class TestPipeline(unittest.TestCase):
                                 'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
                                 'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
                                 'B-WAKE')
-        expected_groups = ('B-NO_GROUP O O O O O',
-                           'B-NO_GROUP O O O O O',
-                           'B-NO_GROUP O O O O O',
-                           'B-NO_GROUP O O O O O',
-                           'B-NO_GROUP')
+        expected_groups = ('B-None O O O O O',
+                           'B-None O O O O O',
+                           'B-None O O O O O',
+                           'B-None O O O O O',
+                           'B-None')
 
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
@@ -679,7 +679,7 @@ def _generate_no_groups(expected_tokens_list: Sequence[str]) -> Sequence[str]:
         for index, handled_token in enumerate(expected_tokens.split(' [')):
             if index != 0:
                 handled_token = '[' + handled_token
-            expected_group.append(default_group_handler('NO_GROUP', handled_token))
+            expected_group.append(default_group_handler('None', handled_token))
         expected_groups.append(' '.join(expected_group))
     return tuple(expected_groups)
 

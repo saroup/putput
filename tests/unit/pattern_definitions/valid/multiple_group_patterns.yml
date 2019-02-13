@@ -8,7 +8,7 @@ token_patterns:
       - [[to], [play, listen]]
     - WAKE:
       - [[hi]]
-base_groups:
+groups:
   - PLAY_PHRASE: [START, PLAY]
 utterance_patterns:
   - [WAKE, PLAY_PHRASE]

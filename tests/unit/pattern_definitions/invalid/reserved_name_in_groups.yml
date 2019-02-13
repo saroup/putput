@@ -6,9 +6,7 @@ token_patterns:
       - [SUBJECT_PERSONAL_PRONOUN, [will], [want]]
     - PLAY:
       - [[to], [play, listen]]
-    - WAKE:
-      - [[hi]]
 groups:
-  - PLAY_PHRASE: [START, PLAY]
+  - None: [START, PLAY]
 utterance_patterns:
-  - [WAKE, PLAY_PHRASE]
+  - [START]
