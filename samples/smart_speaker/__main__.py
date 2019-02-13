@@ -5,6 +5,7 @@ from typing import Tuple
 from putput import ComboOptions
 from putput import Pipeline
 from putput.types import COMBO
+from putput.types import GROUP
 
 def main() -> None:
     pattern_def_path = Path(__file__).parent / 'patterns.yml'
@@ -30,12 +31,11 @@ def main() -> None:
 
     # default format with before joining hook
     print('*' * 50 + 'BEFORE JOINING HOOK' + '*' * 50)
-    before_flow_hooks = {
+    before_joining_hooks_map = {
         ('WAKE', 'PLAY', 'ARTIST'): (_sample_play, _sample_play)
     }
 
-    p = Pipeline()
-    p.register_hooks(before_flow_hooks, 'BEFORE_JOINING')
+    p = Pipeline(before_joining_hooks_map=before_joining_hooks_map)
     for utterance, tokens, groups in p.flow(pattern_def_path,
                                             dynamic_token_patterns_map=dynamic_token_patterns_map,
                                             combo_options_map=combo_options_map):
@@ -48,12 +48,11 @@ def main() -> None:
 
     # default format with after joining hook
     print('*' * 50 + 'AFTER JOINING HOOK' + '*' * 50)
-    after_flow_hooks = {
+    after_joining_hooks_map = {
         ('WAKE', 'PLAY', 'ARTIST'): (_add_random_words_to_utterance,)
     }
 
-    p = Pipeline()
-    p.register_hooks(after_flow_hooks, 'AFTER_JOINING')
+    p = Pipeline(after_joining_hooks_map=after_joining_hooks_map)
     for utterance, tokens, groups in p.flow(pattern_def_path,
                                             dynamic_token_patterns_map=dynamic_token_patterns_map,
                                             combo_options_map=combo_options_map):
@@ -75,11 +74,9 @@ def main() -> None:
 
     # IOB format
     print('*' * 50 + 'IOB' + '*' * 50)
-    p = Pipeline()
+    p = Pipeline(token_handler_map=token_handler_map, group_handler_map=group_handler_map)
     for utterance, tokens, groups in p.flow(pattern_def_path,
                                             dynamic_token_patterns_map=dynamic_token_patterns_map,
-                                            token_handler_map=token_handler_map,
-                                            group_handler_map=group_handler_map,
                                             combo_options_map=combo_options_map):
         print('utterance:', utterance)
         print('tokens:', tokens)
@@ -89,11 +86,10 @@ def main() -> None:
 
     # IOB preset format
     print('*' * 50 + 'IOB (using preset)' + '*' * 50)
-    p = Pipeline()
+    p = Pipeline(preset='IOB')
     for utterance, tokens, groups in p.flow(pattern_def_path,
                                             dynamic_token_patterns_map=dynamic_token_patterns_map,
-                                            combo_options_map=combo_options_map,
-                                            preset='IOB'):
+                                            combo_options_map=combo_options_map):
         print('utterance:', utterance)
         print('tokens:', tokens)
         print('groups:', groups)
@@ -126,20 +122,22 @@ def _iob_group_handler(group_name: str, handled_tokens: Sequence[str]) -> str:
 
 def _sample_play(utterance_combination: COMBO,
                  tokens: Sequence[str],
-                 ) -> Tuple[COMBO, Sequence[str]]:
-    return _sample_utterance_component(utterance_combination, tokens, 'PLAY', 1)
+                 groups: Sequence[GROUP]
+                 ) -> Tuple[COMBO, Sequence[str], Sequence[GROUP]]:
+    return _sample_utterance_component(utterance_combination, tokens, groups, 'PLAY', 1)
 
 def _sample_utterance_component(utterance_combination: COMBO,
                                 tokens: Sequence[str],
+                                groups: Sequence[GROUP],
                                 token_to_sample: str,
                                 sample_size: int,
-                                ) -> Tuple[COMBO, Sequence[str]]:
+                                ) -> Tuple[COMBO, Sequence[str], Sequence[GROUP]]:
     token_index = tokens.index(token_to_sample)
     utterance_combination_list = list(utterance_combination)
     sampled_combinations = tuple(random.sample(utterance_combination_list.pop(token_index), sample_size))
     utterance_combination_list.insert(token_index, sampled_combinations)
     utterance_combination = tuple(utterance_combination_list)
-    return utterance_combination, tokens
+    return utterance_combination, tokens, groups
 
 if __name__ == '__main__':
     main()

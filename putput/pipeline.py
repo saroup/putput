@@ -9,24 +9,23 @@ from typing import Sequence
 from typing import Tuple
 from typing import TypeVar
 from typing import Union # pylint: disable=unused-import
-from typing import cast
 from typing import no_type_check
 
 from putput.generator import generate_utterance_combo_tokens_and_groups
 from putput.generator import generate_utterances_and_handled_tokens
 from putput.joiner import ComboOptions
-from putput.presets.factory import get_init_preset
+from putput.presets import iob
 from putput.types import COMBO
 from putput.types import GROUP
 from putput.types import TOKEN_HANDLER_MAP
 from putput.types import TOKEN_PATTERNS_MAP
 
 _GROUP_HANDLER = Callable[[str, Sequence[str]], str]
-_BEFORE_JOINING_HOOK_ARGS = Tuple[COMBO, Sequence[str], Sequence[GROUP]]
-_BEFORE_JOINING_HOOK = Callable[[_BEFORE_JOINING_HOOK_ARGS], _BEFORE_JOINING_HOOK_ARGS]
-_AFTER_JOINING_HOOK_ARGS = Tuple[str, Sequence[str], Sequence[str]]
-_AFTER_JOINING_HOOK = Callable[[_AFTER_JOINING_HOOK_ARGS], _AFTER_JOINING_HOOK_ARGS]
-_HOOK_ARGS = TypeVar('_HOOK_ARGS', _BEFORE_JOINING_HOOK_ARGS, _AFTER_JOINING_HOOK_ARGS)
+_BEFORE_JOINING_HOOK = Callable[[COMBO, Sequence[str], Sequence[GROUP]], Tuple[COMBO, Sequence[str], Sequence[GROUP]]]
+_AFTER_JOINING_HOOK = Callable[[str, Sequence[str], Sequence[str]], Tuple[str, Sequence[str], Sequence[str]]]
+_HOOK_ARGS = TypeVar('_HOOK_ARGS',
+                     Tuple[COMBO, Sequence[str], Sequence[GROUP]],
+                     Tuple[str, Sequence[str], Sequence[str]])
 _GROUP_HANDLER_MAP = Mapping[str, _GROUP_HANDLER]
 
 _HOOKS_MAP = Mapping[Any, Any]
@@ -40,41 +39,43 @@ _COMBO_OPTIONS_MAP = Mapping[Any, ComboOptions]
 # _COMBO_OPTIONS_MAP = Mapping[Union[str, Tuple[str, ...]], ComboOptions]
 
 class Pipeline:
-    def __init__(self) -> None:
-        self._before_joining_hooks_map = {} # type: Dict[Union[str, Tuple[str, ...]], Sequence[_BEFORE_JOINING_HOOK]]
-        self._after_joining_hooks_map = {} # type: Dict[Union[str, Tuple[str, ...]], Sequence[_AFTER_JOINING_HOOK]]
-
-    def register_hooks(self, hooks_map: _HOOKS_MAP, stage: str) -> None:
-        if stage == 'BEFORE_JOINING':
-            before_joining_hooks_map = cast(_BEFORE_JOINING_HOOKS_MAP, hooks_map)
-            self._before_joining_hooks_map.update(before_joining_hooks_map)
-        elif stage == 'AFTER_JOINING':
-            after_joining_hooks_map = cast(_AFTER_JOINING_HOOKS_MAP, hooks_map)
-            self._after_joining_hooks_map.update(after_joining_hooks_map)
+    # pylint: disable=too-few-public-methods
+    def __init__(self,
+                 *,
+                 token_handler_map: Optional[TOKEN_HANDLER_MAP] = None,
+                 group_handler_map: Optional[_GROUP_HANDLER_MAP] = None,
+                 before_joining_hooks_map: Optional[_BEFORE_JOINING_HOOKS_MAP] = None,
+                 after_joining_hooks_map: Optional[_AFTER_JOINING_HOOKS_MAP] = None,
+                 preset: Optional[str] = None) -> None:
+        if preset:
+            presets = _init_preset(preset,
+                                   token_handler_map=token_handler_map,
+                                   group_handler_map=group_handler_map,
+                                   before_joining_hooks_map=before_joining_hooks_map,
+                                   after_joining_hooks_map=after_joining_hooks_map)
+            self._token_handler_map, self._group_handler_map = presets[0], presets[1]
+            self._before_joining_hooks_map, self._after_joining_hooks_map = presets[2], presets[3]
         else:
-            err_msg = '{} is invalid. Please choose "BEFORE_JOINING" or "AFTER_JOINING"'.format(stage)
-            raise ValueError(err_msg)
+            self._token_handler_map = token_handler_map
+            self._group_handler_map = group_handler_map
+            self._before_joining_hooks_map = before_joining_hooks_map
+            self._after_joining_hooks_map = after_joining_hooks_map
 
     def flow(self,
              pattern_def_path: Path,
              *,
              dynamic_token_patterns_map: Optional[TOKEN_PATTERNS_MAP] = None,
-             token_handler_map: Optional[TOKEN_HANDLER_MAP] = None,
-             group_handler_map: Optional[_GROUP_HANDLER_MAP] = None,
-             combo_options_map: Optional[_COMBO_OPTIONS_MAP] = None,
-             preset: Optional[str] = None
+             combo_options_map: Optional[_COMBO_OPTIONS_MAP] = None
              ) -> Iterable[Tuple[str, str, str]]:
-        # pylint: disable=too-many-arguments, too-many-locals
-        if preset:
-            init_preset = get_init_preset(preset)
-            token_handler_map, group_handler_map = init_preset(token_handler_map, group_handler_map)
         before_gen = generate_utterance_combo_tokens_and_groups(pattern_def_path,
                                                                 dynamic_token_patterns_map=dynamic_token_patterns_map)
         for utterance_combo, tokens, groups in before_gen:
+            group_names = tuple([group[0] for group in groups])
             if self._before_joining_hooks_map:
-                utterance_combo, tokens = self._execute_joining_hooks(tokens,
-                                                                      (utterance_combo, tokens),
-                                                                      'BEFORE_JOINING')
+                utterance_combo, tokens, groups = self._execute_joining_hooks(tokens,
+                                                                              group_names,
+                                                                              (utterance_combo, tokens, groups),
+                                                                              'BEFORE_JOINING')
 
             combo_options = None
             if combo_options_map:
@@ -82,18 +83,19 @@ class Pipeline:
 
             after_joining_generator = generate_utterances_and_handled_tokens(utterance_combo,
                                                                              tokens,
-                                                                             token_handler_map=token_handler_map,
+                                                                             token_handler_map=self._token_handler_map,
                                                                              combo_options=combo_options)
             for utterance, handled_tokens in after_joining_generator:
-                handled_groups = _compute_handled_groups(groups, handled_tokens, group_handler_map=group_handler_map)
+                handled_groups = _compute_handled_groups(groups,
+                                                         handled_tokens,
+                                                         group_handler_map=self._group_handler_map)
                 if self._after_joining_hooks_map:
-                    group_names = tuple([group[0] for group in groups])
                     utterance, handled_tokens, handled_groups = self._execute_joining_hooks(tokens,
+                                                                                            group_names,
                                                                                             (utterance,
                                                                                              handled_tokens,
                                                                                              handled_groups),
-                                                                                            'AFTER_JOINING',
-                                                                                            group_names=group_names)
+                                                                                            'AFTER_JOINING')
                 yield utterance, ' '.join(handled_tokens), ' '.join(handled_groups)
 
     @staticmethod
@@ -108,10 +110,9 @@ class Pipeline:
     @no_type_check
     def _execute_joining_hooks(self,
                                tokens: Sequence[str],
+                               group_names: Sequence[str],
                                args: _HOOK_ARGS,
-                               stage: str,
-                               *,
-                               group_names: Optional[Sequence[str]] = None
+                               stage: str
                                ) -> _HOOK_ARGS:
         hooks_map = self._before_joining_hooks_map if stage == 'BEFORE_JOINING' else self._after_joining_hooks_map
         token_key = tuple(tokens) if tokens in hooks_map else 'DEFAULT'
@@ -149,3 +150,16 @@ def _get_group_handler(group_name: str,
     if group_handler_map:
         return group_handler_map.get(group_name) or group_handler_map.get('DEFAULT') or default_group_handler
     return default_group_handler
+
+def _init_preset(preset: str,
+                 token_handler_map: Optional[TOKEN_HANDLER_MAP] = None,
+                 group_handler_map: Optional[_GROUP_HANDLER_MAP] = None,
+                 before_joining_hooks_map: Optional[_BEFORE_JOINING_HOOKS_MAP] = None,
+                 after_joining_hooks_map: Optional[_AFTER_JOINING_HOOKS_MAP] = None
+                 ) -> Tuple[Optional[TOKEN_HANDLER_MAP],
+                            Optional[_GROUP_HANDLER_MAP],
+                            Optional[_BEFORE_JOINING_HOOKS_MAP],
+                            Optional[_AFTER_JOINING_HOOKS_MAP]]:
+    if preset == 'IOB':
+        token_handler_map, group_handler_map = iob.init_preset(token_handler_map, group_handler_map)
+    return token_handler_map, group_handler_map, before_joining_hooks_map, after_joining_hooks_map

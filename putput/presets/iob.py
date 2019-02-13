@@ -5,6 +5,7 @@ from typing import Tuple
 
 MYPY = False
 if MYPY:
+    # pylint: disable=cyclic-import
     from putput.pipeline import _GROUP_HANDLER_MAP # pylint: disable=unused-import
     from putput.pipeline import TOKEN_HANDLER_MAP # pylint: disable=unused-import
 
