@@ -1,11 +1,10 @@
 # https://en.wikipedia.org/wiki/Inside%E2%80%93outside%E2%80%93beginning_(tagging)
+from functools import partial
+from typing import Callable
 from typing import List
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
-from typing import Callable
-from functools import partial
-
 
 MYPY = False
 if MYPY:

@@ -3,8 +3,8 @@ from distutils.cmd import Command
 from itertools import chain
 from pathlib import Path
 
-from setuptools import setup
 from setuptools import find_packages
+from setuptools import setup
 
 production_packages = ('putput',)
 support_packages = ('samples', 'tests')

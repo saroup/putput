@@ -2,11 +2,13 @@ import random
 from pathlib import Path
 from typing import Sequence
 from typing import Tuple
+
 from putput import ComboOptions
 from putput import Pipeline
+from putput.presets import iob2
 from putput.types import COMBO
 from putput.types import GROUP
-from putput.presets import iob2
+
 
 def main() -> None:
     pattern_def_path = Path(__file__).parent / 'patterns.yml'
