@@ -18,7 +18,7 @@ def preset(*,
            tokens_to_include: Optional[Sequence[str]] = None,
            tokens_to_exclude: Optional[Sequence[str]] = None,
            groups_to_include: Optional[Sequence[str]] = None,
-           groups_to_exclude: Optional[Sequence[str]] = None,
+           groups_to_exclude: Optional[Sequence[str]] = None
            ) -> Callable:
     return partial(_preset,
                    _iob_token_handler,
