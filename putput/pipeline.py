@@ -8,13 +8,14 @@ from typing import Optional
 from typing import Sequence
 from typing import Tuple
 from typing import TypeVar
-from typing import Union # pylint: disable=unused-import
+from typing import Union
 from typing import no_type_check
 
 from putput.generator import generate_utterance_combo_tokens_and_groups
 from putput.generator import generate_utterances_and_handled_tokens
 from putput.joiner import ComboOptions
-from putput.presets import iob
+from putput.presets.preset import Preset
+from putput.presets.factory import get_init_preset
 from putput.types import COMBO
 from putput.types import GROUP
 from putput.types import TOKEN_HANDLER_MAP
@@ -46,13 +47,17 @@ class Pipeline:
                  group_handler_map: Optional[_GROUP_HANDLER_MAP] = None,
                  before_joining_hooks_map: Optional[_BEFORE_JOINING_HOOKS_MAP] = None,
                  after_joining_hooks_map: Optional[_AFTER_JOINING_HOOKS_MAP] = None,
-                 preset: Optional[str] = None) -> None:
+                 preset: Optional[Union[str, Preset]] = None
+                 ) -> None:
         if preset:
-            presets = _init_preset(preset,
-                                   token_handler_map=token_handler_map,
-                                   group_handler_map=group_handler_map,
-                                   before_joining_hooks_map=before_joining_hooks_map,
-                                   after_joining_hooks_map=after_joining_hooks_map)
+            if isinstance(preset, str):
+                init_preset = get_init_preset(preset)
+            else:
+                init_preset = preset.init_preset
+            presets = init_preset(token_handler_map=token_handler_map,
+                                  group_handler_map=group_handler_map,
+                                  before_joining_hooks_map=before_joining_hooks_map,
+                                  after_joining_hooks_map=after_joining_hooks_map)
             self._token_handler_map, self._group_handler_map = presets[0], presets[1]
             self._before_joining_hooks_map, self._after_joining_hooks_map = presets[2], presets[3]
         else:
@@ -150,16 +155,3 @@ def _get_group_handler(group_name: str,
     if group_handler_map:
         return group_handler_map.get(group_name) or group_handler_map.get('DEFAULT') or default_group_handler
     return default_group_handler
-
-def _init_preset(preset: str,
-                 token_handler_map: Optional[TOKEN_HANDLER_MAP] = None,
-                 group_handler_map: Optional[_GROUP_HANDLER_MAP] = None,
-                 before_joining_hooks_map: Optional[_BEFORE_JOINING_HOOKS_MAP] = None,
-                 after_joining_hooks_map: Optional[_AFTER_JOINING_HOOKS_MAP] = None
-                 ) -> Tuple[Optional[TOKEN_HANDLER_MAP],
-                            Optional[_GROUP_HANDLER_MAP],
-                            Optional[_BEFORE_JOINING_HOOKS_MAP],
-                            Optional[_AFTER_JOINING_HOOKS_MAP]]:
-    if preset == 'IOB':
-        token_handler_map, group_handler_map = iob.init_preset(token_handler_map, group_handler_map)
-    return token_handler_map, group_handler_map, before_joining_hooks_map, after_joining_hooks_map

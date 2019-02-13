@@ -6,6 +6,7 @@ from putput import ComboOptions
 from putput import Pipeline
 from putput.types import COMBO
 from putput.types import GROUP
+from putput.presets.iob import IOB
 
 def main() -> None:
     pattern_def_path = Path(__file__).parent / 'patterns.yml'
@@ -85,7 +86,7 @@ def main() -> None:
     print('\n' * 2)
 
     # IOB preset format
-    print('*' * 50 + 'IOB (using preset)' + '*' * 50)
+    print('*' * 50 + 'IOB(using preset)' + '*' * 50)
     p = Pipeline(preset='IOB')
     for utterance, tokens, groups in p.flow(pattern_def_path,
                                             dynamic_token_patterns_map=dynamic_token_patterns_map,
@@ -93,7 +94,51 @@ def main() -> None:
         print('utterance:', utterance)
         print('tokens:', tokens)
         print('groups:', groups)
-    print('*' * 50 + 'IOB (using preset)' + '*' * 50)
+    print('*' * 50 + 'IOB(using preset)' + '*' * 50)
+
+    # IOB preset format with object
+    print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
+    p = Pipeline(preset=IOB(tokens_to_exclude=('WAKE',)))
+    for utterance, tokens, groups in p.flow(pattern_def_path,
+                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
+                                            combo_options_map=combo_options_map):
+        print('utterance:', utterance)
+        print('tokens:', tokens)
+        print('groups:', groups)
+    print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
+
+    # IOB preset format with object
+    print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
+    p = Pipeline(preset=IOB(tokens_to_include=('WAKE',)))
+    for utterance, tokens, groups in p.flow(pattern_def_path,
+                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
+                                            combo_options_map=combo_options_map):
+        print('utterance:', utterance)
+        print('tokens:', tokens)
+        print('groups:', groups)
+    print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
+
+    # IOB preset format with object
+    print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
+    p = Pipeline(preset=IOB(groups_to_exclude=('NO_GROUP',)))
+    for utterance, tokens, groups in p.flow(pattern_def_path,
+                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
+                                            combo_options_map=combo_options_map):
+        print('utterance:', utterance)
+        print('tokens:', tokens)
+        print('groups:', groups)
+    print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
+
+    # IOB preset format with object
+    print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
+    p = Pipeline(preset=IOB(groups_to_include=('NO_GROUP',)))
+    for utterance, tokens, groups in p.flow(pattern_def_path,
+                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
+                                            combo_options_map=combo_options_map):
+        print('utterance:', utterance)
+        print('tokens:', tokens)
+        print('groups:', groups)
+    print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
 
 def _add_random_words_to_utterance(utterance: str,
                                    handled_tokens: Sequence[str],
