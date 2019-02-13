@@ -17,10 +17,12 @@ token_patterns:
       - [[then, and then, and after]]
   - dynamic:
     - SONG
-base_groups:
+groups:
   - PLAY_SONG: [PLAY, SONG]
+  - PLAY_SONGS: [PLAY, SONG, 2-5]
   - PLAY_ARTIST: [PLAY, ARTIST]
 utterance_patterns:
   - [WAKE, PLAY_SONG]
+  - [WAKE, PLAY_SONGS]
   - [WAKE, PLAY_ARTIST, QUEUE, PLAY_SONG, QUEUE, ARTIST]
-  - [WAKE, PLAY_ARTIST]
+  - [WAKE, PLAY_ARTIST, 1-4]

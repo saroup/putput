@@ -1,0 +1,10 @@
+base_tokens:
+  - None: ["i", "he", "she", "we", "they"]
+token_patterns:
+  - static:
+    - PLAY:
+      - [[play]]
+  - dynamic:
+    - OTHER
+utterance_patterns:
+  - [PLAY]

@@ -1,15 +1,12 @@
-
 token_patterns:
   - static:
     - START:
-      - [['i'], [will], [want]]
+      - [[she wants]]
     - PLAY:
-      - [[to], [play, listen]]
+      - [[to play]]
   - dynamic:
     - ARTIST
-base_groups:
-  - PLAY_SONG: 
-    - [PLAY, SONG]
+groups:
   - PLAY_ARTIST: [PLAY, ARTIST]
 utterance_patterns:
-  - [ARTIST]
+  - [START, PLAY_ARTIST, 1-3]

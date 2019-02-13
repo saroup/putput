@@ -6,7 +6,7 @@ token_patterns:
       - [[play]]
   - dynamic:
     - OTHER
-base_groups:
+groups:
   - OVERLAPS: [PLAY, ARTIST]
 utterance_patterns:
   - [OVERLAPS]
