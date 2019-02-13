@@ -14,8 +14,7 @@ from typing import no_type_check
 from putput.generator import generate_utterance_combo_tokens_and_groups
 from putput.generator import generate_utterances_and_handled_tokens
 from putput.joiner import ComboOptions
-from putput.presets.preset import Preset
-from putput.presets.factory import get_init_preset
+from putput.presets.factory import get_preset
 from putput.types import COMBO
 from putput.types import GROUP
 from putput.types import TOKEN_HANDLER_MAP
@@ -47,17 +46,15 @@ class Pipeline:
                  group_handler_map: Optional[_GROUP_HANDLER_MAP] = None,
                  before_joining_hooks_map: Optional[_BEFORE_JOINING_HOOKS_MAP] = None,
                  after_joining_hooks_map: Optional[_AFTER_JOINING_HOOKS_MAP] = None,
-                 preset: Optional[Union[str, Preset]] = None
+                 preset: Optional[Union[str, Callable]] = None
                  ) -> None:
         if preset:
             if isinstance(preset, str):
-                init_preset = get_init_preset(preset)
-            else:
-                init_preset = preset.init_preset
-            presets = init_preset(token_handler_map=token_handler_map,
-                                  group_handler_map=group_handler_map,
-                                  before_joining_hooks_map=before_joining_hooks_map,
-                                  after_joining_hooks_map=after_joining_hooks_map)
+                preset = get_preset(preset)
+            presets = preset(token_handler_map=token_handler_map,
+                             group_handler_map=group_handler_map,
+                             before_joining_hooks_map=before_joining_hooks_map,
+                             after_joining_hooks_map=after_joining_hooks_map)
             self._token_handler_map, self._group_handler_map = presets[0], presets[1]
             self._before_joining_hooks_map, self._after_joining_hooks_map = presets[2], presets[3]
         else:

@@ -1,8 +1,9 @@
 from typing import Callable
 
-from putput.presets.iob import IOB
+from putput.presets import iob2
 
-def get_init_preset(preset: str) -> Callable:
-    if preset == 'IOB':
-        return IOB().init_preset
-    raise ValueError('Unrecoginzed preset.')
+def get_preset(preset: str) -> Callable:
+    supported_presets = ('IOB2',)
+    if preset == 'IOB2':
+        return iob2.preset()
+    raise ValueError('Unrecoginzed preset. Please choose from the supported presets: {}'.format(supported_presets))

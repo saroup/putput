@@ -6,7 +6,7 @@ from putput import ComboOptions
 from putput import Pipeline
 from putput.types import COMBO
 from putput.types import GROUP
-from putput.presets.iob import IOB
+from putput.presets import iob2
 
 def main() -> None:
     pattern_def_path = Path(__file__).parent / 'patterns.yml'
@@ -64,30 +64,9 @@ def main() -> None:
     print('*' * 50 + 'AFTER JOINING HOOK' + '*' * 50)
     print('\n' * 2)
 
-
-    token_handler_map = {
-        'DEFAULT': _iob_token_handler
-    }
-
-    group_handler_map = {
-        'DEFAULT': _iob_group_handler
-    }
-
-    # IOB format
-    print('*' * 50 + 'IOB' + '*' * 50)
-    p = Pipeline(token_handler_map=token_handler_map, group_handler_map=group_handler_map)
-    for utterance, tokens, groups in p.flow(pattern_def_path,
-                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
-                                            combo_options_map=combo_options_map):
-        print('utterance:', utterance)
-        print('tokens:', tokens)
-        print('groups:', groups)
-    print('*' * 50 + 'IOB' + '*' * 50)
-    print('\n' * 2)
-
     # IOB preset format
     print('*' * 50 + 'IOB(using preset)' + '*' * 50)
-    p = Pipeline(preset='IOB')
+    p = Pipeline(preset='IOB2')
     for utterance, tokens, groups in p.flow(pattern_def_path,
                                             dynamic_token_patterns_map=dynamic_token_patterns_map,
                                             combo_options_map=combo_options_map):
@@ -98,40 +77,7 @@ def main() -> None:
 
     # IOB preset format with object
     print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
-    p = Pipeline(preset=IOB(tokens_to_exclude=('WAKE',)))
-    for utterance, tokens, groups in p.flow(pattern_def_path,
-                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
-                                            combo_options_map=combo_options_map):
-        print('utterance:', utterance)
-        print('tokens:', tokens)
-        print('groups:', groups)
-    print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
-
-    # IOB preset format with object
-    print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
-    p = Pipeline(preset=IOB(tokens_to_include=('WAKE',)))
-    for utterance, tokens, groups in p.flow(pattern_def_path,
-                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
-                                            combo_options_map=combo_options_map):
-        print('utterance:', utterance)
-        print('tokens:', tokens)
-        print('groups:', groups)
-    print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
-
-    # IOB preset format with object
-    print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
-    p = Pipeline(preset=IOB(groups_to_exclude=('NO_GROUP',)))
-    for utterance, tokens, groups in p.flow(pattern_def_path,
-                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
-                                            combo_options_map=combo_options_map):
-        print('utterance:', utterance)
-        print('tokens:', tokens)
-        print('groups:', groups)
-    print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
-
-    # IOB preset format with object
-    print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
-    p = Pipeline(preset=IOB(groups_to_include=('NO_GROUP',)))
+    p = Pipeline(preset=iob2.preset(tokens_to_exclude=('WAKE',)))
     for utterance, tokens, groups in p.flow(pattern_def_path,
                                             dynamic_token_patterns_map=dynamic_token_patterns_map,
                                             combo_options_map=combo_options_map):
@@ -151,19 +97,6 @@ def _add_random_words_to_utterance(utterance: str,
     utterances.insert(insert_index, random_word)
     utterance = ' '.join(utterances)
     return utterance, handled_tokens, handled_groups
-
-def _iob_token_handler(token: str, phrase: str) -> str:
-    tokens = ['{}-{}'.format('B' if i == 0 else 'I', token)
-              for i, _ in enumerate(phrase.replace(" '", "'").split())]
-    return ' '.join(tokens)
-
-def _iob_group_handler(group_name: str, handled_tokens: Sequence[str]) -> str:
-    num_tokens = 0
-    for tokenized_phrase in handled_tokens:
-        num_tokens += len(tokenized_phrase.split())
-    groups = ['{}-{}'.format('B' if i == 0 else 'I', group_name)
-              for i in range(num_tokens)]
-    return ' '.join(groups)
 
 def _sample_play(utterance_combination: COMBO,
                  tokens: Sequence[str],
