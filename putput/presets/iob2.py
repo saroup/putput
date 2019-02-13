@@ -7,7 +7,7 @@ from typing import Sequence
 from typing import Tuple
 
 MYPY = False
-if MYPY:
+if MYPY: # pragma: no cover
     # pylint: disable=cyclic-import
     from putput.pipeline import _AFTER_JOINING_HOOKS_MAP # pylint: disable=unused-import
     from putput.pipeline import _BEFORE_JOINING_HOOKS_MAP # pylint: disable=unused-import
