@@ -1,13 +1,13 @@
 """This module provides functionality to validate the pattern definition."""
 import itertools
 import re
+from functools import reduce
 from typing import Any
 from typing import Mapping
 from typing import Sequence
 from typing import Set
 from typing import Tuple
 from typing import Union
-from functools import reduce
 
 RANGE_REGEX = r"^\d+(\-\d+)?$"
 RANGE_OR_WORD_REGEX = r"(^[a-zA-Z_]+$|^\d+(\-\d+)?$)"

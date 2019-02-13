@@ -3,10 +3,11 @@ from distutils.cmd import Command
 from itertools import chain
 from pathlib import Path
 
+from setuptools import find_packages
 from setuptools import setup
 
-production_modules = ('putput',)
-support_modules = ('samples', 'tests')
+production_packages = ('putput',)
+support_packages = ('samples', 'tests')
 
 
 class _BaseCommand(Command):
@@ -16,7 +17,7 @@ class _BaseCommand(Command):
 
     @property
     def test_paths(self):
-        for module in chain(production_modules, support_modules):
+        for module in chain(production_packages, support_packages):
             yield str(self.root_dir / module)
         yield __file__
 
@@ -92,7 +93,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/michaelperel/putput',
-    packages=production_modules,
+    packages=find_packages(exclude=support_packages + tuple(mod + '.*' for mod in support_packages)),
     classifiers=[
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
