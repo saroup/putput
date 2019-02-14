@@ -646,7 +646,7 @@ class TestPipeline(unittest.TestCase):
                                'hi')
         expected_tokens_list = ('O B-START I-START I-START B-PLAY I-PLAY',
                                 'O B-START I-START I-START B-PLAY I-PLAY',
-                                'O B-START I-START I-START B-PLAY I-PLAY', 
+                                'O B-START I-START I-START B-PLAY I-PLAY',
                                 'O B-START I-START I-START B-PLAY I-PLAY',
                                 'b-wake')
         expected_groups = ('b-none b-play_phrase i-play_phrase i-play_phrase i-play_phrase i-play_phrase',
