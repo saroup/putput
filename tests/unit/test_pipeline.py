@@ -547,44 +547,57 @@ class TestPipeline(unittest.TestCase):
                  (actual_groups, expected_groups)]
         compare_all_pairs(self, pairs)
 
-    def test_iob2_preset_str(self) -> None:
+    def test_iob2_preset_tokens_to_include(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        p = Pipeline(preset='IOB2')
+        p = Pipeline(preset=iob2.preset(tokens_to_include=('WAKE',)))
         generator = p.flow(pattern_def_path)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
-        expected_utterances = ('hi he will want to play', 'hi he will want to listen',
-                               'hi she will want to play', 'hi she will want to listen', 'hi')
-        expected_tokens_list = ('B-WAKE B-START I-START I-START B-PLAY I-PLAY',
-                                'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
-                                'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
-                                'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+        expected_utterances = ('hi he will want to play',
+                               'hi he will want to listen',
+                               'hi she will want to play',
+                               'hi she will want to listen',
+                               'hi')
+        expected_tokens_list = ('B-WAKE O O O O O',
+                                'B-WAKE O O O O O',
+                                'B-WAKE O O O O O',
+                                'B-WAKE O O O O O',
                                 'B-WAKE')
         expected_groups = ('B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
                            'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
                            'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
                            'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
                            'B-None')
-
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
                  (actual_groups, expected_groups)]
         compare_all_pairs(self, pairs)
 
-    def test_iob2_preset_tokens_to_include(self) -> None:
+    def test_iob2_preset_tokens_to_include_with_after_joining_hook(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        p = Pipeline(preset=iob2.preset(tokens_to_include=('WAKE',)))
+        after_joining_hooks_map = {
+            'DEFAULT' : (_add_random_words,),
+            'GROUP_DEFAULT': (_lowercase_handled_groups,),
+            ('WAKE',): (_lowercase_handled_tokens,)
+        }
+        p = Pipeline(preset=iob2.preset(tokens_to_include=('WAKE',)),
+                     after_joining_hooks_map=after_joining_hooks_map)
         generator = p.flow(pattern_def_path)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
-        expected_utterances = ('hi he will want to play', 'hi he will want to listen',
-                               'hi she will want to play', 'hi she will want to listen', 'hi')
-        expected_tokens_list = ('B-WAKE O O O O O', 'B-WAKE O O O O O',
-                                'B-WAKE O O O O O', 'B-WAKE O O O O O', 'B-WAKE')
-        expected_groups = ('B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
-                           'B-None')
-
+        expected_utterances = ('hi he will want to play please',
+                               'hi he will want to listen please',
+                               'hi she will want to play please',
+                               'hi she will want to listen please',
+                               'hi')
+        expected_tokens_list = ('B-WAKE O O O O O',
+                                'B-WAKE O O O O O',
+                                'B-WAKE O O O O O',
+                                'B-WAKE O O O O O',
+                                'b-wake')
+        expected_groups = ('b-none b-play_phrase i-play_phrase i-play_phrase i-play_phrase i-play_phrase',
+                           'b-none b-play_phrase i-play_phrase i-play_phrase i-play_phrase i-play_phrase',
+                           'b-none b-play_phrase i-play_phrase i-play_phrase i-play_phrase i-play_phrase',
+                           'b-none b-play_phrase i-play_phrase i-play_phrase i-play_phrase i-play_phrase',
+                           'b-none')
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
                  (actual_groups, expected_groups)]
@@ -595,8 +608,11 @@ class TestPipeline(unittest.TestCase):
         p = Pipeline(preset=iob2.preset(tokens_to_exclude=('WAKE',)))
         generator = p.flow(pattern_def_path)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
-        expected_utterances = ('hi he will want to play', 'hi he will want to listen',
-                               'hi she will want to play', 'hi she will want to listen', 'hi')
+        expected_utterances = ('hi he will want to play',
+                               'hi he will want to listen',
+                               'hi she will want to play',
+                               'hi she will want to listen',
+                               'hi')
         expected_tokens_list = ('O B-START I-START I-START B-PLAY I-PLAY',
                                 'O B-START I-START I-START B-PLAY I-PLAY',
                                 'O B-START I-START I-START B-PLAY I-PLAY',
@@ -607,7 +623,37 @@ class TestPipeline(unittest.TestCase):
                            'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
                            'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
                            'B-None')
+        pairs = [(actual_utterances, expected_utterances),
+                 (actual_tokens_list, expected_tokens_list),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
 
+    def test_iob2_preset_tokens_to_exclude_with_after_joining_hook(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        after_joining_hooks_map = {
+            'DEFAULT' : (_add_random_words,),
+            'GROUP_DEFAULT': (_lowercase_handled_groups,),
+            ('WAKE',): (_lowercase_handled_tokens,)
+        }
+        p = Pipeline(preset=iob2.preset(tokens_to_exclude=('WAKE',)),
+                     after_joining_hooks_map=after_joining_hooks_map)
+        generator = p.flow(pattern_def_path)
+        actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
+        expected_utterances = ('hi he will want to play please',
+                               'hi he will want to listen please',
+                               'hi she will want to play please',
+                               'hi she will want to listen please',
+                               'hi')
+        expected_tokens_list = ('O B-START I-START I-START B-PLAY I-PLAY',
+                                'O B-START I-START I-START B-PLAY I-PLAY',
+                                'O B-START I-START I-START B-PLAY I-PLAY', 
+                                'O B-START I-START I-START B-PLAY I-PLAY',
+                                'b-wake')
+        expected_groups = ('b-none b-play_phrase i-play_phrase i-play_phrase i-play_phrase i-play_phrase',
+                           'b-none b-play_phrase i-play_phrase i-play_phrase i-play_phrase i-play_phrase',
+                           'b-none b-play_phrase i-play_phrase i-play_phrase i-play_phrase i-play_phrase',
+                           'b-none b-play_phrase i-play_phrase i-play_phrase i-play_phrase i-play_phrase',
+                           'b-none')
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
                  (actual_groups, expected_groups)]
@@ -630,8 +676,11 @@ class TestPipeline(unittest.TestCase):
         p = Pipeline(preset=iob2.preset(groups_to_include=('PLAY_PHRASE',)))
         generator = p.flow(pattern_def_path)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
-        expected_utterances = ('hi he will want to play', 'hi he will want to listen',
-                               'hi she will want to play', 'hi she will want to listen', 'hi')
+        expected_utterances = ('hi he will want to play',
+                               'hi he will want to listen',
+                               'hi she will want to play',
+                               'hi she will want to listen',
+                               'hi')
         expected_tokens_list = ('B-WAKE B-START I-START I-START B-PLAY I-PLAY',
                                 'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
                                 'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
@@ -642,7 +691,37 @@ class TestPipeline(unittest.TestCase):
                            'O B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
                            'O B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
                            'O')
+        pairs = [(actual_utterances, expected_utterances),
+                 (actual_tokens_list, expected_tokens_list),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
 
+    def test_iob2_preset_groups_to_include_with_after_joining_map(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        after_joining_hooks_map = {
+            'DEFAULT' : (_add_random_words,),
+            'GROUP_DEFAULT': (_lowercase_handled_groups,),
+            ('WAKE',): (_lowercase_handled_tokens,)
+        }
+        p = Pipeline(preset=iob2.preset(groups_to_include=('PLAY_PHRASE',)),
+                     after_joining_hooks_map=after_joining_hooks_map)
+        generator = p.flow(pattern_def_path)
+        actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
+        expected_utterances = ('hi he will want to play please',
+                               'hi he will want to listen please',
+                               'hi she will want to play please',
+                               'hi she will want to listen please',
+                               'hi')
+        expected_tokens_list = ('B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'b-wake')
+        expected_groups = ('o b-play_phrase i-play_phrase i-play_phrase i-play_phrase i-play_phrase',
+                           'o b-play_phrase i-play_phrase i-play_phrase i-play_phrase i-play_phrase',
+                           'o b-play_phrase i-play_phrase i-play_phrase i-play_phrase i-play_phrase',
+                           'o b-play_phrase i-play_phrase i-play_phrase i-play_phrase i-play_phrase',
+                           'o')
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
                  (actual_groups, expected_groups)]
@@ -653,8 +732,11 @@ class TestPipeline(unittest.TestCase):
         p = Pipeline(preset=iob2.preset(groups_to_exclude=('PLAY_PHRASE',)))
         generator = p.flow(pattern_def_path)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
-        expected_utterances = ('hi he will want to play', 'hi he will want to listen',
-                               'hi she will want to play', 'hi she will want to listen', 'hi')
+        expected_utterances = ('hi he will want to play',
+                               'hi he will want to listen',
+                               'hi she will want to play',
+                               'hi she will want to listen',
+                               'hi')
         expected_tokens_list = ('B-WAKE B-START I-START I-START B-PLAY I-PLAY',
                                 'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
                                 'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
@@ -665,7 +747,128 @@ class TestPipeline(unittest.TestCase):
                            'B-None O O O O O',
                            'B-None O O O O O',
                            'B-None')
+        pairs = [(actual_utterances, expected_utterances),
+                 (actual_tokens_list, expected_tokens_list),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
 
+    def test_iob2_preset_groups_to_exclude_with_after_joining_hooks_map(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        after_joining_hooks_map = {
+            'DEFAULT' : (_add_random_words,),
+            'GROUP_DEFAULT': (_lowercase_handled_groups,),
+            ('WAKE',): (_lowercase_handled_tokens,)
+        }
+        p = Pipeline(preset=iob2.preset(groups_to_exclude=('PLAY_PHRASE',)),
+                     after_joining_hooks_map=after_joining_hooks_map)
+        generator = p.flow(pattern_def_path)
+        actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
+        expected_utterances = ('hi he will want to play please',
+                               'hi he will want to listen please',
+                               'hi she will want to play please',
+                               'hi she will want to listen please',
+                               'hi')
+        expected_tokens_list = ('B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'b-wake')
+        expected_groups = ('b-none o o o o o',
+                           'b-none o o o o o',
+                           'b-none o o o o o',
+                           'b-none o o o o o',
+                           'b-none')
+        pairs = [(actual_utterances, expected_utterances),
+                 (actual_tokens_list, expected_tokens_list),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
+
+    def test_iob2_str_preset(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        p = Pipeline(preset='IOB2')
+        generator = p.flow(pattern_def_path)
+        actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
+        expected_utterances = ('hi he will want to play',
+                               'hi he will want to listen',
+                               'hi she will want to play',
+                               'hi she will want to listen',
+                               'hi')
+        expected_tokens_list = ('B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'B-WAKE')
+        expected_groups = ('B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None')
+        pairs = [(actual_utterances, expected_utterances),
+                 (actual_tokens_list, expected_tokens_list),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
+
+    def test_iob2_override_token_group_handler_default(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        token_handler_map = {
+            'DEFAULT': _just_tokens,
+        }
+        group_handler_map = {
+            'DEFAULT': _remove_group,
+        }
+        p = Pipeline(preset='IOB2',
+                     group_handler_map=group_handler_map,
+                     token_handler_map=token_handler_map)
+        generator = p.flow(pattern_def_path)
+        actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
+        expected_utterances = ('hi he will want to play',
+                               'hi he will want to listen',
+                               'hi she will want to play',
+                               'hi she will want to listen',
+                               'hi')
+        expected_tokens_list = ('B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'B-WAKE B-START I-START I-START B-PLAY I-PLAY',
+                                'B-WAKE')
+        expected_groups = ('B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None B-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE I-PLAY_PHRASE',
+                           'B-None')
+        pairs = [(actual_utterances, expected_utterances),
+                 (actual_tokens_list, expected_tokens_list),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
+
+    def test_iob2_token_group_handler_non_default(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        token_handler_map = {
+            'WAKE': _remove_token,
+        }
+        group_handler_map = {
+            'PLAY_PHRASE': _remove_group,
+        }
+        p = Pipeline(preset='IOB2',
+                     group_handler_map=group_handler_map,
+                     token_handler_map=token_handler_map)
+        generator = p.flow(pattern_def_path)
+        actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
+        expected_utterances = ('hi he will want to play',
+                               'hi he will want to listen',
+                               'hi she will want to play',
+                               'hi she will want to listen',
+                               'hi')
+        expected_tokens_list = ('[(hi)] B-START I-START I-START B-PLAY I-PLAY',
+                                '[(hi)] B-START I-START I-START B-PLAY I-PLAY',
+                                '[(hi)] B-START I-START I-START B-PLAY I-PLAY',
+                                '[(hi)] B-START I-START I-START B-PLAY I-PLAY',
+                                '[(hi)]')
+        expected_groups = ('B-None {(B-START I-START I-START B-PLAY I-PLAY)}',
+                           'B-None {(B-START I-START I-START B-PLAY I-PLAY)}',
+                           'B-None {(B-START I-START I-START B-PLAY I-PLAY)}',
+                           'B-None {(B-START I-START I-START B-PLAY I-PLAY)}',
+                           'B-None')
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
                  (actual_groups, expected_groups)]
