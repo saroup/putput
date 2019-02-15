@@ -98,7 +98,7 @@ class Pipeline:
                                                                                              handled_tokens,
                                                                                              handled_groups),
                                                                                             'AFTER_JOINING')
-                yield utterance, ' '.join(handled_tokens), ' '.join(handled_groups)
+                yield utterance, handled_tokens, handled_groups
 
     @staticmethod
     def _get_combo_options(tokens: Sequence[str],

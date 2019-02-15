@@ -6,6 +6,7 @@ from typing import Tuple
 from putput import ComboOptions
 from putput import Pipeline
 from putput.presets import iob2
+from putput.presets import displaCy
 from putput.types import COMBO
 from putput.types import GROUP
 
@@ -80,6 +81,17 @@ def main() -> None:
     # IOB preset format with object
     print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
     p = Pipeline(preset=iob2.preset(tokens_to_exclude=('WAKE',)))
+    for utterance, tokens, groups in p.flow(pattern_def_path,
+                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
+                                            combo_options_map=combo_options_map):
+        print('utterance:', utterance)
+        print('tokens:', tokens)
+        print('groups:', groups)
+    print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
+
+    # displaCy preset
+    print('*' * 50 + 'displaCy' + '*' * 50)
+    p = Pipeline(preset='displaCy')
     for utterance, tokens, groups in p.flow(pattern_def_path,
                                             dynamic_token_patterns_map=dynamic_token_patterns_map,
                                             combo_options_map=combo_options_map):
