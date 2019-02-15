@@ -5,9 +5,9 @@ from putput.presets import displaCy
 
 
 def get_preset(preset: str) -> Callable:
-    supported_presets = ('IOB2', 'displaCy')
+    supported_presets = ('IOB2', 'DISPLACY')
     if preset == 'IOB2':
         return iob2.preset()
-    if preset == 'displaCy':
+    if preset == 'DISPLACY':
         return displaCy.preset()
     raise ValueError('Unrecoginzed preset. Please choose from the supported presets: {}'.format(supported_presets))

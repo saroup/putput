@@ -14,39 +14,19 @@ if MYPY: # pragma: no cover
     from putput.pipeline import _GROUP_HANDLER_MAP # pylint: disable=unused-import
     from putput.types import TOKEN_HANDLER_MAP # pylint: disable=unused-import
 
+
 def preset() -> Callable:
     return _preset
 
-def _preset(token_handler_map: Optional['TOKEN_HANDLER_MAP'] = None,
-            group_handler_map: Optional['_GROUP_HANDLER_MAP'] = None,
-            before_joining_hooks_map: Optional['_BEFORE_JOINING_HOOKS_MAP'] = None,
-            after_joining_hooks_map: Optional['_AFTER_JOINING_HOOKS_MAP'] = None,
-            final_hook: Optional['_FINAL_HOOK'] = None
-            ) -> Tuple[Optional['TOKEN_HANDLER_MAP'],
+def _preset() -> Tuple[Optional['TOKEN_HANDLER_MAP'],
                        Optional['_GROUP_HANDLER_MAP'],
                        Optional['_BEFORE_JOINING_HOOKS_MAP'],
                        Optional['_AFTER_JOINING_HOOKS_MAP'],
                        Optional['_FINAL_HOOK']]:
-    iob_after_joining_hooks_map = dict(after_joining_hooks_map) if after_joining_hooks_map else {}
-    existing_tokens_hooks = iob_after_joining_hooks_map.get('DEFAULT')
-    if existing_tokens_hooks:
-        updated_tokens_hooks = (_handled_tokens_to_ent,) + tuple(_ for _ in existing_tokens_hooks)
-    else:
-        updated_tokens_hooks = (_handled_tokens_to_ent,)
-    iob_after_joining_hooks_map.update({'DEFAULT': updated_tokens_hooks})
-
-    existing_groups_hooks = iob_after_joining_hooks_map.get('GROUP_DEFAULT')
-    if existing_groups_hooks:
-        updated_groups_hooks = (_handled_groups_to_ent,) + tuple(_ for _ in existing_groups_hooks)
-    else:
-        updated_groups_hooks = (_handled_groups_to_ent,)
-    iob_after_joining_hooks_map.update({'GROUP_DEFAULT': updated_groups_hooks})
-
-    iob_final_hook = _convert_to_displaCy_visualizer
-
-    return (token_handler_map, group_handler_map,
-            before_joining_hooks_map, iob_after_joining_hooks_map,
-            iob_final_hook)
+    after_joining_hooks_map = {}
+    after_joining_hooks_map['DEFAULT'] = (_handled_tokens_to_ent,)
+    after_joining_hooks_map['GROUP_DEFAULT'] = (_handled_groups_to_ent,)
+    return (None, None, None, after_joining_hooks_map, _convert_to_displaCy_visualizer)
 
 def _convert_to_ents(utterance: str,
                      handled_items: Sequence[str],

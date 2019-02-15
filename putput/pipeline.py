@@ -50,14 +50,16 @@ class Pipeline:
                  final_hook: Optional[_FINAL_HOOK] = None,
                  preset: Optional[Union[str, Callable]] = None
                  ) -> None:
+        if preset and any((token_handler_map,
+                           group_handler_map,
+                           before_joining_hooks_map,
+                           after_joining_hooks_map,
+                           final_hook)):
+            raise ValueError('If a preset is used, no other arguments may be specified.')
         if preset:
             if isinstance(preset, str):
                 preset = get_preset(preset)
-            presets = preset(token_handler_map=token_handler_map,
-                             group_handler_map=group_handler_map,
-                             before_joining_hooks_map=before_joining_hooks_map,
-                             after_joining_hooks_map=after_joining_hooks_map,
-                             final_hook=final_hook)
+            presets = preset()
             self._token_handler_map, self._group_handler_map = presets[0], presets[1]
             self._before_joining_hooks_map, self._after_joining_hooks_map = presets[2], presets[3]
             self._final_hook = presets[4]
