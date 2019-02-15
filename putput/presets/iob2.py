@@ -57,7 +57,6 @@ def _preset(token_handler: Callable[[str, str], str],
     iob_group_handler_map.update({'DEFAULT': group_handler})
 
     iob_after_joining_hooks_map = dict(after_joining_hooks_map) if after_joining_hooks_map else {}
-    iob_before_joining_hooks_map = dict(before_joining_hooks_map) if before_joining_hooks_map else {}
 
     if tokens_to_exclude:
         exclude_tokens_hook = partial(_exclude_tokens, tokens_to_exclude=tokens_to_exclude)
@@ -72,7 +71,7 @@ def _preset(token_handler: Callable[[str, str], str],
         exclude_groups_hook = partial(_exclude_groups, groups_to_exclude=groups_to_exclude)
         iob_after_joining_hooks_map.update({'GROUP_DEFAULT': (exclude_groups_hook,)})
 
-    return iob_token_handler_map, iob_group_handler_map, iob_before_joining_hooks_map, iob_after_joining_hooks_map
+    return iob_token_handler_map, iob_group_handler_map, before_joining_hooks_map, iob_after_joining_hooks_map
 
 def _iob_token_handler(token: str, phrase: str) -> str:
     tokens = ['{}-{}'.format('B' if i == 0 else 'I', token)

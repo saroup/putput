@@ -22,7 +22,7 @@ from putput.types import TOKEN_PATTERNS_MAP
 
 _GROUP_HANDLER = Callable[[str, Sequence[str]], str]
 _BEFORE_JOINING_HOOK = Callable[[COMBO, Sequence[str], Sequence[GROUP]], Tuple[COMBO, Sequence[str], Sequence[GROUP]]]
-_AFTER_JOINING_HOOK = Callable[[str, Sequence[str], Sequence[str]], Tuple[str, Sequence[str], Sequence[str]]]
+_AFTER_JOINING_HOOK = Callable[[str, Sequence[Any], Sequence[Any]], Tuple[str, Sequence[Any], Sequence[Any]]]
 _HOOK_ARGS = TypeVar('_HOOK_ARGS',
                      Tuple[COMBO, Sequence[str], Sequence[GROUP]],
                      Tuple[str, Sequence[str], Sequence[str]])
@@ -68,7 +68,7 @@ class Pipeline:
              *,
              dynamic_token_patterns_map: Optional[TOKEN_PATTERNS_MAP] = None,
              combo_options_map: Optional[_COMBO_OPTIONS_MAP] = None
-             ) -> Iterable[Tuple[str, str, str]]:
+             ) -> Iterable[Tuple[str, Sequence[Any], Sequence[Any]]]:
         before_gen = generate_utterance_combo_tokens_and_groups(pattern_def_path,
                                                                 dynamic_token_patterns_map=dynamic_token_patterns_map)
         for utterance_combo, tokens, groups in before_gen:

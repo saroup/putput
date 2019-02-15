@@ -1,10 +1,10 @@
 import re
+from typing import Any
 from typing import Callable
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
 from typing import Mapping
-import json
 
 MYPY = False
 if MYPY: # pragma: no cover
@@ -25,7 +25,6 @@ def _preset(token_handler_map: Optional['TOKEN_HANDLER_MAP'] = None,
                        Optional['_GROUP_HANDLER_MAP'],
                        Optional['_BEFORE_JOINING_HOOKS_MAP'],
                        Optional['_AFTER_JOINING_HOOKS_MAP']]:
-    # visualize groups AND tokens
     iob_after_joining_hooks_map = dict(after_joining_hooks_map) if after_joining_hooks_map else {}
     existing_tokens_hooks = iob_after_joining_hooks_map.get('DEFAULT')
     if existing_tokens_hooks:
@@ -46,7 +45,7 @@ def _preset(token_handler_map: Optional['TOKEN_HANDLER_MAP'] = None,
 def _convert_to_ents(utterance: str,
                      handled_items: Sequence[str],
                      label_extractor: Callable[[str], str]
-                     ) -> Tuple[Mapping]:
+                     ) -> Sequence[Mapping]:
     ents = []
     offset = 0
     for handled_item in handled_items:
@@ -64,17 +63,17 @@ def _convert_to_ents(utterance: str,
     return tuple(ents)
 
 def _handled_groups_to_ent(utterance: str,
-                           handled_tokens: Sequence[str],
+                           handled_tokens: Sequence[Any],
                            handled_groups: Sequence[str]
-                           ) -> Tuple[str, Sequence[str], Sequence[str]]:
+                           ) -> Tuple[str, Sequence[Any], Sequence[Any]]:
     label_extractor = lambda s: s[s.index('{') + 1: s.index('(')]
     ents = _convert_to_ents(utterance, handled_groups, label_extractor)
-    return utterance, handled_tokens, json.dumps(ents)
+    return utterance, handled_tokens, ents
 
 def _handled_tokens_to_ent(utterance: str,
                            handled_tokens: Sequence[str],
-                           handled_groups: Sequence[str]
-                           ) -> Tuple[str, Sequence[str], Sequence[str]]:
+                           handled_groups: Sequence[Any]
+                           ) -> Tuple[str, Sequence[Any], Sequence[Any]]:
     label_extractor = lambda s: s[s.index('[') + 1: s.index('(')]
     ents = _convert_to_ents(utterance, handled_tokens, label_extractor)
-    return utterance, json.dumps(ents), handled_groups
+    return utterance, ents, handled_groups
