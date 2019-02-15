@@ -61,19 +61,31 @@ def _preset(token_handler: Callable[[str, str], str],
 
     iob_after_joining_hooks_map = dict(after_joining_hooks_map) if after_joining_hooks_map else {}
 
-    if tokens_to_exclude:
-        exclude_tokens_hook = partial(_exclude_tokens, tokens_to_exclude=tokens_to_exclude)
-        iob_after_joining_hooks_map.update({'DEFAULT': (exclude_tokens_hook,)})
+    tokens_hook = None
     if tokens_to_include:
-        include_tokens_hook = partial(_include_tokens, tokens_to_include=tokens_to_include)
-        iob_after_joining_hooks_map.update({'DEFAULT': (include_tokens_hook,)})
-    if groups_to_include:
-        include_groups_hook = partial(_include_groups, groups_to_include=groups_to_include)
-        iob_after_joining_hooks_map.update({'GROUP_DEFAULT': (include_groups_hook,)})
-    if groups_to_exclude:
-        exclude_groups_hook = partial(_exclude_groups, groups_to_exclude=groups_to_exclude)
-        iob_after_joining_hooks_map.update({'GROUP_DEFAULT': (exclude_groups_hook,)})
+        tokens_hook = partial(_include_tokens, tokens_to_include=tokens_to_include)
+    if tokens_to_exclude:
+        tokens_hook = partial(_exclude_tokens, tokens_to_exclude=tokens_to_exclude)
+    if tokens_hook:
+        existing_tokens_hooks = iob_after_joining_hooks_map.get('DEFAULT')
+        if existing_tokens_hooks:
+            updated_tokens_hooks = (tokens_hook,) + tuple(_ for _ in existing_tokens_hooks)
+        else:
+            updated_tokens_hooks = (tokens_hook,)
+        iob_after_joining_hooks_map.update({'DEFAULT': updated_tokens_hooks})
 
+    groups_hook = None
+    if groups_to_include:
+        groups_hook = partial(_include_groups, groups_to_include=groups_to_include)
+    if groups_to_exclude:
+        groups_hook = partial(_exclude_groups, groups_to_exclude=groups_to_exclude)
+    if groups_hook:
+        existing_groups_hooks = iob_after_joining_hooks_map.get('GROUP_DEFAULT')
+        if existing_groups_hooks:
+            updated_groups_hooks = (groups_hook,) + tuple(_ for _ in existing_groups_hooks)
+        else:
+            updated_groups_hooks = (groups_hook,)
+        iob_after_joining_hooks_map.update({'GROUP_DEFAULT': updated_groups_hooks})
     return (iob_token_handler_map, iob_group_handler_map,
             before_joining_hooks_map, iob_after_joining_hooks_map,
             final_hook)
