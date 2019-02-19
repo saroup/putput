@@ -1,7 +1,7 @@
 from typing import Callable
 
-from putput.presets import iob2
 from putput.presets import displaCy
+from putput.presets import iob2
 
 
 def get_preset(preset: str) -> Callable:
