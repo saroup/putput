@@ -1,6 +1,7 @@
 """This module provides functionality to join combos."""
 import itertools
 import random
+import sys
 from functools import reduce
 from typing import Iterable
 from typing import List  # pylint: disable=unused-import
@@ -9,6 +10,8 @@ from typing import Sequence
 from typing import TypeVar
 
 import numpy as np
+
+from putput.logger import get_logger
 
 T = TypeVar('T')
 
@@ -74,16 +77,41 @@ def _join_with_sampling(combo: _COMBO, combo_options: ComboOptions) -> _COMBO_PR
     np.random.seed(combo_options.seed)
 
     component_lengths = tuple(len(item) for item in combo)
-    num_possible_unique_samples = reduce(lambda x, y: x * y, component_lengths)
-    if combo_options.with_replacement:
-        flat_item_indices = tuple(random.randint(0, num_possible_unique_samples - 1)
-                                  for _ in range(combo_options.max_sample_size))
-    else:
-        sample_size = min(combo_options.max_sample_size, num_possible_unique_samples)
-        flat_item_indices = tuple(random.sample(range(num_possible_unique_samples), sample_size))
+    num_unique_samples = reduce(lambda x, y: x * y, component_lengths)
 
-    for flat_item_index in flat_item_indices:
-        component_indices = np.unravel_index(flat_item_index, component_lengths)
-        combo_components = tuple(combo[component_index][item_index]
-                                 for component_index, item_index in enumerate(component_indices))
-        yield combo_components
+    if combo_options.with_replacement:
+        sample_size = combo_options.max_sample_size
+    else:
+        sample_size = min(combo_options.max_sample_size, num_unique_samples)
+
+    can_be_sampled = num_unique_samples <= sys.maxsize and _is_valid_to_unravel(component_lengths)
+    if can_be_sampled:
+        if combo_options.with_replacement:
+            flat_item_indices = tuple(random.randint(0, num_unique_samples - 1)
+                                      for _ in range(sample_size))
+        else:
+            flat_item_indices = tuple(random.sample(range(num_unique_samples), sample_size))
+
+        for flat_item_index in flat_item_indices:
+            component_indices = np.unravel_index(flat_item_index, component_lengths)
+            combo_components = tuple(combo[component_index][item_index]
+                                     for component_index, item_index in enumerate(component_indices))
+            yield combo_components
+    else:
+        logger = get_logger(__name__)
+        warning_msg = ('Number of possible combinations exceeds sys.maxsize or np.unravel received invalid dimensions.'
+                       ' Defaulting to joining without sampling, capped to the specified sample size.')
+        logger.warning(warning_msg)
+        for i, c_components in enumerate(_join_without_sampling(combo)):
+            if i >= sample_size:
+                break
+            yield c_components
+
+def _is_valid_to_unravel(dimensions: Sequence[int]) -> bool:
+    try:
+        np.unravel_index(0, dimensions)
+        return True
+    except ValueError:
+        # https://github.com/numpy/numpy/issues/9538
+        # also invalid dimensions, such as 0
+        return False

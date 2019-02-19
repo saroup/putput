@@ -1,9 +1,9 @@
 import re
 from typing import Callable
+from typing import Mapping
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
-from typing import Mapping
 
 MYPY = False
 if MYPY: # pragma: no cover

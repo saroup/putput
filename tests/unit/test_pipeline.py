@@ -7,8 +7,8 @@ from typing import Tuple
 
 from putput import ComboOptions
 from putput import Pipeline
-from putput.presets import iob2
 from putput.presets import displaCy
+from putput.presets import iob2
 from putput.types import COMBO
 from putput.types import GROUP
 from tests.unit.helper_functions import compare_all_pairs
