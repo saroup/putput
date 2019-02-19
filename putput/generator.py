@@ -2,6 +2,7 @@
 import itertools
 import re
 from functools import lru_cache
+from functools import reduce
 from pathlib import Path
 from typing import Dict  # pylint: disable=unused-import
 from typing import Iterable
@@ -36,7 +37,7 @@ _UTTERANCE_PATTERN = Sequence[str]
 def generate_utterance_combo_tokens_and_groups(pattern_def_path: Path,
                                                *,
                                                dynamic_token_patterns_map: Optional[TOKEN_PATTERNS_MAP] = None
-                                               ) -> Iterable[Tuple[COMBO, Sequence[str], Sequence[GROUP]]]:
+                                               ) -> Tuple[int, Iterable[Tuple[COMBO, Sequence[str], Sequence[GROUP]]]]:
     pattern_def = _load_pattern_def(pattern_def_path)
     validate_pattern_def(pattern_def)
     token_patterns_map = _get_token_patterns_map(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
@@ -44,29 +45,38 @@ def generate_utterance_combo_tokens_and_groups(pattern_def_path: Path,
     utterance_patterns = _handle_ranges(pattern_def['utterance_patterns'])
     expanded_utterance_patterns, utterance_patterns_groups = _expand_groups(pattern_def, utterance_patterns)
 
-    for utterance_pattern, utterance_pattern_group in zip(expanded_utterance_patterns, utterance_patterns_groups):
-        expanded_utterance_pattern = tuple(token_patterns_map[token] for token in utterance_pattern)
-        utterance_combo = _compute_utterance_combo(expanded_utterance_pattern)
-        yield utterance_combo, tuple(utterance_pattern), tuple(utterance_pattern_group)
+    def _generate_utterance_combo_tokens_and_groups() -> Iterable[Tuple[COMBO, Sequence[str], Sequence[GROUP]]]:
+        for utterance_pattern, utterance_pattern_group in zip(expanded_utterance_patterns, utterance_patterns_groups):
+            expanded_utterance_pattern = tuple(token_patterns_map[token] for token in utterance_pattern)
+            utterance_combo = _compute_utterance_combo(expanded_utterance_pattern)
+            yield utterance_combo, tuple(utterance_pattern), tuple(utterance_pattern_group)
+    return len(expanded_utterance_patterns), _generate_utterance_combo_tokens_and_groups()
 
 def generate_utterances_and_handled_tokens(utterance_combo: COMBO,
                                            tokens: Sequence[str],
                                            *,
                                            token_handler_map: Optional[TOKEN_HANDLER_MAP] = None,
                                            combo_options: Optional[ComboOptions] = None
-                                           ) -> Iterable[Tuple[str, Sequence[str]]]:
-    # pylint: disable=too-many-arguments, too-many-locals
-    handled_token_combo = _compute_handled_token_combo(utterance_combo, tokens, token_handler_map=token_handler_map)
-    combo_indices = tuple(tuple(i for i in range(len(component))) for component in utterance_combo)
-    for indices in join_combo(combo_indices, combo_options=combo_options):
-        utterance = []
-        handled_tokens = []
-        for utterance_component, token_component, index in zip(utterance_combo,
-                                                               handled_token_combo,
-                                                               indices):
-            utterance.append(utterance_component[index])
-            handled_tokens.append(token_component[index])
-        yield ' '.join(utterance), tuple(handled_tokens)
+                                           ) -> Tuple[int, Iterable[Tuple[str, Sequence[str]]]]:
+    # TODO: combo options should behave this way too in joiner
+    sample_size = reduce(lambda x, y: x * y, (len(item) for item in utterance_combo))
+    if combo_options:
+        sample_size = combo_options.max_sample_size
+
+    # TODO: consider if these should really be nested
+    def _generate_utterances_and_handled_tokens() -> Iterable[Tuple[str, Sequence[str]]]:
+        handled_token_combo = _compute_handled_token_combo(utterance_combo, tokens, token_handler_map=token_handler_map)
+        combo_indices = tuple(tuple(i for i in range(len(component))) for component in utterance_combo)
+        for indices in join_combo(combo_indices, combo_options=combo_options):
+            utterance = []
+            handled_tokens = []
+            for utterance_component, token_component, index in zip(utterance_combo,
+                                                                   handled_token_combo,
+                                                                   indices):
+                utterance.append(utterance_component[index])
+                handled_tokens.append(token_component[index])
+            yield ' '.join(utterance), tuple(handled_tokens)
+    return sample_size, _generate_utterances_and_handled_tokens()
 
 def _load_pattern_def(pattern_def_path: Path) -> Mapping:
     with pattern_def_path.open(encoding='utf-8') as pattern_def_file:
