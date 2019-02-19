@@ -92,6 +92,21 @@ class TestJoiner(unittest.TestCase):
                            ('he', 'will', 'have'), ('he', 'will', 'order'))
         self._test_join_combo(pattern, expected_output)
 
+    def test_zero_dimension(self) -> None:
+        with self.assertRaises(ValueError):
+            pattern = (tuple(), ('would', 'will'), ('want', 'have', 'order')) # type: _COMBO
+            expected_output = (('would', 'want'), ('would', 'have'),
+                               ('would', 'order'), ('will', 'want'),
+                               ('will', 'have'), ('will', 'order'))
+            self._test_join_combo(pattern, expected_output)
+
+    def test_num_unique_combinations_greater_than_max_size(self) -> None:
+        pattern = tuple([tuple(range(50))] * 50)
+        expected_output = ((0,) * 50, ((0,) * 49) + (1,))
+        all_options = [ComboOptions(max_sample_size=2, with_replacement=True, seed=0),
+                       ComboOptions(max_sample_size=2, with_replacement=False, seed=0)]
+        self._test_join_combo(pattern, expected_output, all_options=all_options)
+
     def test_invalid_combo_options(self) -> None:
         with self.assertRaises(ValueError):
             ComboOptions(max_sample_size=0, with_replacement=False, seed=0)

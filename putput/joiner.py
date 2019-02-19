@@ -65,6 +65,8 @@ def join_combo(combo: _COMBO, *, combo_options: Optional[ComboOptions] = None) -
     Yields:
         A joined combo.
     """
+    if not all(combo):
+        raise ValueError('Invalid combo: components must not be empty.')
     if combo_options:
         return _join_with_sampling(combo, combo_options)
     return _join_without_sampling(combo)
@@ -99,7 +101,7 @@ def _join_with_sampling(combo: _COMBO, combo_options: ComboOptions) -> _COMBO_PR
             yield combo_components
     else:
         logger = get_logger(__name__)
-        warning_msg = ('Number of possible combinations exceeds sys.maxsize or np.unravel received invalid dimensions.'
+        warning_msg = ('Number of possible combinations exceeds sys.maxsize OR np.unravel received invalid dimensions.'
                        ' Defaulting to joining without sampling, capped to the specified sample size.')
         logger.warning(warning_msg)
         for i, c_components in enumerate(_join_without_sampling(combo)):
@@ -111,7 +113,7 @@ def _is_valid_to_unravel(dimensions: Sequence[int]) -> bool:
     try:
         np.unravel_index(0, dimensions)
         return True
-    except ValueError:
-        # https://github.com/numpy/numpy/issues/9538
-        # also invalid dimensions, such as 0
+    except ValueError: # pragma: no cover
+        # not covered in unittests because creating components with large lengths takes too long.
+        # catches the following issue for certain large numbers: https://github.com/numpy/numpy/issues/9538.
         return False
