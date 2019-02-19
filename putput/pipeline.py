@@ -22,7 +22,8 @@ from putput.types import TOKEN_PATTERNS_MAP
 
 _GROUP_HANDLER = Callable[[str, Sequence[str]], str]
 _BEFORE_JOINING_HOOK = Callable[[COMBO, Sequence[str], Sequence[GROUP]], Tuple[COMBO, Sequence[str], Sequence[GROUP]]]
-_AFTER_JOINING_HOOK = Callable[[str, Sequence[str], Sequence[str]], Tuple[str, Sequence[str], Sequence[str]]]
+_AFTER_JOINING_HOOK = Callable[[str, Sequence, Sequence], Tuple[str, Sequence, Sequence]]
+_FINAL_HOOK = Callable[[str, Sequence, Sequence], Any]
 _HOOK_ARGS = TypeVar('_HOOK_ARGS',
                      Tuple[COMBO, Sequence[str], Sequence[GROUP]],
                      Tuple[str, Sequence[str], Sequence[str]])
@@ -46,29 +47,35 @@ class Pipeline:
                  group_handler_map: Optional[_GROUP_HANDLER_MAP] = None,
                  before_joining_hooks_map: Optional[_BEFORE_JOINING_HOOKS_MAP] = None,
                  after_joining_hooks_map: Optional[_AFTER_JOINING_HOOKS_MAP] = None,
+                 final_hook: Optional[_FINAL_HOOK] = None,
                  preset: Optional[Union[str, Callable]] = None
                  ) -> None:
+        if preset and any((token_handler_map,
+                           group_handler_map,
+                           before_joining_hooks_map,
+                           after_joining_hooks_map,
+                           final_hook)):
+            raise ValueError('If a preset is used, no other arguments may be specified.')
         if preset:
             if isinstance(preset, str):
                 preset = get_preset(preset)
-            presets = preset(token_handler_map=token_handler_map,
-                             group_handler_map=group_handler_map,
-                             before_joining_hooks_map=before_joining_hooks_map,
-                             after_joining_hooks_map=after_joining_hooks_map)
+            presets = preset()
             self._token_handler_map, self._group_handler_map = presets[0], presets[1]
             self._before_joining_hooks_map, self._after_joining_hooks_map = presets[2], presets[3]
+            self._final_hook = presets[4]
         else:
             self._token_handler_map = token_handler_map
             self._group_handler_map = group_handler_map
             self._before_joining_hooks_map = before_joining_hooks_map
             self._after_joining_hooks_map = after_joining_hooks_map
+            self._final_hook = final_hook
 
     def flow(self,
              pattern_def_path: Path,
              *,
              dynamic_token_patterns_map: Optional[TOKEN_PATTERNS_MAP] = None,
              combo_options_map: Optional[_COMBO_OPTIONS_MAP] = None
-             ) -> Iterable[Tuple[str, str, str]]:
+             ) -> Iterable:
         before_gen = generate_utterance_combo_tokens_and_groups(pattern_def_path,
                                                                 dynamic_token_patterns_map=dynamic_token_patterns_map)
         for utterance_combo, tokens, groups in before_gen:
@@ -98,7 +105,10 @@ class Pipeline:
                                                                                              handled_tokens,
                                                                                              handled_groups),
                                                                                             'AFTER_JOINING')
-                yield utterance, ' '.join(handled_tokens), ' '.join(handled_groups)
+                if self._final_hook:
+                    yield self._final_hook(utterance, handled_tokens, handled_groups)
+                else:
+                    yield utterance, handled_tokens, handled_groups
 
     @staticmethod
     def _get_combo_options(tokens: Sequence[str],

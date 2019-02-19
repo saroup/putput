@@ -11,6 +11,7 @@ if MYPY: # pragma: no cover
     # pylint: disable=cyclic-import
     from putput.pipeline import _AFTER_JOINING_HOOKS_MAP # pylint: disable=unused-import
     from putput.pipeline import _BEFORE_JOINING_HOOKS_MAP # pylint: disable=unused-import
+    from putput.pipeline import _FINAL_HOOK # pylint: disable=unused-import
     from putput.pipeline import _GROUP_HANDLER_MAP # pylint: disable=unused-import
     from putput.types import TOKEN_HANDLER_MAP # pylint: disable=unused-import
 
@@ -21,43 +22,30 @@ def preset(*,
            groups_to_exclude: Optional[Sequence[str]] = None
            ) -> Callable:
     return partial(_preset,
-                   _iob_token_handler,
-                   _iob_group_handler,
                    tokens_to_include=tokens_to_include,
                    tokens_to_exclude=tokens_to_exclude,
                    groups_to_include=groups_to_include,
                    groups_to_exclude=groups_to_exclude)
 
-def _preset(token_handler: Callable[[str, str], str],
-            group_handler: Callable[[str, Sequence[str]], str],
-            *,
+def _preset(*,
             tokens_to_include: Optional[Sequence[str]] = None,
             tokens_to_exclude: Optional[Sequence[str]] = None,
             groups_to_include: Optional[Sequence[str]] = None,
-            groups_to_exclude: Optional[Sequence[str]] = None,
-            token_handler_map: Optional['TOKEN_HANDLER_MAP'] = None,
-            group_handler_map: Optional['_GROUP_HANDLER_MAP'] = None,
-            before_joining_hooks_map: Optional['_BEFORE_JOINING_HOOKS_MAP'] = None,
-            after_joining_hooks_map: Optional['_AFTER_JOINING_HOOKS_MAP'] = None
+            groups_to_exclude: Optional[Sequence[str]] = None
             ) -> Tuple[Optional['TOKEN_HANDLER_MAP'],
                        Optional['_GROUP_HANDLER_MAP'],
                        Optional['_BEFORE_JOINING_HOOKS_MAP'],
-                       Optional['_AFTER_JOINING_HOOKS_MAP']]:
-    # pylint: disable=too-many-locals
-
+                       Optional['_AFTER_JOINING_HOOKS_MAP'],
+                       Optional['_FINAL_HOOK']]:
     if tokens_to_include and tokens_to_exclude:
         raise ValueError("Cannot specify tokens_to_include AND tokens_to_exclude.")
     if groups_to_include and groups_to_exclude:
         raise ValueError("Cannot specify groups_to_include AND groups_to_exclude")
 
-    iob_token_handler_map = dict(token_handler_map) if token_handler_map else {}
-    iob_group_handler_map = dict(group_handler_map) if group_handler_map else {}
+    token_handler_map = {'DEFAULT': _iob_token_handler}
+    group_handler_map = {'DEFAULT': _iob_group_handler}
 
-    iob_token_handler_map.update({'DEFAULT': token_handler})
-    iob_group_handler_map.update({'DEFAULT': group_handler})
-
-    iob_after_joining_hooks_map = dict(after_joining_hooks_map) if after_joining_hooks_map else {}
-    iob_before_joining_hooks_map = dict(before_joining_hooks_map) if before_joining_hooks_map else {}
+    after_joining_hooks_map = {}
 
     tokens_hook = None
     if tokens_to_include:
@@ -65,12 +53,7 @@ def _preset(token_handler: Callable[[str, str], str],
     if tokens_to_exclude:
         tokens_hook = partial(_exclude_tokens, tokens_to_exclude=tokens_to_exclude)
     if tokens_hook:
-        existing_tokens_hooks = iob_after_joining_hooks_map.get('DEFAULT')
-        if existing_tokens_hooks:
-            updated_tokens_hooks = (tokens_hook,) + tuple(_ for _ in existing_tokens_hooks)
-        else:
-            updated_tokens_hooks = (tokens_hook,)
-        iob_after_joining_hooks_map.update({'DEFAULT': updated_tokens_hooks})
+        after_joining_hooks_map.update({'DEFAULT': (tokens_hook,)})
 
     groups_hook = None
     if groups_to_include:
@@ -78,13 +61,8 @@ def _preset(token_handler: Callable[[str, str], str],
     if groups_to_exclude:
         groups_hook = partial(_exclude_groups, groups_to_exclude=groups_to_exclude)
     if groups_hook:
-        existing_groups_hooks = iob_after_joining_hooks_map.get('GROUP_DEFAULT')
-        if existing_groups_hooks:
-            updated_groups_hooks = (groups_hook,) + tuple(_ for _ in existing_groups_hooks)
-        else:
-            updated_groups_hooks = (groups_hook,)
-        iob_after_joining_hooks_map.update({'GROUP_DEFAULT': updated_groups_hooks})
-    return iob_token_handler_map, iob_group_handler_map, iob_before_joining_hooks_map, iob_after_joining_hooks_map
+        after_joining_hooks_map.update({'GROUP_DEFAULT': (groups_hook,)})
+    return (token_handler_map, group_handler_map, None, after_joining_hooks_map, None)
 
 def _iob_token_handler(token: str, phrase: str) -> str:
     tokens = ['{}-{}'.format('B' if i == 0 else 'I', token)

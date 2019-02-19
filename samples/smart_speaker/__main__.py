@@ -88,6 +88,18 @@ def main() -> None:
         print('groups:', groups)
     print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
 
+    # displaCy preset
+    print('*' * 50 + 'displaCy' + '*' * 50)
+    p = Pipeline(preset='DISPLACY')
+    for token_visualizer, group_visualizer in p.flow(pattern_def_path,
+                                                     dynamic_token_patterns_map=dynamic_token_patterns_map,
+                                                     combo_options_map=combo_options_map):
+        print('token visualizer: ', token_visualizer)
+        print()
+        print('group visualizer: ', group_visualizer)
+
+    print('*' * 50 + 'displaCy' + '*' * 50)
+
 def _add_random_words_to_utterance(utterance: str,
                                    handled_tokens: Sequence[str],
                                    handled_groups: Sequence[str]
@@ -110,7 +122,7 @@ def _sample_utterance_component(utterance_combination: COMBO,
                                 tokens: Sequence[str],
                                 groups: Sequence[GROUP],
                                 token_to_sample: str,
-                                sample_size: int,
+                                sample_size: int
                                 ) -> Tuple[COMBO, Sequence[str], Sequence[GROUP]]:
     token_index = tokens.index(token_to_sample)
     utterance_combination_list = list(utterance_combination)
