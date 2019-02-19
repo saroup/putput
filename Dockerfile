@@ -6,7 +6,8 @@ COPY samples/**/requirements*.txt /app/
 RUN for reqs in /app/requirements*.txt; do pip install --no-cache-dir -r $reqs; done
 COPY . /app
 WORKDIR /app
-RUN python setup.py mypy pylint \
+RUN isort -rc . --check-only \
+ && python setup.py mypy pylint \
  && coverage run setup.py test \
  && python setup.py sdist bdist_wheel \
  && pip install --no-cache-dir dist/* \
