@@ -31,7 +31,7 @@ def _validate_range_pattern(range_pattern: Sequence[str]) -> None:
             is_previous_word_range = True
             if index == 0:
                 raise PatternDefinitionValidationError('First token is a range: {}'.format(range_pattern))
-            min_range, max_range = parse_range_token(word)
+            min_range, max_range = _parse_range_token(word)
             if min_range and min_range >= max_range:
                 raise PatternDefinitionValidationError('Not valid range syntax, max must be > min: {}'.format(word))
         else:
@@ -114,12 +114,12 @@ def _validate_token_patterns(pattern_def: Mapping, base_tokens: Set[str]) -> Non
         else:
             raise PatternDefinitionValidationError('token type must be either dynamic or static')
 
-def get_base_keys(pattern_def: Mapping, key: str) -> Set[str]:
+def _get_base_keys(pattern_def: Mapping, key: str) -> Set[str]:
     if key not in pattern_def:
         return set()
     return {base for base_dict in pattern_def[key] for base in base_dict}
 
-def parse_range_token(range_token: str) -> Tuple[Union[int, None], int]:
+def _parse_range_token(range_token: str) -> Tuple[Union[int, None], int]:
     if '-' not in range_token:
         return None, int(range_token)
     min_range, max_range = range_token.split('-')
@@ -144,8 +144,8 @@ def validate_pattern_def(pattern_def: Mapping) -> None:
             err_msg = 'At the top level, token_patterns and utterance_patterns must exist.'
             raise PatternDefinitionValidationError(err_msg)
 
-        base_tokens = get_base_keys(pattern_def, 'base_tokens')
-        groups = get_base_keys(pattern_def, 'groups')
+        base_tokens = _get_base_keys(pattern_def, 'base_tokens')
+        groups = _get_base_keys(pattern_def, 'groups')
 
         _validate_token_patterns(pattern_def, base_tokens)
         _validate_utterance_patterns(pattern_def)
