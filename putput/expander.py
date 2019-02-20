@@ -1,7 +1,10 @@
 """This module provides functionality to generate utterances and tokens after processing the pattern definition."""
 import itertools
+from itertools import chain
+from itertools import product
 import re
 from functools import lru_cache
+from functools import reduce
 from pathlib import Path
 from typing import Dict  # pylint: disable=unused-import
 from typing import Iterable
@@ -38,7 +41,9 @@ def expand(pattern_def_path: Path,
     pattern_def = _load_pattern_def(pattern_def_path)
     validate_pattern_def(pattern_def)
     token_patterns_map = _get_token_patterns_map(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
-    utterance_patterns, groups = _expand_groups(pattern_def)
+    utterance_patterns = _expand_utterance_pattern_ranges(pattern_def['utterance_patterns'])
+    utterance_patterns, groups = _expand_groups(pattern_def, utterance_patterns)
+    # breakpoint()
     # TODO: utterance_patterns is the same as tokens
     # expanded_utterance_patterns, tokens, groups =
     # _expand_utterance_patterns(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
@@ -49,6 +54,33 @@ def expand(pattern_def_path: Path,
             utterance_combo = _compute_utterance_combo(utterance_pattern, token_patterns_map)
             yield utterance_combo, tuple(utterance_pattern), tuple(group)
     return len(utterance_patterns), _expand()
+
+def _expand_utterance_pattern_ranges(utterance_patterns: Sequence[_UTTERANCE_PATTERN]):
+    return tuple(chain.from_iterable(map(_expand_ranges, utterance_patterns)))
+
+def _expand_ranges(seq_with_ranges: Sequence[str]):
+    ranges = tuple(map(_parse_range_token, seq_with_ranges))
+    ranges_and_tokens = map(lambda range_token: range_token[0] + (range_token[1],),
+                            zip(ranges[1:] + ((0, 0),), seq_with_ranges))
+    ranges_and_tokens = filter(lambda range_token: not re.match(RANGE_REGEX, range_token[2]),
+                               ranges_and_tokens)
+    expanded_ranges_iterables = map(chain.from_iterable, product(*map(_expand_tokens, ranges_and_tokens)))
+    expanded_ranges = tuple(map(tuple, expanded_ranges_iterables))
+    return expanded_ranges
+
+def _parse_range_token(token: str) -> Tuple[Union[int, int]]:
+    if re.match(RANGE_REGEX, token):
+        if '-' not in token:
+            return int(token), int(token) + 1
+        min_range, max_range = token.split('-')
+        return int(min_range), int(max_range) + 1
+    return (0, 0)
+
+def _expand_tokens(range_token):
+    min_range, max_range, token = range_token
+    if min_range == 0 and max_range == 0:
+        return ((token,),)
+    return tuple(map(lambda i: (range_token[2],) * i, range(range_token[0], range_token[1])))
 
 def _load_pattern_def(pattern_def_path: Path) -> Mapping:
     with pattern_def_path.open(encoding='utf-8') as pattern_def_file:
@@ -97,12 +129,14 @@ def _expand_base_tokens(pattern_def: Mapping,
     return tuple(tuple(base_token_map[component] if isinstance(component, str) else component
                        for component in token_pattern) for token_pattern in token_patterns)
 
-def _expand_groups(pattern_def: Mapping) -> Tuple[Sequence[_UTTERANCE_PATTERN], Sequence[Sequence[GROUP]]]:
-    utterance_patterns = _expand_ranges(pattern_def['utterance_patterns'])
+def _expand_groups(pattern_def: Mapping, utterance_patterns: Sequence[_UTTERANCE_PATTERN]) -> Tuple[Sequence[_UTTERANCE_PATTERN], Sequence[Sequence[GROUP]]]:
+    # utterance_patterns = _expand_ranges(pattern_def['utterance_patterns'])
+    # breakpoint()
     default_groups = [[('None', 1) for token in utterance_pattern] for utterance_pattern in utterance_patterns]
     if 'groups' in pattern_def:
+        # breakpoint()
         group_map = _get_base_item_map(pattern_def, 'groups')
-        expanded_group_map = {name: _expand_ranges([pattern]) for name, pattern in group_map.items()}
+        expanded_group_map = {name: _expand_ranges(pattern) for name, pattern in group_map.items()}
         return _expand_groups_recursive(utterance_patterns, default_groups, expanded_group_map)
     return utterance_patterns, default_groups
 
@@ -136,32 +170,6 @@ def _expand_groups_recursive(utterance_patterns: Sequence[_UTTERANCE_PATTERN],
     return _expand_groups_recursive(tuple(expanded_utterance_patterns),
                                     tuple(expanded_utterance_patterns_groups),
                                     expanded_group_map)
-
-def _expand_ranges(utterance_patterns: Sequence[_UTTERANCE_PATTERN]) -> Sequence[_UTTERANCE_PATTERN]:
-    # Base case
-    if not _any_patterns_match_regex(utterance_patterns, RANGE_REGEX):
-        return tuple(utterance_patterns)
-
-    # Recursive
-    handled_utterance_patterns = [] # type: List[_UTTERANCE_PATTERN]
-    for utterance_pattern in utterance_patterns:
-        match_index = _get_regex_match_index(utterance_pattern, RANGE_REGEX)
-        if match_index and match_index > 0:
-            token = utterance_pattern[match_index]
-            previous_token = utterance_pattern[match_index - 1]
-            min_range, max_range = parse_range_token(token)
-            if min_range is not None:
-                for range_value in range(min_range, max_range):
-                    new_utterance_pattern = [_ for _ in utterance_pattern]
-                    new_utterance_pattern[match_index - 1: match_index + 1] = [previous_token] * range_value
-                    handled_utterance_patterns.append(tuple(new_utterance_pattern))
-            else:
-                new_utterance_pattern = [_ for _ in utterance_pattern]
-                new_utterance_pattern[match_index - 1: match_index + 1] = [previous_token] * max_range
-                handled_utterance_patterns.append(tuple(new_utterance_pattern))
-        else:
-            handled_utterance_patterns.append(tuple(utterance_pattern))
-    return _expand_ranges(tuple(handled_utterance_patterns))
 
 def _get_current_group_index(token_index: int, groups: Sequence[GROUP]) -> int:
     cur_index = 0
@@ -201,7 +209,7 @@ def _compute_utterance_combo(utterance_pattern: _UTTERANCE_PATTERN, token_patter
         hashable_token_patterns = _convert_token_patterns_to_tuples(token_patterns)
         expanded_token_patterns = tuple(_expand_token_pattern(token_pattern)
                                         for token_pattern in hashable_token_patterns)
-        utterance_components = tuple(itertools.chain.from_iterable(expanded_token_patterns))
+        utterance_components = tuple(chain.from_iterable(expanded_token_patterns))
         utterance_combo.append(utterance_components)
     return tuple(utterance_combo)
 
