@@ -15,8 +15,8 @@ from typing import no_type_check
 
 from tqdm import tqdm
 
-from putput.generator import generate_utterance_combo_tokens_and_groups
-from putput.generator import generate_utterances_and_handled_tokens
+from putput.expander import expand
+from putput.combiner import combine
 from putput.joiner import ComboOptions
 from putput.logger import get_logger
 from putput.presets.factory import get_preset
@@ -85,9 +85,8 @@ class Pipeline:
              disable_progress_bar: bool = False
              ) -> Iterable:
         # pylint: disable=too-many-locals
-        ilen, bgen = generate_utterance_combo_tokens_and_groups(pattern_def_path,
-                                                                dynamic_token_patterns_map=dynamic_token_patterns_map)
-        with tqdm(bgen, total=ilen, disable=disable_progress_bar, leave=False, miniters=1) as expansion_tqdm:
+        ilen, exp_gen = expand(pattern_def_path, dynamic_token_patterns_map=dynamic_token_patterns_map)
+        with tqdm(exp_gen, total=ilen, disable=disable_progress_bar, leave=False, miniters=1) as expansion_tqdm:
             for utterance_combo, tokens, groups in expansion_tqdm:
                 desc = '{}'.format(', '.join(tokens))
                 expansion_tqdm.set_description(textwrap.shorten(desc, width=30))
@@ -97,23 +96,18 @@ class Pipeline:
                     utterance_combo, tokens, groups = self._execute_joining_hooks(tokens,
                                                                                   group_names,
                                                                                   (utterance_combo, tokens, groups),
-                                                                                  'BEFORE_JOINING')
+                                                                                  'EXPANSION')
 
                 combo_options = self._get_combo_options(tokens, combo_options_map) if combo_options_map else None
 
-                sample_size, agen = generate_utterances_and_handled_tokens(utterance_combo,
-                                                                           tokens,
-                                                                           token_handler_map=self._token_handler_map,
-                                                                           combo_options=combo_options)
-                with tqdm(agen,
-                          desc='Combining',
-                          total=sample_size,
-                          disable=disable_progress_bar,
-                          leave=False,
-                          miniters=1) as combo_tqdm:
+                sample_size, combo_gen = combine(utterance_combo,
+                                                 tokens,
+                                                 token_handler_map=self._token_handler_map,
+                                                 combo_options=combo_options)
+                with tqdm(combo_gen, desc='COMBINING', total=sample_size,
+                          disable=disable_progress_bar, leave=False, miniters=1) as combo_tqdm:
                     for utterance, handled_tokens in combo_tqdm:
-                        handled_groups = _compute_handled_groups(groups,
-                                                                 handled_tokens,
+                        handled_groups = _compute_handled_groups(groups, handled_tokens,
                                                                  group_handler_map=self._group_handler_map)
                         if self._after_joining_hooks_map:
                             utterance, handled_tokens, handled_groups = self._execute_joining_hooks(tokens,
@@ -121,16 +115,14 @@ class Pipeline:
                                                                                                     (utterance,
                                                                                                      handled_tokens,
                                                                                                      handled_groups),
-                                                                                                    'AFTER_JOINING')
+                                                                                                    'COMBINATION')
                         if self._final_hook:
                             yield self._final_hook(utterance, handled_tokens, handled_groups)
                         else:
                             yield utterance, handled_tokens, handled_groups
 
     @staticmethod
-    def _get_combo_options(tokens: Sequence[str],
-                           combo_options_map: _COMBO_OPTIONS_MAP,
-                           ) -> Optional[ComboOptions]:
+    def _get_combo_options(tokens: Sequence[str], combo_options_map: _COMBO_OPTIONS_MAP) -> Optional[ComboOptions]:
         options_map = {} # type: Dict[Union[str, Tuple[str, ...]], ComboOptions]
         options_map.update(combo_options_map)
         key = tuple(tokens)
@@ -143,7 +135,7 @@ class Pipeline:
                                args: _HOOK_ARGS,
                                stage: str
                                ) -> _HOOK_ARGS:
-        hooks_map = self._before_joining_hooks_map if stage == 'BEFORE_JOINING' else self._after_joining_hooks_map
+        hooks_map = self._before_joining_hooks_map if stage == 'EXPANSION' else self._after_joining_hooks_map
         token_key = tuple(tokens) if tokens in hooks_map else 'DEFAULT'
         if token_key in hooks_map:
             for hook in hooks_map[token_key]:
