@@ -8,8 +8,8 @@ from typing import Tuple
 MYPY = False
 if MYPY: # pragma: no cover
     # pylint: disable=cyclic-import
-    from putput.pipeline import _AFTER_JOINING_HOOKS_MAP # pylint: disable=unused-import
-    from putput.pipeline import _BEFORE_JOINING_HOOKS_MAP # pylint: disable=unused-import
+    from putput.pipeline import _COMBINATION_HOOKS_MAP # pylint: disable=unused-import
+    from putput.pipeline import _EXPANSION_HOOKS_MAP # pylint: disable=unused-import
     from putput.pipeline import _FINAL_HOOK # pylint: disable=unused-import
     from putput.pipeline import _GROUP_HANDLER_MAP # pylint: disable=unused-import
     from putput.types import TOKEN_HANDLER_MAP # pylint: disable=unused-import
@@ -20,13 +20,13 @@ def preset() -> Callable:
 
 def _preset() -> Tuple[Optional['TOKEN_HANDLER_MAP'],
                        Optional['_GROUP_HANDLER_MAP'],
-                       Optional['_BEFORE_JOINING_HOOKS_MAP'],
-                       Optional['_AFTER_JOINING_HOOKS_MAP'],
+                       Optional['_EXPANSION_HOOKS_MAP'],
+                       Optional['_COMBINATION_HOOKS_MAP'],
                        Optional['_FINAL_HOOK']]:
-    after_joining_hooks_map = {}
-    after_joining_hooks_map['DEFAULT'] = (_handled_tokens_to_ent,)
-    after_joining_hooks_map['GROUP_DEFAULT'] = (_handled_groups_to_ent,)
-    return (None, None, None, after_joining_hooks_map, _convert_to_displaCy_visualizer)
+    combination_hooks_map = {}
+    combination_hooks_map['DEFAULT'] = (_handled_tokens_to_ent,)
+    combination_hooks_map['GROUP_DEFAULT'] = (_handled_groups_to_ent,)
+    return (None, None, None, combination_hooks_map, _convert_to_displaCy_visualizer)
 
 def _convert_to_ents(utterance: str,
                      handled_items: Sequence[str],

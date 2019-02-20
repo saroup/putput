@@ -34,11 +34,11 @@ def main() -> None:
 
     # default format with before joining hook
     print('*' * 50 + 'BEFORE JOINING HOOK' + '*' * 50)
-    before_joining_hooks_map = {
+    expansion_hooks_map = {
         ('WAKE', 'PLAY', 'ARTIST'): (_sample_play, _sample_play)
     }
 
-    p = Pipeline(before_joining_hooks_map=before_joining_hooks_map)
+    p = Pipeline(expansion_hooks_map=expansion_hooks_map)
     for utterance, tokens, groups in p.flow(pattern_def_path,
                                             dynamic_token_patterns_map=dynamic_token_patterns_map,
                                             combo_options_map=combo_options_map):
@@ -51,11 +51,11 @@ def main() -> None:
 
     # default format with after joining hook
     print('*' * 50 + 'AFTER JOINING HOOK' + '*' * 50)
-    after_joining_hooks_map = {
+    combination_hooks_map = {
         ('WAKE', 'PLAY', 'ARTIST'): (_add_random_words_to_utterance,)
     }
 
-    p = Pipeline(after_joining_hooks_map=after_joining_hooks_map)
+    p = Pipeline(combination_hooks_map=combination_hooks_map)
     for utterance, tokens, groups in p.flow(pattern_def_path,
                                             dynamic_token_patterns_map=dynamic_token_patterns_map,
                                             combo_options_map=combo_options_map):

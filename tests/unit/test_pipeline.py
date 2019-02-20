@@ -27,11 +27,11 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('kanye west', 'the beatles'),),)
         }
 
-        before_joining_hooks_map = {
+        expansion_hooks_map = {
             ('START', 'PLAY', 'ARTIST'): (_sample_artist, _sample_play)
         }
 
-        p = Pipeline(before_joining_hooks_map=before_joining_hooks_map)
+        p = Pipeline(expansion_hooks_map=expansion_hooks_map)
         generator = p.flow(pattern_def_path,
                            dynamic_token_patterns_map=dynamic_token_patterns_map,
                            disable_progress_bar=self._disable_progress_bar)
@@ -55,11 +55,11 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('kanye west', 'the beatles'),),)
         }
 
-        before_joining_hooks_map = {
+        expansion_hooks_map = {
             'DEFAULT': (_sample_artist, _sample_play)
         }
 
-        p = Pipeline(before_joining_hooks_map=before_joining_hooks_map)
+        p = Pipeline(expansion_hooks_map=expansion_hooks_map)
         generator = p.flow(pattern_def_path,
                            dynamic_token_patterns_map=dynamic_token_patterns_map,
                            disable_progress_bar=self._disable_progress_bar)
@@ -83,12 +83,12 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('kanye west', 'the beatles'),),)
         }
 
-        before_joining_hooks_map = {
+        expansion_hooks_map = {
             ('START', 'PLAY', 'ARTIST'): (_sample_play,),
             'DEFAULT': (_sample_artist,)
         }
 
-        p = Pipeline(before_joining_hooks_map=before_joining_hooks_map)
+        p = Pipeline(expansion_hooks_map=expansion_hooks_map)
         generator = p.flow(pattern_def_path,
                            dynamic_token_patterns_map=dynamic_token_patterns_map,
                            disable_progress_bar=self._disable_progress_bar)
@@ -152,11 +152,11 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles',),),)
         }
 
-        after_joining_hooks_map = {
+        combination_hooks_map = {
             ('START', 'PLAY', 'ARTIST') : (_add_random_words,)
         }
 
-        p = Pipeline(after_joining_hooks_map=after_joining_hooks_map)
+        p = Pipeline(combination_hooks_map=combination_hooks_map)
         generator = p.flow(pattern_def_path,
                            dynamic_token_patterns_map=dynamic_token_patterns_map,
                            disable_progress_bar=self._disable_progress_bar)
@@ -187,11 +187,11 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles',),),)
         }
 
-        after_joining_hooks_map = {
+        combination_hooks_map = {
             'DEFAULT' : (_add_random_words,)
         }
 
-        p = Pipeline(after_joining_hooks_map=after_joining_hooks_map)
+        p = Pipeline(combination_hooks_map=combination_hooks_map)
         generator = p.flow(pattern_def_path,
                            dynamic_token_patterns_map=dynamic_token_patterns_map,
                            disable_progress_bar=self._disable_progress_bar)
@@ -222,12 +222,12 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles',),),)
         }
 
-        after_joining_hooks_map = {
+        combination_hooks_map = {
             ('START', 'PLAY', 'ARTIST') : (_add_random_words,),
             'DEFAULT' : (_lowercase_handled_tokens,)
         }
 
-        p = Pipeline(after_joining_hooks_map=after_joining_hooks_map)
+        p = Pipeline(combination_hooks_map=combination_hooks_map)
         generator = p.flow(pattern_def_path,
                            dynamic_token_patterns_map=dynamic_token_patterns_map,
                            disable_progress_bar=self._disable_progress_bar)
@@ -349,11 +349,11 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles',),),)
         }
 
-        after_joining_hooks_map = {
+        combination_hooks_map = {
             ('None', 'PLAY_PHRASE') : (_add_commas_to_groups,),
         }
 
-        p = Pipeline(after_joining_hooks_map=after_joining_hooks_map)
+        p = Pipeline(combination_hooks_map=combination_hooks_map)
         generator = p.flow(pattern_def_path,
                            dynamic_token_patterns_map=dynamic_token_patterns_map,
                            disable_progress_bar=self._disable_progress_bar)
@@ -382,11 +382,11 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles',),),)
         }
 
-        after_joining_hooks_map = {
+        combination_hooks_map = {
             'GROUP_DEFAULT' : (_lowercase_handled_groups,)
         }
 
-        p = Pipeline(after_joining_hooks_map=after_joining_hooks_map)
+        p = Pipeline(combination_hooks_map=combination_hooks_map)
         generator = p.flow(pattern_def_path,
                            dynamic_token_patterns_map=dynamic_token_patterns_map,
                            disable_progress_bar=self._disable_progress_bar)
@@ -415,12 +415,12 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles',),),)
         }
 
-        after_joining_hooks_map = {
+        combination_hooks_map = {
             ('None', 'PLAY_PHRASE') : (_add_commas_to_groups,),
             'GROUP_DEFAULT' : (_lowercase_handled_groups,)
         }
 
-        p = Pipeline(after_joining_hooks_map=after_joining_hooks_map)
+        p = Pipeline(combination_hooks_map=combination_hooks_map)
         generator = p.flow(pattern_def_path,
                            dynamic_token_patterns_map=dynamic_token_patterns_map,
                            disable_progress_bar=self._disable_progress_bar)
@@ -756,17 +756,17 @@ class TestPipeline(unittest.TestCase):
         with self.assertRaises(ValueError):
             Pipeline(preset='IOB2', group_handler_map=group_handler_map) # type: ignore
 
-        before_joining_hooks_map = {
+        expansion_hooks_map = {
             'DEFAULT': lambda x, y, z: (x, y, z)
         }
         with self.assertRaises(ValueError):
-            Pipeline(preset='IOB2', before_joining_hooks_map=before_joining_hooks_map) # type: ignore
+            Pipeline(preset='IOB2', expansion_hooks_map=expansion_hooks_map) # type: ignore
 
-        after_joining_hooks_map = {
+        combination_hooks_map = {
             'DEFAULT' : lambda x, y, z: (x, y, z)
         }
         with self.assertRaises(ValueError):
-            Pipeline(preset='IOB2', after_joining_hooks_map=after_joining_hooks_map) # type: ignore
+            Pipeline(preset='IOB2', combination_hooks_map=combination_hooks_map) # type: ignore
 
         final_hook = lambda x, y, z: z
         with self.assertRaises(ValueError):

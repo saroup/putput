@@ -11,6 +11,7 @@ from putput.types import COMBO
 from putput.types import TOKEN_HANDLER
 from putput.types import TOKEN_HANDLER_MAP
 
+
 def combine(utterance_combo: COMBO,
             tokens: Sequence[str],
             *,

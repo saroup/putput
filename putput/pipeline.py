@@ -15,8 +15,8 @@ from typing import no_type_check
 
 from tqdm import tqdm
 
-from putput.expander import expand
 from putput.combiner import combine
+from putput.expander import expand
 from putput.joiner import ComboOptions
 from putput.logger import get_logger
 from putput.presets.factory import get_preset
@@ -26,8 +26,8 @@ from putput.types import TOKEN_HANDLER_MAP
 from putput.types import TOKEN_PATTERNS_MAP
 
 _GROUP_HANDLER = Callable[[str, Sequence[str]], str]
-_BEFORE_JOINING_HOOK = Callable[[COMBO, Sequence[str], Sequence[GROUP]], Tuple[COMBO, Sequence[str], Sequence[GROUP]]]
-_AFTER_JOINING_HOOK = Callable[[str, Sequence, Sequence], Tuple[str, Sequence, Sequence]]
+_EXPANSION_HOOK = Callable[[COMBO, Sequence[str], Sequence[GROUP]], Tuple[COMBO, Sequence[str], Sequence[GROUP]]]
+_COMBINATION_HOOK = Callable[[str, Sequence, Sequence], Tuple[str, Sequence, Sequence]]
 _FINAL_HOOK = Callable[[str, Sequence, Sequence], Any]
 _HOOK_ARGS = TypeVar('_HOOK_ARGS',
                      Tuple[COMBO, Sequence[str], Sequence[GROUP]],
@@ -35,13 +35,13 @@ _HOOK_ARGS = TypeVar('_HOOK_ARGS',
 _GROUP_HANDLER_MAP = Mapping[str, _GROUP_HANDLER]
 
 _HOOKS_MAP = Mapping[Any, Any]
-_BEFORE_JOINING_HOOKS_MAP = Mapping[Any, Sequence[_BEFORE_JOINING_HOOK]]
-_AFTER_JOINING_HOOKS_MAP = Mapping[Any, Sequence[_AFTER_JOINING_HOOK]]
+_EXPANSION_HOOKS_MAP = Mapping[Any, Sequence[_EXPANSION_HOOK]]
+_COMBINATION_HOOKS_MAP = Mapping[Any, Sequence[_COMBINATION_HOOK]]
 _COMBO_OPTIONS_MAP = Mapping[Any, ComboOptions]
 # TODO: check whether we need any instead of union
-# _HOOKS_MAP=Mapping[Union[str, Tuple[str, ...]], Union[Sequence[_BEFORE_JOINING_HOOK], Sequence[_AFTER_JOINING_HOOK]]]
-# _BEFORE_JOINING_HOOKS_MAP = Mapping[Union[str, Tuple[str, ...]], Sequence[_BEFORE_JOINING_HOOK]]
-# _AFTER_JOINING_HOOKS_MAP = Mapping[Union[str, Tuple[str, ...]], Sequence[_AFTER_JOINING_HOOK]]
+# _HOOKS_MAP=Mapping[Union[str, Tuple[str, ...]], Union[Sequence[_EXPANSION_HOOK], Sequence[_COMBINATION_HOOK]]]
+# _EXPANSION_HOOKS_MAP = Mapping[Union[str, Tuple[str, ...]], Sequence[_EXPANSION_HOOK]]
+# _COMBINATION_HOOKS_MAP = Mapping[Union[str, Tuple[str, ...]], Sequence[_COMBINATION_HOOK]]
 # _COMBO_OPTIONS_MAP = Mapping[Union[str, Tuple[str, ...]], ComboOptions]
 
 class Pipeline:
@@ -50,16 +50,16 @@ class Pipeline:
                  *,
                  token_handler_map: Optional[TOKEN_HANDLER_MAP] = None,
                  group_handler_map: Optional[_GROUP_HANDLER_MAP] = None,
-                 before_joining_hooks_map: Optional[_BEFORE_JOINING_HOOKS_MAP] = None,
-                 after_joining_hooks_map: Optional[_AFTER_JOINING_HOOKS_MAP] = None,
+                 expansion_hooks_map: Optional[_EXPANSION_HOOKS_MAP] = None,
+                 combination_hooks_map: Optional[_COMBINATION_HOOKS_MAP] = None,
                  preset: Optional[Union[str, Callable]] = None,
                  final_hook: Optional[_FINAL_HOOK] = None,
                  LOG_LEVEL: int = logging.WARNING
                  ) -> None:
         if preset and any((token_handler_map,
                            group_handler_map,
-                           before_joining_hooks_map,
-                           after_joining_hooks_map,
+                           expansion_hooks_map,
+                           combination_hooks_map,
                            final_hook)):
             raise ValueError('If a preset is used, no other arguments may be specified.')
         self._logger = get_logger(__name__, LOG_LEVEL)
@@ -68,20 +68,20 @@ class Pipeline:
                 preset = get_preset(preset)
             presets = preset()
             self._token_handler_map, self._group_handler_map = presets[0], presets[1]
-            self._before_joining_hooks_map, self._after_joining_hooks_map = presets[2], presets[3]
+            self._expansion_hooks_map, self._combination_hooks_map = presets[2], presets[3]
             self._final_hook = presets[4]
         else:
             self._token_handler_map = token_handler_map
             self._group_handler_map = group_handler_map
-            self._before_joining_hooks_map = before_joining_hooks_map
-            self._after_joining_hooks_map = after_joining_hooks_map
+            self._expansion_hooks_map = expansion_hooks_map
+            self._combination_hooks_map = combination_hooks_map
             self._final_hook = final_hook
 
     def flow(self,
              pattern_def_path: Path,
              *,
              dynamic_token_patterns_map: Optional[TOKEN_PATTERNS_MAP] = None,
-             combo_options_map: Optional[_COMBO_OPTIONS_MAP] = None,
+             combo_options_map: Optional[_COMBO_OPTIONS_MAP] = None, # TODO: should be part of init
              disable_progress_bar: bool = False
              ) -> Iterable:
         # pylint: disable=too-many-locals
@@ -92,7 +92,7 @@ class Pipeline:
                 expansion_tqdm.set_description(textwrap.shorten(desc, width=30))
                 self._logger.info(desc)
                 group_names = tuple([group[0] for group in groups])
-                if self._before_joining_hooks_map:
+                if self._expansion_hooks_map:
                     utterance_combo, tokens, groups = self._execute_joining_hooks(tokens,
                                                                                   group_names,
                                                                                   (utterance_combo, tokens, groups),
@@ -105,11 +105,11 @@ class Pipeline:
                                                  token_handler_map=self._token_handler_map,
                                                  combo_options=combo_options)
                 with tqdm(combo_gen, desc='COMBINING', total=sample_size,
-                          disable=disable_progress_bar, leave=False, miniters=1) as combo_tqdm:
-                    for utterance, handled_tokens in combo_tqdm:
+                          disable=disable_progress_bar, leave=False, miniters=1) as combination_tqdm:
+                    for utterance, handled_tokens in combination_tqdm:
                         handled_groups = _compute_handled_groups(groups, handled_tokens,
                                                                  group_handler_map=self._group_handler_map)
-                        if self._after_joining_hooks_map:
+                        if self._combination_hooks_map:
                             utterance, handled_tokens, handled_groups = self._execute_joining_hooks(tokens,
                                                                                                     group_names,
                                                                                                     (utterance,
@@ -135,7 +135,7 @@ class Pipeline:
                                args: _HOOK_ARGS,
                                stage: str
                                ) -> _HOOK_ARGS:
-        hooks_map = self._before_joining_hooks_map if stage == 'EXPANSION' else self._after_joining_hooks_map
+        hooks_map = self._expansion_hooks_map if stage == 'EXPANSION' else self._combination_hooks_map
         token_key = tuple(tokens) if tokens in hooks_map else 'DEFAULT'
         if token_key in hooks_map:
             for hook in hooks_map[token_key]:

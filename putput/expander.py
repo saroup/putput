@@ -34,10 +34,15 @@ def expand(pattern_def_path: Path,
            *,
            dynamic_token_patterns_map: Optional[TOKEN_PATTERNS_MAP] = None
            ) -> Tuple[int, Iterable[Tuple[COMBO, Sequence[str], Sequence[GROUP]]]]:
+    """Yields utterance_combo, tokens, group"""
     pattern_def = _load_pattern_def(pattern_def_path)
     validate_pattern_def(pattern_def)
     token_patterns_map = _get_token_patterns_map(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
     utterance_patterns, groups = _expand_groups(pattern_def)
+    # TODO: utterance_patterns is the same as tokens
+    # expanded_utterance_patterns, tokens, groups =
+    # _expand_utterance_patterns(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
+    # rename _expand_groups -> _expand_utterance_patterns_tokens_groups
 
     def _expand() -> Iterable[Tuple[COMBO, Sequence[str], Sequence[GROUP]]]:
         for utterance_pattern, group in zip(utterance_patterns, groups):
@@ -51,9 +56,9 @@ def _load_pattern_def(pattern_def_path: Path) -> Mapping:
     return pattern_def
 
 def _get_token_patterns_map(pattern_def: Mapping,
-                               *,
-                               dynamic_token_patterns_map: Optional[TOKEN_PATTERNS_MAP] = None
-                               ) -> TOKEN_PATTERNS_MAP:
+                            *,
+                            dynamic_token_patterns_map: Optional[TOKEN_PATTERNS_MAP] = None
+                            ) -> TOKEN_PATTERNS_MAP:
     token_patterns_map = {} # type: Dict[str, Sequence[TOKEN_PATTERN]]
     static_token_patterns_map = _get_static_token_patterns_map(pattern_def)
     token_patterns_map.update(static_token_patterns_map)
@@ -67,7 +72,7 @@ def _get_base_item_map(pattern_def: Mapping, base_key: str) -> _BASE_ITEM_MAP:
 
 def _get_static_token_patterns_map(pattern_def: Mapping) -> TOKEN_PATTERNS_MAP:
     return {
-        token: _process_static_token_patterns(pattern_def, token_patterns)
+        token: _expand_static_token_patterns(pattern_def, token_patterns)
         for token_type_map in pattern_def['token_patterns']
         for token_type in token_type_map
         if token_type == 'static'
@@ -75,9 +80,9 @@ def _get_static_token_patterns_map(pattern_def: Mapping) -> TOKEN_PATTERNS_MAP:
         for token, token_patterns in static_token_patterns_map.items()
     }
 
-def _process_static_token_patterns(pattern_def: Mapping,
-                                   token_patterns: _TOKEN_PATTERNS_WITH_BASE_TOKENS
-                                   ) -> Sequence[TOKEN_PATTERN]:
+def _expand_static_token_patterns(pattern_def: Mapping,
+                                  token_patterns: _TOKEN_PATTERNS_WITH_BASE_TOKENS
+                                  ) -> Sequence[TOKEN_PATTERN]:
     if 'base_tokens' in pattern_def:
         token_patterns = _expand_base_tokens(pattern_def, token_patterns)
     return _convert_token_patterns_to_tuples(token_patterns)
