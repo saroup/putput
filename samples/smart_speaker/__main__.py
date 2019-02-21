@@ -5,7 +5,6 @@ from typing import Tuple
 
 from putput import ComboOptions
 from putput import Pipeline
-from putput.presets import iob2
 from putput.types import COMBO
 from putput.types import GROUP
 
@@ -22,10 +21,8 @@ def main() -> None:
 
     # default format
     print('*' * 50 + 'DEFAULT' + '*' * 50)
-    p = Pipeline()
-    for utterance, tokens, groups in p.flow(pattern_def_path,
-                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
-                                            combo_options_map=combo_options_map):
+    p = Pipeline(dynamic_token_patterns_map=dynamic_token_patterns_map, combo_options_map=combo_options_map)
+    for utterance, tokens, groups in p.flow(pattern_def_path):
         print('utterance:', utterance)
         print('tokens:', tokens)
         print('groups:', groups)
@@ -38,10 +35,10 @@ def main() -> None:
         ('WAKE', 'PLAY', 'ARTIST'): (_sample_play, _sample_play)
     }
 
-    p = Pipeline(expansion_hooks_map=expansion_hooks_map)
-    for utterance, tokens, groups in p.flow(pattern_def_path,
-                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
-                                            combo_options_map=combo_options_map):
+    p = Pipeline(expansion_hooks_map=expansion_hooks_map,
+                 dynamic_token_patterns_map=dynamic_token_patterns_map,
+                 combo_options_map=combo_options_map)
+    for utterance, tokens, groups in p.flow(pattern_def_path):
         print('utterance:', utterance)
         print('tokens:', tokens)
         print('groups:', groups)
@@ -51,14 +48,14 @@ def main() -> None:
 
     # default format with after joining hook
     print('*' * 50 + 'AFTER JOINING HOOK' + '*' * 50)
-    combination_hooks_map = {
+    combo_hooks_map = {
         ('WAKE', 'PLAY', 'ARTIST'): (_add_random_words_to_utterance,)
     }
 
-    p = Pipeline(combination_hooks_map=combination_hooks_map)
-    for utterance, tokens, groups in p.flow(pattern_def_path,
-                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
-                                            combo_options_map=combo_options_map):
+    p = Pipeline(combo_hooks_map=combo_hooks_map,
+                 dynamic_token_patterns_map=dynamic_token_patterns_map,
+                 combo_options_map=combo_options_map)
+    for utterance, tokens, groups in p.flow(pattern_def_path):
         print('utterance:', utterance)
         print('tokens:', tokens)
         print('groups:', groups)
@@ -68,10 +65,10 @@ def main() -> None:
 
     # IOB preset format
     print('*' * 50 + 'IOB(using preset)' + '*' * 50)
-    p = Pipeline(preset='IOB2')
-    for utterance, tokens, groups in p.flow(pattern_def_path,
-                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
-                                            combo_options_map=combo_options_map):
+    p = Pipeline.from_preset('IOB2',
+                             dynamic_token_patterns_map=dynamic_token_patterns_map,
+                             combo_options_map=combo_options_map)
+    for utterance, tokens, groups in p.flow(pattern_def_path):
         print('utterance:', utterance)
         print('tokens:', tokens)
         print('groups:', groups)
@@ -79,10 +76,10 @@ def main() -> None:
 
     # IOB preset format with object
     print('*' * 50 + 'IOB(using preset with object)' + '*' * 50)
-    p = Pipeline(preset=iob2.preset(tokens_to_exclude=('WAKE',)))
-    for utterance, tokens, groups in p.flow(pattern_def_path,
-                                            dynamic_token_patterns_map=dynamic_token_patterns_map,
-                                            combo_options_map=combo_options_map):
+    p = Pipeline.from_preset('IOB2',
+                             dynamic_token_patterns_map=dynamic_token_patterns_map,
+                             combo_options_map=combo_options_map)
+    for utterance, tokens, groups in p.flow(pattern_def_path):
         print('utterance:', utterance)
         print('tokens:', tokens)
         print('groups:', groups)
@@ -90,10 +87,10 @@ def main() -> None:
 
     # displaCy preset
     print('*' * 50 + 'displaCy' + '*' * 50)
-    p = Pipeline(preset='DISPLACY')
-    for token_visualizer, group_visualizer in p.flow(pattern_def_path,
-                                                     dynamic_token_patterns_map=dynamic_token_patterns_map,
-                                                     combo_options_map=combo_options_map):
+    p = Pipeline.from_preset('DISPLACY',
+                             dynamic_token_patterns_map=dynamic_token_patterns_map,
+                             combo_options_map=combo_options_map)
+    for token_visualizer, group_visualizer in p.flow(pattern_def_path):
         print('token visualizer: ', token_visualizer)
         print()
         print('group visualizer: ', group_visualizer)

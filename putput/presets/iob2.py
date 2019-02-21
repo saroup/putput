@@ -2,18 +2,11 @@
 from functools import partial
 from typing import Callable
 from typing import List
+from typing import Mapping
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
 
-MYPY = False
-if MYPY: # pragma: no cover
-    # pylint: disable=cyclic-import
-    from putput.pipeline import _COMBINATION_HOOKS_MAP # pylint: disable=unused-import
-    from putput.pipeline import _EXPANSION_HOOKS_MAP # pylint: disable=unused-import
-    from putput.pipeline import _FINAL_HOOK # pylint: disable=unused-import
-    from putput.pipeline import _GROUP_HANDLER_MAP # pylint: disable=unused-import
-    from putput.types import TOKEN_HANDLER_MAP # pylint: disable=unused-import
 
 def preset(*,
            tokens_to_include: Optional[Sequence[str]] = None,
@@ -32,11 +25,7 @@ def _preset(*,
             tokens_to_exclude: Optional[Sequence[str]] = None,
             groups_to_include: Optional[Sequence[str]] = None,
             groups_to_exclude: Optional[Sequence[str]] = None
-            ) -> Tuple[Optional['TOKEN_HANDLER_MAP'],
-                       Optional['_GROUP_HANDLER_MAP'],
-                       Optional['_EXPANSION_HOOKS_MAP'],
-                       Optional['_COMBINATION_HOOKS_MAP'],
-                       Optional['_FINAL_HOOK']]:
+            ) -> Mapping:
     if tokens_to_include and tokens_to_exclude:
         raise ValueError("Cannot specify tokens_to_include AND tokens_to_exclude.")
     if groups_to_include and groups_to_exclude:
@@ -45,7 +34,7 @@ def _preset(*,
     token_handler_map = {'DEFAULT': _iob_token_handler}
     group_handler_map = {'DEFAULT': _iob_group_handler}
 
-    combination_hooks_map = {}
+    combo_hooks_map = {}
 
     tokens_hook = None
     if tokens_to_include:
@@ -53,7 +42,7 @@ def _preset(*,
     if tokens_to_exclude:
         tokens_hook = partial(_exclude_tokens, tokens_to_exclude=tokens_to_exclude)
     if tokens_hook:
-        combination_hooks_map.update({'DEFAULT': (tokens_hook,)})
+        combo_hooks_map.update({'DEFAULT': (tokens_hook,)})
 
     groups_hook = None
     if groups_to_include:
@@ -61,8 +50,12 @@ def _preset(*,
     if groups_to_exclude:
         groups_hook = partial(_exclude_groups, groups_to_exclude=groups_to_exclude)
     if groups_hook:
-        combination_hooks_map.update({'GROUP_DEFAULT': (groups_hook,)})
-    return (token_handler_map, group_handler_map, None, combination_hooks_map, None)
+        combo_hooks_map.update({'GROUP_DEFAULT': (groups_hook,)})
+    return {
+        'token_handler_map': token_handler_map,
+        'group_handler_map': group_handler_map,
+        'combo_hooks_map': combo_hooks_map
+    }
 
 def _iob_token_handler(token: str, phrase: str) -> str:
     tokens = ['{}-{}'.format('B' if i == 0 else 'I', token)

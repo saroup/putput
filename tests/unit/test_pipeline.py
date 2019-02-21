@@ -144,11 +144,11 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles',),),)
         }
 
-        combination_hooks_map = {
+        combo_hooks_map = {
             ('START', 'PLAY', 'ARTIST') : (_add_random_words,)
         }
 
-        p = Pipeline(combination_hooks_map=combination_hooks_map, dynamic_token_patterns_map=dynamic_token_patterns_map)
+        p = Pipeline(combo_hooks_map=combo_hooks_map, dynamic_token_patterns_map=dynamic_token_patterns_map)
         generator = p.flow(pattern_def_path, disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
         expected_utterances = ('he will want to play the please beatles', 'he will want to listen the please beatles',
@@ -177,11 +177,11 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles',),),)
         }
 
-        combination_hooks_map = {
+        combo_hooks_map = {
             'DEFAULT' : (_add_random_words,)
         }
 
-        p = Pipeline(combination_hooks_map=combination_hooks_map, dynamic_token_patterns_map=dynamic_token_patterns_map)
+        p = Pipeline(combo_hooks_map=combo_hooks_map, dynamic_token_patterns_map=dynamic_token_patterns_map)
         generator = p.flow(pattern_def_path, disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
         expected_utterances = ('he will want to play the please beatles', 'he will want to listen the please beatles',
@@ -210,12 +210,12 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles',),),)
         }
 
-        combination_hooks_map = {
+        combo_hooks_map = {
             ('START', 'PLAY', 'ARTIST') : (_add_random_words,),
             'DEFAULT' : (_lowercase_handled_tokens,)
         }
 
-        p = Pipeline(combination_hooks_map=combination_hooks_map, dynamic_token_patterns_map=dynamic_token_patterns_map)
+        p = Pipeline(combo_hooks_map=combo_hooks_map, dynamic_token_patterns_map=dynamic_token_patterns_map)
         generator = p.flow(pattern_def_path, disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
         expected_utterances = ('he will want to play the please beatles', 'he will want to listen the please beatles',
@@ -329,11 +329,11 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles',),),)
         }
 
-        combination_hooks_map = {
+        combo_hooks_map = {
             ('None', 'PLAY_PHRASE') : (_add_commas_to_groups,),
         }
 
-        p = Pipeline(combination_hooks_map=combination_hooks_map, dynamic_token_patterns_map=dynamic_token_patterns_map)
+        p = Pipeline(combo_hooks_map=combo_hooks_map, dynamic_token_patterns_map=dynamic_token_patterns_map)
         generator = p.flow(pattern_def_path, disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
         expected_utterances = ('hi he will want to play', 'hi he will want to listen',
@@ -360,11 +360,11 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles',),),)
         }
 
-        combination_hooks_map = {
+        combo_hooks_map = {
             'GROUP_DEFAULT' : (_lowercase_handled_groups,)
         }
 
-        p = Pipeline(combination_hooks_map=combination_hooks_map, dynamic_token_patterns_map=dynamic_token_patterns_map)
+        p = Pipeline(combo_hooks_map=combo_hooks_map, dynamic_token_patterns_map=dynamic_token_patterns_map)
         generator = p.flow(pattern_def_path, disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
         expected_utterances = ('hi he will want to play', 'hi he will want to listen',
@@ -391,12 +391,12 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles',),),)
         }
 
-        combination_hooks_map = {
+        combo_hooks_map = {
             ('None', 'PLAY_PHRASE') : (_add_commas_to_groups,),
             'GROUP_DEFAULT' : (_lowercase_handled_groups,)
         }
 
-        p = Pipeline(combination_hooks_map=combination_hooks_map, dynamic_token_patterns_map=dynamic_token_patterns_map)
+        p = Pipeline(combo_hooks_map=combo_hooks_map, dynamic_token_patterns_map=dynamic_token_patterns_map)
         generator = p.flow(pattern_def_path, disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
         expected_utterances = ('hi he will want to play', 'hi he will want to listen',
@@ -643,7 +643,7 @@ class TestPipeline(unittest.TestCase):
 
     def test_iob2_preset_tokens_to_include(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        p = Pipeline(preset=iob2.preset(tokens_to_include=('WAKE',)))
+        p = Pipeline.from_preset(iob2.preset(tokens_to_include=('WAKE',)))
         generator = p.flow(pattern_def_path, disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
         expected_utterances = ('hi he will want to play',
@@ -668,7 +668,7 @@ class TestPipeline(unittest.TestCase):
 
     def test_iob2_preset_tokens_to_exclude(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        p = Pipeline(preset=iob2.preset(tokens_to_exclude=('WAKE',)))
+        p = Pipeline.from_preset(iob2.preset(tokens_to_exclude=('WAKE',)))
         generator = p.flow(pattern_def_path, disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
         expected_utterances = ('hi he will want to play',
@@ -693,48 +693,19 @@ class TestPipeline(unittest.TestCase):
 
     def test_iob2_preset_tokens_to_include_and_tokens_to_exclude(self) -> None:
         with self.assertRaises(ValueError):
-            Pipeline(preset=iob2.preset(tokens_to_include=('WAKE',), tokens_to_exclude=('PLAY',)))
+            Pipeline.from_preset(iob2.preset(tokens_to_include=('WAKE',), tokens_to_exclude=('PLAY',)))
 
     def test_iob2_preset_groups_to_include_and_groups_to_exclude(self) -> None:
         with self.assertRaises(ValueError):
-            Pipeline(preset=iob2.preset(groups_to_include=('PLAY_SONG',), groups_to_exclude=('PLAY_ARTIST',)))
-
-    def test_iob2_preset_and_other_params(self) -> None:
-        token_handler_map = {
-            'SOME_TOKEN': lambda x, y: x,
-        }
-        with self.assertRaises(ValueError):
-            Pipeline(preset='IOB2', token_handler_map=token_handler_map) # type: ignore
-
-        group_handler_map = {
-            'SOME_GROUP': lambda x, y: x,
-        }
-        with self.assertRaises(ValueError):
-            Pipeline(preset='IOB2', group_handler_map=group_handler_map) # type: ignore
-
-        expansion_hooks_map = {
-            'DEFAULT': lambda x, y, z: (x, y, z)
-        }
-        with self.assertRaises(ValueError):
-            Pipeline(preset='IOB2', expansion_hooks_map=expansion_hooks_map) # type: ignore
-
-        combination_hooks_map = {
-            'DEFAULT' : lambda x, y, z: (x, y, z)
-        }
-        with self.assertRaises(ValueError):
-            Pipeline(preset='IOB2', combination_hooks_map=combination_hooks_map) # type: ignore
-
-        final_hook = lambda x, y, z: z
-        with self.assertRaises(ValueError):
-            Pipeline(preset='IOB2', final_hook=final_hook)
+            Pipeline.from_preset(iob2.preset(groups_to_include=('PLAY_SONG',), groups_to_exclude=('PLAY_ARTIST',)))
 
     def test_preset_str_invalid(self) -> None:
         with self.assertRaises(ValueError):
-            Pipeline(preset='INVALID')
+            Pipeline.from_preset('INVALID')
 
     def test_iob2_preset_groups_to_include(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        p = Pipeline(preset=iob2.preset(groups_to_include=('PLAY_PHRASE',)))
+        p = Pipeline.from_preset(iob2.preset(groups_to_include=('PLAY_PHRASE',)))
         generator = p.flow(pattern_def_path, disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
         expected_utterances = ('hi he will want to play',
@@ -759,7 +730,7 @@ class TestPipeline(unittest.TestCase):
 
     def test_iob2_preset_groups_to_exclude(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        p = Pipeline(preset=iob2.preset(groups_to_exclude=('PLAY_PHRASE',)))
+        p = Pipeline.from_preset(iob2.preset(groups_to_exclude=('PLAY_PHRASE',)))
         generator = p.flow(pattern_def_path, disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
         expected_utterances = ('hi he will want to play',
@@ -784,7 +755,7 @@ class TestPipeline(unittest.TestCase):
 
     def test_iob2_str_preset(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        p = Pipeline(preset='IOB2')
+        p = Pipeline.from_preset('IOB2')
         generator = p.flow(pattern_def_path, disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
         expected_utterances = ('hi he will want to play',
@@ -809,7 +780,7 @@ class TestPipeline(unittest.TestCase):
 
     def test_displaCy_func_preset(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        p = Pipeline(preset=displaCy.preset())
+        p = Pipeline.from_preset(displaCy.preset())
         generator = p.flow(pattern_def_path, disable_progress_bar=self._disable_progress_bar)
         actual_tokens_visualizer, actual_groups_visualizer = zip(*generator)
         exp_tokens_visualizer = ({'text': 'hi he will want to play',
@@ -860,7 +831,7 @@ class TestPipeline(unittest.TestCase):
 
     def test_displaCy_str_preset(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        p = Pipeline(preset='DISPLACY')
+        p = Pipeline.from_preset('DISPLACY')
         generator = p.flow(pattern_def_path, disable_progress_bar=self._disable_progress_bar)
         actual_tokens_visualizer, actual_groups_visualizer = zip(*generator)
         exp_tokens_visualizer = ({'text': 'hi he will want to play',

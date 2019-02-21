@@ -1,32 +1,21 @@
 import re
 from typing import Callable
 from typing import Mapping
-from typing import Optional
 from typing import Sequence
 from typing import Tuple
-
-MYPY = False
-if MYPY: # pragma: no cover
-    # pylint: disable=cyclic-import
-    from putput.pipeline import _COMBINATION_HOOKS_MAP # pylint: disable=unused-import
-    from putput.pipeline import _EXPANSION_HOOKS_MAP # pylint: disable=unused-import
-    from putput.pipeline import _FINAL_HOOK # pylint: disable=unused-import
-    from putput.pipeline import _GROUP_HANDLER_MAP # pylint: disable=unused-import
-    from putput.types import TOKEN_HANDLER_MAP # pylint: disable=unused-import
 
 
 def preset() -> Callable:
     return _preset
 
-def _preset() -> Tuple[Optional['TOKEN_HANDLER_MAP'],
-                       Optional['_GROUP_HANDLER_MAP'],
-                       Optional['_EXPANSION_HOOKS_MAP'],
-                       Optional['_COMBINATION_HOOKS_MAP'],
-                       Optional['_FINAL_HOOK']]:
-    combination_hooks_map = {}
-    combination_hooks_map['DEFAULT'] = (_handled_tokens_to_ent,)
-    combination_hooks_map['GROUP_DEFAULT'] = (_handled_groups_to_ent,)
-    return (None, None, None, combination_hooks_map, _convert_to_displaCy_visualizer)
+def _preset() -> Mapping:
+    combo_hooks_map = {}
+    combo_hooks_map['DEFAULT'] = (_handled_tokens_to_ent,)
+    combo_hooks_map['GROUP_DEFAULT'] = (_handled_groups_to_ent,)
+    return {
+        'combo_hooks_map': combo_hooks_map,
+        'final_hook': _convert_to_displaCy_visualizer
+    }
 
 def _convert_to_ents(utterance: str,
                      handled_items: Sequence[str],
@@ -66,7 +55,8 @@ def _handled_tokens_to_ent(utterance: str,
 
 def _convert_to_displaCy_visualizer(utterance: str,
                                     handled_tokens: Sequence[Mapping],
-                                    handled_groups: Sequence[Mapping]):
+                                    handled_groups: Sequence[Mapping]
+                                    ) -> Tuple[Mapping, Mapping]:
     # https://spacy.io/usage/visualizers#manual-usage
     # ent usage
     token_visualizer = {
