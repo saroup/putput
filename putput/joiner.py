@@ -15,9 +15,6 @@ from putput.logger import get_logger
 
 T = TypeVar('T')
 
-_COMBO = Sequence[Sequence[T]]
-_COMBO_PRODUCT = Iterable[Sequence[T]]
-
 class ComboOptions:
     """Options for join_combo via random sampling.
 
@@ -52,7 +49,7 @@ class ComboOptions:
         """Read only attribute."""
         return self._seed
 
-def join_combo(combo: _COMBO, *, combo_options: Optional[ComboOptions] = None) -> _COMBO_PRODUCT:
+def join_combo(combo: Sequence[Sequence[T]], *, combo_options: Optional[ComboOptions] = None) -> Iterable[Sequence[T]]:
     """Generates a joined combo.
 
     A joined combo is the product, or random sampling of the product, of each component
@@ -71,10 +68,10 @@ def join_combo(combo: _COMBO, *, combo_options: Optional[ComboOptions] = None) -
         return _join_with_sampling(combo, combo_options)
     return _join_without_sampling(combo)
 
-def _join_without_sampling(combo: _COMBO) -> _COMBO_PRODUCT:
+def _join_without_sampling(combo: Sequence[Sequence[T]]) -> Iterable[Sequence[T]]:
     return itertools.product(*combo)
 
-def _join_with_sampling(combo: _COMBO, combo_options: ComboOptions) -> _COMBO_PRODUCT:
+def _join_with_sampling(combo: Sequence[Sequence[T]], combo_options: ComboOptions) -> Iterable[Sequence[T]]:
     random.seed(combo_options.seed)
     np.random.seed(combo_options.seed)
 

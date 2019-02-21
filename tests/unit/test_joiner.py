@@ -1,18 +1,17 @@
 import unittest
+from typing import Iterable
 from typing import List
 from typing import Optional
-from typing import Tuple  # pylint: disable=unused-import
+from typing import Sequence
 
-from putput.joiner import _COMBO
-from putput.joiner import _COMBO_PRODUCT
 from putput.joiner import ComboOptions
 from putput.joiner import join_combo
 
 
 class TestJoiner(unittest.TestCase):
     def _test_join_combo(self,
-                         pattern: _COMBO,
-                         expected_output: _COMBO_PRODUCT,
+                         pattern: Sequence[Sequence],
+                         expected_output: Iterable[Sequence],
                          *,
                          all_options: Optional[List[ComboOptions]] = None
                          ) -> None:
@@ -94,7 +93,7 @@ class TestJoiner(unittest.TestCase):
 
     def test_zero_dimension(self) -> None:
         with self.assertRaises(ValueError):
-            pattern = (tuple(), ('would', 'will'), ('want', 'have', 'order')) # type: _COMBO
+            pattern = (tuple(), ('would', 'will'), ('want', 'have', 'order')) # type: Sequence[Sequence]
             expected_output = (('would', 'want'), ('would', 'have'),
                                ('would', 'order'), ('will', 'want'),
                                ('will', 'have'), ('will', 'order'))

@@ -4,7 +4,7 @@ from typing import Type
 
 from yaml.scanner import ScannerError
 
-from putput.generator import generate_utterance_combo_tokens_and_groups
+from putput.expander import expand
 from putput.validator import PatternDefinitionValidationError
 
 
@@ -19,7 +19,7 @@ class TestValidator(unittest.TestCase):
                          ) -> None:
         pattern_def = self._base_dir / pattern_def_file_name
         with self.assertRaises(exception) as cm:
-            for _ in generate_utterance_combo_tokens_and_groups(pattern_def):
+            for _ in expand(pattern_def):
                 break
         self.assertIsInstance(cm.exception, exception)
 
