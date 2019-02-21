@@ -1,5 +1,6 @@
 """This module provides functionality to generate utterances and tokens after processing the pattern definition."""
 from functools import reduce
+from itertools import repeat
 from typing import Iterable
 from typing import Optional
 from typing import Sequence
@@ -43,12 +44,16 @@ def _compute_handled_token_combo(utterance_combo: COMBO,
                                  *,
                                  token_handler_map: Optional[TOKEN_HANDLER_MAP] = None
                                  ) -> COMBO:
-    handled_token_combo = []
-    for utterance_component, token in zip(utterance_combo, tokens):
-        token_components = tuple(_get_token_handler(token, token_handler_map=token_handler_map)(token, phrase)
-                                 for phrase in utterance_component)
-        handled_token_combo.append(token_components)
-    return tuple(handled_token_combo)
+    handled_token_combo = tuple(map(_compute_token_components, utterance_combo, tokens, repeat(token_handler_map)))
+    return handled_token_combo
+
+def _compute_token_components(utterance_component: Sequence[str],
+                              token: str,
+                              token_handler_map: Optional[TOKEN_HANDLER_MAP] = None
+                              ) -> Sequence[str]:
+    token_components = tuple(_get_token_handler(token, token_handler_map=token_handler_map)(token, phrase)
+                             for phrase in utterance_component)
+    return token_components
 
 def _get_token_handler(token: str,
                        *,
