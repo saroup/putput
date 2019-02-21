@@ -9,8 +9,6 @@ from putput import ComboOptions
 from putput import Pipeline
 from putput.presets import displaCy
 from putput.presets import iob2
-from putput.types import COMBO
-from putput.types import GROUP
 from tests.unit.helper_functions import compare_all_pairs
 
 
@@ -892,12 +890,12 @@ def _just_tokens(token: str, _: str) -> str:
 def _remove_token(_: str, phrase: str) -> str:
     return '[({phrase})]'.format(phrase=phrase)
 
-def _sample_utterance_combo(utterance_combo: COMBO,
+def _sample_utterance_combo(utterance_combo: Sequence[Sequence[str]],
                             tokens: Sequence[str],
-                            groups: Sequence[GROUP],
+                            groups: Sequence[Tuple[str, int]],
                             token_to_sample: str,
                             sample_size: int,
-                            ) -> Tuple[COMBO, Sequence[str], Sequence[GROUP]]:
+                            ) -> Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]:
     random.seed(0)
     TOKEN_INDEX = tokens.index(token_to_sample)
     utterance_combo_list = list(utterance_combo)
@@ -906,16 +904,16 @@ def _sample_utterance_combo(utterance_combo: COMBO,
     utterance_combo = tuple(utterance_combo_list)
     return utterance_combo, tokens, groups
 
-def _sample_play(utterance_combo: COMBO,
+def _sample_play(utterance_combo: Sequence[Sequence[str]],
                  tokens: Sequence[str],
-                 groups: Sequence[GROUP]
-                 ) -> Tuple[COMBO, Sequence[str], Sequence[GROUP]]:
+                 groups: Sequence[Tuple[str, int]]
+                 ) -> Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]:
     return _sample_utterance_combo(utterance_combo, tokens, groups, 'PLAY', 1)
 
-def _sample_artist(utterance_combo: COMBO,
+def _sample_artist(utterance_combo: Sequence[Sequence[str]],
                    tokens: Sequence[str],
-                   groups: Sequence[GROUP]
-                   ) -> Tuple[COMBO, Sequence[str], Sequence[GROUP]]:
+                   groups: Sequence[Tuple[str, int]]
+                   ) -> Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]:
     return _sample_utterance_combo(utterance_combo, tokens, groups, 'ARTIST', 1)
 
 def _add_random_words(utterance: str,

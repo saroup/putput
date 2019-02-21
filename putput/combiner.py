@@ -1,22 +1,21 @@
 """This module provides functionality to generate utterances and tokens after processing the pattern definition."""
 from functools import reduce
 from itertools import repeat
+from typing import Callable
 from typing import Iterable
+from typing import Mapping
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
 
 from putput.joiner import ComboOptions
 from putput.joiner import join_combo
-from putput.types import COMBO
-from putput.types import TOKEN_HANDLER
-from putput.types import TOKEN_HANDLER_MAP
 
 
-def combine(utterance_combo: COMBO,
+def combine(utterance_combo: Sequence[Sequence[str]],
             tokens: Sequence[str],
             *,
-            token_handler_map: Optional[TOKEN_HANDLER_MAP] = None,
+            token_handler_map: Optional[Mapping[str, Callable[[str, str], str]]] = None,
             combo_options: Optional[ComboOptions] = None
             ) -> Tuple[int, Iterable[Tuple[str, Sequence[str]]]]:
     # TODO: combo options should behave this way too in joiner
@@ -39,17 +38,17 @@ def combine(utterance_combo: COMBO,
             yield ' '.join(utterance), tuple(handled_tokens)
     return sample_size, _combine()
 
-def _compute_handled_token_combo(utterance_combo: COMBO,
+def _compute_handled_token_combo(utterance_combo: Sequence[Sequence[str]],
                                  tokens: Sequence[str],
                                  *,
-                                 token_handler_map: Optional[TOKEN_HANDLER_MAP] = None
-                                 ) -> COMBO:
+                                 token_handler_map: Optional[Mapping[str, Callable[[str, str], str]]] = None
+                                 ) -> Sequence[Sequence[str]]:
     handled_token_combo = tuple(map(_compute_token_components, utterance_combo, tokens, repeat(token_handler_map)))
     return handled_token_combo
 
 def _compute_token_components(utterance_component: Sequence[str],
                               token: str,
-                              token_handler_map: Optional[TOKEN_HANDLER_MAP] = None
+                              token_handler_map: Optional[Mapping[str, Callable[[str, str], str]]] = None
                               ) -> Sequence[str]:
     token_components = tuple(_get_token_handler(token, token_handler_map=token_handler_map)(token, phrase)
                              for phrase in utterance_component)
@@ -57,8 +56,8 @@ def _compute_token_components(utterance_component: Sequence[str],
 
 def _get_token_handler(token: str,
                        *,
-                       token_handler_map: Optional[TOKEN_HANDLER_MAP] = None
-                       ) -> TOKEN_HANDLER:
+                       token_handler_map: Optional[Mapping[str, Callable[[str, str], str]]] = None
+                       ) -> Callable[[str, str], str]:
     default_token_handler = lambda token, phrase: '[{}({})]'.format(token, phrase)
     if token_handler_map:
         return token_handler_map.get(token) or token_handler_map.get('DEFAULT') or default_token_handler

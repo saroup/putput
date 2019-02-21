@@ -5,8 +5,6 @@ from typing import Tuple
 
 from putput import ComboOptions
 from putput import Pipeline
-from putput.types import COMBO
-from putput.types import GROUP
 
 
 def main() -> None:
@@ -109,18 +107,18 @@ def _add_random_words_to_utterance(utterance: str,
     utterance = ' '.join(utterances)
     return utterance, handled_tokens, handled_groups
 
-def _sample_play(utterance_combination: COMBO,
+def _sample_play(utterance_combination: Sequence[Sequence[str]],
                  tokens: Sequence[str],
-                 groups: Sequence[GROUP]
-                 ) -> Tuple[COMBO, Sequence[str], Sequence[GROUP]]:
+                 groups: Sequence[Tuple[str, int]]
+                 ) -> Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]:
     return _sample_utterance_component(utterance_combination, tokens, groups, 'PLAY', 1)
 
-def _sample_utterance_component(utterance_combination: COMBO,
+def _sample_utterance_component(utterance_combination: Sequence[Sequence[str]],
                                 tokens: Sequence[str],
-                                groups: Sequence[GROUP],
+                                groups: Sequence[Tuple[str, int]],
                                 token_to_sample: str,
                                 sample_size: int
-                                ) -> Tuple[COMBO, Sequence[str], Sequence[GROUP]]:
+                                ) -> Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]:
     token_index = tokens.index(token_to_sample)
     utterance_combination_list = list(utterance_combination)
     sampled_combinations = tuple(random.sample(utterance_combination_list.pop(token_index), sample_size))

@@ -21,41 +21,26 @@ from putput.expander import expand
 from putput.joiner import ComboOptions
 from putput.logger import get_logger
 from putput.presets.factory import get_preset
-from putput.types import COMBO
-from putput.types import GROUP
-from putput.types import TOKEN_HANDLER_MAP
-from putput.types import TOKEN_PATTERNS_MAP
 
-_GROUP_HANDLER = Callable[[str, Sequence[str]], str]
-_EXPANSION_HOOK = Callable[[COMBO, Sequence[str], Sequence[GROUP]], Tuple[COMBO, Sequence[str], Sequence[GROUP]]]
-_COMBINATION_HOOK = Callable[[str, Sequence, Sequence], Tuple[str, Sequence, Sequence]]
-_FINAL_HOOK = Callable[[str, Sequence, Sequence], Any]
 _HOOK_ARGS = TypeVar('_HOOK_ARGS',
-                     Tuple[COMBO, Sequence[str], Sequence[GROUP]],
+                     Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
                      Tuple[str, Sequence[str], Sequence[str]])
-_GROUP_HANDLER_MAP = Mapping[str, _GROUP_HANDLER]
 
-_HOOKS_MAP = Mapping[Any, Any]
-_EXPANSION_HOOKS_MAP = Mapping[Any, Sequence[_EXPANSION_HOOK]]
-_combo_hooks_map = Mapping[Any, Sequence[_COMBINATION_HOOK]]
-_COMBO_OPTIONS_MAP = Mapping[Any, ComboOptions]
-# TODO: check whether we need any instead of union
-# _HOOKS_MAP=Mapping[Union[str, Tuple[str, ...]], Union[Sequence[_EXPANSION_HOOK], Sequence[_COMBINATION_HOOK]]]
-# _EXPANSION_HOOKS_MAP = Mapping[Union[str, Tuple[str, ...]], Sequence[_EXPANSION_HOOK]]
-# _combo_hooks_map = Mapping[Union[str, Tuple[str, ...]], Sequence[_COMBINATION_HOOK]]
-# _COMBO_OPTIONS_MAP = Mapping[Union[str, Tuple[str, ...]], ComboOptions]
+_E_H_MAP = Mapping[Any, Sequence[Callable[[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
+                                          Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]]]]
+C_H_MAP = Mapping[Any, Sequence[Callable[[str, Sequence, Sequence], Tuple[str, Sequence, Sequence]]]]
 
 class Pipeline:
     # pylint: disable=too-many-instance-attributes
     def __init__(self,
                  *,
-                 dynamic_token_patterns_map: Optional[TOKEN_PATTERNS_MAP] = None,
-                 token_handler_map: Optional[TOKEN_HANDLER_MAP] = None,
-                 group_handler_map: Optional[_GROUP_HANDLER_MAP] = None,
-                 expansion_hooks_map: Optional[_EXPANSION_HOOKS_MAP] = None,
-                 combo_hooks_map: Optional[_combo_hooks_map] = None,
-                 combo_options_map: Optional[_COMBO_OPTIONS_MAP] = None,
-                 final_hook: Optional[_FINAL_HOOK] = None,
+                 dynamic_token_patterns_map: Optional[Mapping[str, Sequence[Sequence[Sequence[str]]]]] = None,
+                 token_handler_map: Optional[Mapping[str, Callable[[str, str], str]]] = None,
+                 group_handler_map: Optional[Mapping[str, Callable[[str, Sequence[str]], str]]] = None,
+                 expansion_hooks_map: Optional[_E_H_MAP] = None,
+                 combo_hooks_map: Optional[C_H_MAP] = None,
+                 combo_options_map: Optional[Mapping[Any, ComboOptions]] = None,
+                 final_hook: Optional[Callable[[str, Sequence, Sequence], Any]] = None,
                  LOG_LEVEL: int = logging.WARNING
                  ) -> None:
         self.dynamic_token_patterns_map = dynamic_token_patterns_map
@@ -100,9 +85,9 @@ class Pipeline:
                     yield utterance, handled_tokens, handled_groups
 
     def _combine(self,
-                 utterance_combo: COMBO,
+                 utterance_combo: Sequence[Sequence[str]],
                  tokens: Sequence[str],
-                 groups: Sequence[GROUP],
+                 groups: Sequence[Tuple[str, int]],
                  *,
                  disable_progress_bar: bool = False
                  ) -> Iterable[Tuple[str, Sequence[str], Sequence[str]]]:
@@ -134,7 +119,7 @@ class Pipeline:
                 pattern_def_path: Path,
                 *,
                 disable_progress_bar: bool = False
-                ) -> Iterable[Tuple[COMBO, Sequence[str], Sequence[GROUP]]]:
+                ) -> Iterable[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]]:
         ilen, exp_gen = expand(pattern_def_path, dynamic_token_patterns_map=self.dynamic_token_patterns_map)
         with tqdm(exp_gen, total=ilen, disable=disable_progress_bar, leave=False, miniters=1) as expansion_tqdm:
             for utterance_combo, tokens, groups in expansion_tqdm:
@@ -150,7 +135,9 @@ class Pipeline:
                 yield utterance_combo, tokens, groups
 
     @staticmethod
-    def _get_combo_options(tokens: Sequence[str], combo_options_map: _COMBO_OPTIONS_MAP) -> Optional[ComboOptions]:
+    def _get_combo_options(tokens: Sequence[str],
+                           combo_options_map: Mapping[Any, ComboOptions]
+                           ) -> Optional[ComboOptions]:
         options_map = {} # type: Dict[Union[str, Tuple[str, ...]], ComboOptions]
         options_map.update(combo_options_map)
         key = tuple(tokens)
@@ -171,7 +158,7 @@ class Pipeline:
         return args
 
     def _compute_handled_groups(self,
-                                groups: Sequence[GROUP],
+                                groups: Sequence[Tuple[str, int]],
                                 handled_tokens: Sequence[str],
                                 ) -> Sequence[str]:
         start_index = 0
@@ -184,7 +171,7 @@ class Pipeline:
             start_index += end_index
         return tuple(handled_groups)
 
-    def _get_group_handler(self, group_name: str) -> _GROUP_HANDLER:
+    def _get_group_handler(self, group_name: str) -> Callable[[str, Sequence[str]], str]:
         default_group_handler = lambda group_name, handled_tokens: '{{{}({})}}'.format(group_name,
                                                                                        ' '.join(handled_tokens))
         if self.group_handler_map:
