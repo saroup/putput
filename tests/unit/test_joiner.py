@@ -3,7 +3,6 @@ from typing import Iterable
 from typing import List
 from typing import Optional
 from typing import Sequence
-from typing import Tuple  # pylint: disable=unused-import
 
 from putput.joiner import ComboOptions
 from putput.joiner import join_combo
