@@ -1,5 +1,6 @@
 import logging
 import textwrap
+from functools import reduce
 from pathlib import Path
 from typing import Any
 from typing import Callable
@@ -138,13 +139,11 @@ class Pipeline:
         hooks_map = self._expansion_hooks_map if stage == 'EXPANSION' else self._combination_hooks_map
         token_key = tuple(tokens) if tokens in hooks_map else 'DEFAULT'
         if token_key in hooks_map:
-            for hook in hooks_map[token_key]:
-                args = hook(*args)
+            args = reduce(lambda args, hook: hook(*args), hooks_map[token_key], args)
         if group_names:
             group_name_key = tuple(group_names) if group_names in hooks_map else 'GROUP_DEFAULT'
             if group_name_key in hooks_map:
-                for hook in hooks_map[group_name_key]:
-                    args = hook(*args)
+                args = reduce(lambda args, hook: hook(*args), hooks_map[group_name_key], args)
         return args
 
 def _compute_handled_groups(groups: Sequence[GROUP],
