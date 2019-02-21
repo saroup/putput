@@ -12,7 +12,6 @@ from typing import Sequence
 from typing import Tuple
 from typing import TypeVar
 from typing import Union
-from typing import no_type_check
 
 from tqdm import tqdm
 
@@ -64,6 +63,7 @@ class Pipeline:
                            final_hook)):
             raise ValueError('If a preset is used, no other arguments may be specified.')
         self._logger = get_logger(__name__, LOG_LEVEL)
+        # TODO: https://stackoverflow.com/questions/11156739/divide-a-dictionary-into-variables
         if preset:
             if isinstance(preset, str):
                 preset = get_preset(preset)
@@ -129,7 +129,6 @@ class Pipeline:
         key = tuple(tokens)
         return options_map.get(key) or options_map.get('DEFAULT')
 
-    @no_type_check
     def _execute_joining_hooks(self,
                                tokens: Sequence[str],
                                group_names: Sequence[str],
