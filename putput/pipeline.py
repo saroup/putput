@@ -64,10 +64,6 @@ class Pipeline:
     def logger(self) -> logging.Logger:
         return self._logger
 
-    @logger.setter
-    def logger(self, LOG_LEVEL: int) -> None:
-        self._logger = get_logger(__name__, LOG_LEVEL)
-
     def flow(self,
              pattern_def_path: Path,
              *,

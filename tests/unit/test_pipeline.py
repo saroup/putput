@@ -1,4 +1,5 @@
 # pylint: disable=too-many-lines
+import logging
 import random
 import unittest
 from pathlib import Path
@@ -877,6 +878,10 @@ class TestPipeline(unittest.TestCase):
         pairs = [(actual_tokens_visualizer, exp_tokens_visualizer),
                  (actual_groups_visualizer, exp_groups_visualizer)]
         compare_all_pairs(self, pairs)
+
+    def test_default_logger(self) -> None:
+        p = Pipeline.from_preset(iob2.preset(groups_to_exclude=('PLAY_PHRASE',)))
+        self.assertEqual(p.logger.level, logging.WARNING)
 
 def _just_groups(group_name: str, _: Sequence[str]) -> str:
     return '[{group_name}]'.format(group_name=group_name)
