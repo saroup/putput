@@ -5,7 +5,7 @@ from putput.joiner import ComboOptions
 from tests.unit.helper_functions import compare_all_pairs
 
 
-class TestGenerateUtterancesHandledTokens(unittest.TestCase):
+class TestCombiner(unittest.TestCase):
     def test_one_token(self) -> None:
         utterance_combo = (('the beatles', 'kanye'),)
         tokens = ('ARTIST',)
