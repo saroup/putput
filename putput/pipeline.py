@@ -28,7 +28,7 @@ _HOOK_ARGS = TypeVar('_HOOK_ARGS',
 
 _E_H_MAP = Mapping[Any, Sequence[Callable[[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
                                           Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]]]]
-C_H_MAP = Mapping[Any, Sequence[Callable[[str, Sequence, Sequence], Tuple[str, Sequence, Sequence]]]]
+_C_H_MAP = Mapping[Any, Sequence[Callable[[str, Sequence, Sequence], Tuple[str, Sequence, Sequence]]]]
 
 class Pipeline:
     # pylint: disable=too-many-instance-attributes
@@ -38,7 +38,7 @@ class Pipeline:
                  token_handler_map: Optional[Mapping[str, Callable[[str, str], str]]] = None,
                  group_handler_map: Optional[Mapping[str, Callable[[str, Sequence[str]], str]]] = None,
                  expansion_hooks_map: Optional[_E_H_MAP] = None,
-                 combo_hooks_map: Optional[C_H_MAP] = None,
+                 combo_hooks_map: Optional[_C_H_MAP] = None,
                  combo_options_map: Optional[Mapping[Any, ComboOptions]] = None,
                  final_hook: Optional[Callable[[str, Sequence, Sequence], Any]] = None,
                  LOG_LEVEL: int = logging.WARNING
@@ -61,11 +61,11 @@ class Pipeline:
         return cls(**init_kwargs)
 
     @property
-    def logger(self):
+    def logger(self) -> logging.Logger:
         return self._logger
 
     @logger.setter
-    def logger(self, LOG_LEVEL: int):
+    def logger(self, LOG_LEVEL: int) -> None:
         self._logger = get_logger(__name__, LOG_LEVEL)
 
     def flow(self,
@@ -148,7 +148,7 @@ class Pipeline:
     def _execute_joining_hooks(tokens: Sequence[str],
                                group_names: Sequence[str],
                                args: _HOOK_ARGS,
-                               hooks_map
+                               hooks_map: Union[_C_H_MAP, _E_H_MAP]
                                ) -> _HOOK_ARGS:
         token_key = tuple(tokens) if tuple(tokens) in hooks_map else 'DEFAULT'
         group_key = tuple(group_names) if tuple(group_names) in hooks_map else 'GROUP_DEFAULT'

@@ -21,11 +21,6 @@ from putput.joiner import join_combo
 from putput.validator import RANGE_REGEX
 from putput.validator import validate_pattern_def
 
-# TODO: get rid of types, all public ones (i/o of functions) should be without _
-_TOKEN_PATTERNS_WITH_BASE_TOKENS = Sequence[Sequence[Union[str, Sequence[str]]]]
-_BASE_ITEM_MAP = Mapping[str, Sequence[str]]
-_EXPANDED_BASE_ITEM_MAP = Mapping[str, Sequence[Sequence[str]]]
-_HASHABLE_TOKEN_PATTERN = Tuple[Tuple[str, ...], ...]
 
 def expand(pattern_def_path: Path,
            *,
@@ -86,7 +81,7 @@ def _get_token_patterns_map(pattern_def: Mapping,
     token_patterns_map.update(dynamic_token_patterns_map or {})
     return token_patterns_map
 
-def _get_base_item_map(pattern_def: Mapping, base_key: str) -> _BASE_ITEM_MAP:
+def _get_base_item_map(pattern_def: Mapping, base_key: str) -> Mapping[str, Sequence[str]]:
     if base_key in pattern_def:
         return {next(iter(base_item_map.keys())): tuple(next(iter(base_item_map.values())))
                 for base_item_map in pattern_def[base_key]}
@@ -103,25 +98,25 @@ def _get_static_token_patterns_map(pattern_def: Mapping) -> Mapping[str, Sequenc
     }
 
 def _expand_static_token_patterns(pattern_def: Mapping,
-                                  token_patterns: _TOKEN_PATTERNS_WITH_BASE_TOKENS
+                                  token_patterns: Sequence[Sequence[Union[str, Sequence[str]]]]
                                   ) -> Sequence[Sequence[Sequence[str]]]:
     if 'base_tokens' in pattern_def:
         token_patterns = _expand_base_tokens(pattern_def, token_patterns)
     return _convert_token_patterns_to_tuples(token_patterns)
 
 def _convert_token_patterns_to_tuples(token_patterns: Sequence[Sequence[Sequence[str]]]
-                                      ) -> Tuple[_HASHABLE_TOKEN_PATTERN, ...]:
+                                      ) -> Tuple[Tuple[Tuple[str, ...], ...], ...]:
     return tuple(tuple(tuple(phrases) for phrases in token_pattern) for token_pattern in token_patterns)
 
 def _expand_base_tokens(pattern_def: Mapping,
-                        token_patterns: _TOKEN_PATTERNS_WITH_BASE_TOKENS
+                        token_patterns: Sequence[Sequence[Union[str, Sequence[str]]]]
                         ) -> Sequence[Sequence[Sequence[str]]]:
     base_token_map = _get_base_item_map(pattern_def, 'base_tokens')
     return tuple(tuple(base_token_map[component] if isinstance(component, str) else component
                        for component in token_pattern) for token_pattern in token_patterns)
 
 def _expand_utterance_patterns_groups(utterance_patterns: Sequence[Sequence[str]],
-                                      group_map: _BASE_ITEM_MAP
+                                      group_map: Mapping[str, Sequence[str]]
                                       ) -> Tuple[Sequence[Sequence[str]], Sequence[Sequence[Tuple[str, int]]]]:
     expanded_group_map = {name: _expand_ranges(pattern) for name, pattern in group_map.items()}
     utterance_pattern_expanded_groups = tuple(chain.from_iterable(map(_expand_groups,
@@ -164,5 +159,5 @@ def _expand_utterance_components(token_patterns: Sequence[Sequence[Sequence[str]
     return utterance_components
 
 @lru_cache(maxsize=None)
-def _expand_token_pattern(token_pattern: _HASHABLE_TOKEN_PATTERN) -> Sequence[str]:
+def _expand_token_pattern(token_pattern: Tuple[Tuple[str, ...], ...]) -> Sequence[str]:
     return tuple(' '.join(phrase) for phrase in join_combo(token_pattern))
