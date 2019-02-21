@@ -1,0 +1,14 @@
+token_patterns:
+  - static:
+    - START:
+      - [[she], [wants]]
+    - PLAY:
+      - [[to], [play, listen]]
+    - WAKE:
+      - [[hi]]
+groups:
+  - SUB_PLAYS: [PLAY]
+  - PLAYS: [SUB_PLAYS, SUB_PLAYS]
+  - PLAY_PHRASE: [START, PLAYS]
+utterance_patterns:
+  - [WAKE, PLAY_PHRASE]

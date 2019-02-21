@@ -185,5 +185,44 @@ class TestExpander(unittest.TestCase):
                  (actual_groups, expected_groups)]
         compare_all_pairs(self, pairs)
 
+    def test_nested_group_tokens(self) -> None:
+        pattern_def = self._base_dir / 'nested_group_tokens.yml'
+        _, generator = expand(pattern_def)
+        actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
+        expected_utterance_combo = ((('hi',), ('she wants',), ('to play', 'to listen'), ('to play', 'to listen')),)
+        expected_tokens = (('WAKE', 'START', 'PLAY', 'PLAY'),)
+        expected_groups = ((('None', 1), ('PLAY_PHRASE', 3),),)
+        pairs = [(actual_utterance_combo, expected_utterance_combo),
+                 (actual_tokens, expected_tokens),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
+
+    def test_nested_group_tokens_and_ranges(self) -> None:
+        pattern_def = self._base_dir / 'nested_group_tokens_and_ranges.yml'
+        _, generator = expand(pattern_def)
+        actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
+        expected_utterance_combo = ((('hi',), ('she wants',),
+                                     ('to play', 'to listen')),
+                                    (('hi',), ('she wants',),
+                                     ('to play', 'to listen'), ('to play', 'to listen')),
+                                    (('hi',), ('she wants',),
+                                     ('to play', 'to listen'), ('to play', 'to listen'),
+                                     ('to play', 'to listen')),
+                                    (('hi',), ('she wants',),
+                                     ('to play', 'to listen'), ('to play', 'to listen'),
+                                     ('to play', 'to listen'), ('to play', 'to listen')),)
+        expected_tokens = (('WAKE', 'START', 'PLAY'),
+                           ('WAKE', 'START', 'PLAY', 'PLAY'),
+                           ('WAKE', 'START', 'PLAY', 'PLAY', 'PLAY'),
+                           ('WAKE', 'START', 'PLAY', 'PLAY', 'PLAY', 'PLAY'),)
+        expected_groups = ((('None', 1), ('PLAY_PHRASE', 2),),
+                           (('None', 1), ('PLAY_PHRASE', 3),),
+                           (('None', 1), ('PLAY_PHRASE', 4),),
+                           (('None', 1), ('PLAY_PHRASE', 5),))
+        pairs = [(actual_utterance_combo, expected_utterance_combo),
+                 (actual_tokens, expected_tokens),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
+
 if __name__ == '__main__':
     unittest.main()

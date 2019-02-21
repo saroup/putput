@@ -32,6 +32,8 @@ def expand(pattern_def_path: Path,
     group_map = _get_base_item_map(pattern_def, 'groups')
     utterance_patterns_expanded_groups_and_ranges, groups = _expand_utterance_patterns_groups(
         _expand_utterance_patterns_ranges(pattern_def['utterance_patterns']), group_map)
+    utterance_patterns_expanded_groups_and_ranges, groups = zip(*set(zip(utterance_patterns_expanded_groups_and_ranges,
+                                                                         groups)))
 
     def _expand() -> Iterable[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]]:
         token_patterns_map = _get_token_patterns_map(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
@@ -118,12 +120,25 @@ def _expand_base_tokens(pattern_def: Mapping,
 def _expand_utterance_patterns_groups(utterance_patterns: Sequence[Sequence[str]],
                                       group_map: Mapping[str, Sequence[str]]
                                       ) -> Tuple[Sequence[Sequence[str]], Sequence[Sequence[Tuple[str, int]]]]:
-    expanded_group_map = {name: _expand_ranges(pattern) for name, pattern in group_map.items()}
+    expanded_group_map = _expand_group_map(group_map)
     utterance_pattern_expanded_groups = tuple(chain.from_iterable(map(_expand_groups,
                                                                       utterance_patterns, repeat(expanded_group_map))))
     expanded_groups = tuple(chain.from_iterable(map(_create_groups,
                                                     utterance_patterns, repeat(expanded_group_map))))
     return utterance_pattern_expanded_groups, expanded_groups
+
+def _expand_group_map(group_map: Mapping[str, Sequence[str]]) -> Mapping[str, Sequence[Sequence[str]]]:
+    group_map_expanded_ranges = {name: _expand_ranges(pattern) for name, pattern in group_map.items()}
+    expanded_group_map = {name : _expand_group_map_groups(patterns, group_map_expanded_ranges)
+                          for name, patterns in group_map_expanded_ranges.items()}
+    return expanded_group_map
+
+def _expand_group_map_groups(patterns: Sequence[Sequence[str]],
+                             expanded_group_map: Mapping[str, Sequence[Sequence[str]]]) -> Sequence[Sequence[str]]:
+    if not any(token in expanded_group_map for pattern in patterns for token in pattern):
+        return patterns
+    expanded_patterns = tuple(chain.from_iterable(map(_expand_groups, patterns, repeat(expanded_group_map))))
+    return _expand_group_map_groups(expanded_patterns, expanded_group_map)
 
 def _create_groups(utterance_pattern: Sequence[str],
                    expanded_group_map: Mapping[str, Sequence[Sequence[str]]]
