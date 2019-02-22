@@ -9,9 +9,9 @@ from typing import Set
 from typing import Tuple
 from typing import Union
 
-RANGE_REGEX = r"^\d+(\-\d+)?$"
-RANGE_OR_WORD_REGEX = r"(^[a-zA-Z_]+$|^\d+(\-\d+)?$)"
-RESERVED_TOKEN = 'none'
+RANGE_REGEX = r'^\d+(\-\d+)?$'
+_RANGE_OR_WORD_REGEX = r'(^[a-zA-Z_]+$|^\d+(\-\d+)?$)'
+_RESERVED_TOKEN = 'none'
 
 class PatternDefinitionValidationError(Exception):
     """Exception that describes invalid pattern defintions"""
@@ -23,7 +23,7 @@ def _validate_instance(item: Any, instance: Any, err_msg: str) -> None:
 def _validate_range_pattern(range_pattern: Sequence[str]) -> None:
     is_previous_word_range = False
     for index, word in enumerate(range_pattern):
-        if not re.match(RANGE_OR_WORD_REGEX, word):
+        if not re.match(_RANGE_OR_WORD_REGEX, word):
             raise PatternDefinitionValidationError('Not valid syntax: {}'.format(word))
         if re.match(RANGE_REGEX, word):
             if is_previous_word_range:
@@ -47,8 +47,8 @@ def _check_for_overlap(token_sets: Sequence[Set[str]]) -> None:
 def _check_for_reserved_null_token(token_sets: Sequence[Set[str]]) -> None:
     all_tokens = reduce(lambda x, y: x | y, token_sets)
     for token in all_tokens:
-        if token.lower() == RESERVED_TOKEN:
-            raise PatternDefinitionValidationError('Using reserved token: {}'.format(RESERVED_TOKEN))
+        if token.lower() == _RESERVED_TOKEN:
+            raise PatternDefinitionValidationError('Using reserved token: {}'.format(_RESERVED_TOKEN))
 
 def _check_for_undefined_tokens(token_set_to_check: Set[str],
                                 defined_token_sets: Sequence[Set[str]],

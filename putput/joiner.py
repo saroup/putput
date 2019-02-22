@@ -4,7 +4,6 @@ import random
 import sys
 from functools import reduce
 from typing import Iterable
-from typing import List  # pylint: disable=unused-import
 from typing import Optional
 from typing import Sequence
 from typing import TypeVar
@@ -35,17 +34,17 @@ class ComboOptions:
         self._seed = seed
 
     @property
-    def max_sample_size(self):
+    def max_sample_size(self) -> int:
         """Read only attribute."""
         return self._max_sample_size
 
     @property
-    def with_replacement(self):
+    def with_replacement(self) -> bool:
         """Read only attribute."""
         return self._with_replacement
 
     @property
-    def seed(self):
+    def seed(self) -> int:
         """Read only attribute."""
         return self._seed
 

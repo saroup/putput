@@ -9,9 +9,10 @@ from typing import Mapping
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
+from typing import Type
 from typing import TypeVar
 from typing import Union
-from typing import no_type_check
+from typing import overload
 
 from putput.combiner import combine
 from putput.expander import expand
@@ -25,14 +26,10 @@ try:
 except NameError:
     from tqdm import tqdm
 
-
-_HOOK_ARGS = TypeVar('_HOOK_ARGS',
-                     Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
-                     Tuple[str, Sequence[str], Sequence[str]])
-
 _E_H_MAP = Mapping[Any, Sequence[Callable[[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
                                           Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]]]]
-_C_H_MAP = Mapping[Any, Sequence[Callable[[str, Sequence, Sequence], Tuple[str, Sequence, Sequence]]]]
+_C_H_MAP = Mapping[Any, Sequence[Callable[[Any, Any, Any], Tuple[Any, Any, Any]]]]
+T_PIPELINE = TypeVar('T_PIPELINE', bound='Pipeline')
 
 class Pipeline:
     # pylint: disable=too-many-instance-attributes
@@ -44,7 +41,7 @@ class Pipeline:
                  expansion_hooks_map: Optional[_E_H_MAP] = None,
                  combo_hooks_map: Optional[_C_H_MAP] = None,
                  combo_options_map: Optional[Mapping[Any, ComboOptions]] = None,
-                 final_hook: Optional[Callable[[str, Sequence, Sequence], Any]] = None,
+                 final_hook: Optional[Callable[[Any, Any, Any], Any]] = None,
                  LOG_LEVEL: int = logging.WARNING
                  ) -> None:
         self.dynamic_token_patterns_map = dynamic_token_patterns_map
@@ -57,7 +54,7 @@ class Pipeline:
         self._logger = get_logger(__name__, LOG_LEVEL)
 
     @classmethod
-    def from_preset(cls, preset: Union[str, Callable], **kwargs: Any) -> 'Pipeline':
+    def from_preset(cls: Type[T_PIPELINE], preset: Union[str, Callable], **kwargs: Any) -> T_PIPELINE:
         if isinstance(preset, str):
             preset = get_preset(preset)
         init_kwargs = preset()
@@ -103,8 +100,8 @@ class Pipeline:
                   total=sample_size,
                   disable=disable_progress_bar,
                   leave=False,
-                  miniters=1) as combination_tqdm:
-            for utterance, handled_tokens in combination_tqdm:
+                  miniters=1) as pbar:
+            for utterance, handled_tokens in pbar:
                 handled_groups = self._compute_handled_groups(groups, handled_tokens)
                 if self.combo_hooks_map:
                     utterance, handled_tokens, handled_groups = self._execute_joining_hooks(tokens,
@@ -133,22 +130,47 @@ class Pipeline:
                                                                                   self.expansion_hooks_map)
                 yield utterance_combo, tokens, groups
 
-    @staticmethod
-    def _get_combo_options(tokens: Sequence[str],
+    def _get_combo_options(self,
+                           tokens: Sequence[str],
                            combo_options_map: Mapping[Any, ComboOptions]
                            ) -> Optional[ComboOptions]:
+        # pylint: disable=no-self-use
         options_map = {} # type: Dict[Union[str, Tuple[str, ...]], ComboOptions]
         options_map.update(combo_options_map)
         key = tuple(tokens)
         return options_map.get(key) or options_map.get('DEFAULT')
 
-    @no_type_check
-    @staticmethod
-    def _execute_joining_hooks(tokens: Sequence[str],
+    @overload
+    def _execute_joining_hooks(self,
+                               tokens: Sequence[str],
                                group_names: Sequence[str],
-                               args: _HOOK_ARGS,
-                               hooks_map: Union[_C_H_MAP, _E_H_MAP]
-                               ) -> _HOOK_ARGS:
+                               args: Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
+                               hooks_map: _E_H_MAP,
+                               ) -> Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]:
+        # pylint: disable=no-self-use
+        # pylint: disable=unused-argument
+        pass # pragma: no cover
+
+    @overload
+    def _execute_joining_hooks(self,
+                               tokens: Sequence[str],
+                               group_names: Sequence[str],
+                               args: Tuple[Any, Any, Any],
+                               hooks_map: _C_H_MAP,
+                               ) -> Tuple[Any, Any, Any]:
+        # pylint: disable=no-self-use
+        # pylint: disable=unused-argument
+        pass # pragma: no cover
+
+    def _execute_joining_hooks(self,
+                               tokens: Sequence[str],
+                               group_names: Sequence[str],
+                               args: Union[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
+                                           Tuple[Any, Any, Any]],
+                               hooks_map: Union[_E_H_MAP, _C_H_MAP]
+                               ) -> Union[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
+                                          Tuple[Any, Any, Any]]:
+        # pylint: disable=no-self-use
         token_key = tuple(tokens) if tuple(tokens) in hooks_map else 'DEFAULT'
         group_key = tuple(group_names) if tuple(group_names) in hooks_map else 'GROUP_DEFAULT'
         for key in (token_key, group_key):

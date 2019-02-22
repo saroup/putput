@@ -23,7 +23,6 @@ def combine(utterance_combo: Sequence[Sequence[str]],
     if combo_options:
         sample_size = combo_options.max_sample_size
 
-    # TODO: consider if these should really be nested
     def _combine() -> Iterable[Tuple[str, Sequence[str]]]:
         handled_token_combo = _compute_handled_token_combo(utterance_combo, tokens, token_handler_map=token_handler_map)
         combo_indices = tuple(tuple(i for i in range(len(component))) for component in utterance_combo)

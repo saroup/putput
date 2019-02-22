@@ -7,7 +7,6 @@ from itertools import repeat
 from pathlib import Path
 from typing import Dict  # pylint: disable=unused-import
 from typing import Iterable
-from typing import List  # pylint: disable=unused-import
 from typing import Mapping
 from typing import Optional
 from typing import Sequence
