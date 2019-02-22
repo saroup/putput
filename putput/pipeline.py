@@ -1,5 +1,4 @@
 import logging
-import textwrap
 from functools import reduce
 from pathlib import Path
 from typing import Any
@@ -14,13 +13,18 @@ from typing import TypeVar
 from typing import Union
 from typing import no_type_check
 
-from tqdm import tqdm
-
 from putput.combiner import combine
 from putput.expander import expand
 from putput.joiner import ComboOptions
 from putput.logger import get_logger
 from putput.presets.factory import get_preset
+
+try:
+    get_ipython() # type: ignore
+    from tqdm import tqdm_notebook as tqdm # pragma: no cover
+except NameError:
+    from tqdm import tqdm
+
 
 _HOOK_ARGS = TypeVar('_HOOK_ARGS',
                      Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
@@ -95,7 +99,7 @@ class Pipeline:
                                          token_handler_map=self.token_handler_map,
                                          combo_options=combo_options)
         with tqdm(combo_gen,
-                  desc='COMBINING',
+                  desc='Combination...',
                   total=sample_size,
                   disable=disable_progress_bar,
                   leave=False,
@@ -117,11 +121,10 @@ class Pipeline:
                 disable_progress_bar: bool = False
                 ) -> Iterable[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]]:
         ilen, exp_gen = expand(pattern_def_path, dynamic_token_patterns_map=self.dynamic_token_patterns_map)
-        with tqdm(exp_gen, total=ilen, disable=disable_progress_bar, leave=False, miniters=1) as expansion_tqdm:
+        with tqdm(exp_gen, desc='Expansion...', total=ilen, disable=disable_progress_bar, miniters=1) as expansion_tqdm:
             for utterance_combo, tokens, groups in expansion_tqdm:
-                desc = '{}'.format(', '.join(tokens))
-                expansion_tqdm.set_description(textwrap.shorten(desc, width=30))
-                self._logger.info(desc)
+                log_msg = '{}'.format(', '.join(tokens))
+                self._logger.info(log_msg)
                 group_names = tuple([group[0] for group in groups])
                 if self.expansion_hooks_map:
                     utterance_combo, tokens, groups = self._execute_joining_hooks(tokens,
