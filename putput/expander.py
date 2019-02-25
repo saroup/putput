@@ -4,7 +4,6 @@ from functools import lru_cache
 from itertools import chain
 from itertools import product
 from itertools import repeat
-from pathlib import Path
 from typing import Dict  # pylint: disable=unused-import
 from typing import Iterable
 from typing import Mapping
@@ -14,32 +13,33 @@ from typing import Tuple
 from typing import Union
 from typing import cast
 
-import yaml
-
 from putput.joiner import join_combo
 from putput.validator import RANGE_REGEX
-from putput.validator import validate_pattern_def
 
 
-def expand(pattern_def_path: Path,
+def expand(pattern_def: Mapping,
            *,
            dynamic_token_patterns_map: Optional[Mapping[str, Sequence[Sequence[Sequence[str]]]]] = None
            ) -> Tuple[int, Iterable[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]]]:
     """Yields utterance_combo, tokens, group"""
-    pattern_def = _load_pattern_def(pattern_def_path)
-    validate_pattern_def(pattern_def)
-    group_map = _get_base_item_map(pattern_def, 'groups')
-    utterance_patterns_expanded_groups_and_ranges, groups = _expand_utterance_patterns_groups(
-        _expand_utterance_patterns_ranges(pattern_def['utterance_patterns']), group_map)
-    utterance_patterns_expanded_groups_and_ranges, groups = zip(*set(zip(utterance_patterns_expanded_groups_and_ranges,
-                                                                         groups)))
+    utterance_patterns_expanded_ranges_and_groups, groups = expand_utterance_patterns_ranges_and_groups(
+        pattern_def['utterance_patterns'], get_base_item_map(pattern_def, 'groups'))
 
     def _expand() -> Iterable[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]]:
         token_patterns_map = _get_token_patterns_map(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
-        for utterance_pattern, group in zip(utterance_patterns_expanded_groups_and_ranges, groups):
+        for utterance_pattern, group in zip(utterance_patterns_expanded_ranges_and_groups, groups):
             utterance_combo = _compute_utterance_combo(utterance_pattern, token_patterns_map)
             yield utterance_combo, tuple(utterance_pattern), tuple(group)
-    return len(utterance_patterns_expanded_groups_and_ranges), _expand()
+    return len(utterance_patterns_expanded_ranges_and_groups), _expand()
+
+def expand_utterance_patterns_ranges_and_groups(utterance_patterns: Sequence[Sequence[str]],
+                                                group_map: Mapping[str, Sequence[str]]
+                                                ) -> Tuple[Sequence[Sequence[str]],
+                                                           Sequence[Sequence[Tuple[str, int]]]]:
+    expanded_ranges = _expand_utterance_patterns_ranges(utterance_patterns)
+    expanded_ranges_groups, groups = _expand_utterance_patterns_groups(expanded_ranges, group_map)
+    deduped_expanded_ranges_groups, groups = zip(*set(zip(expanded_ranges_groups, groups)))
+    return deduped_expanded_ranges_groups, groups
 
 def _expand_utterance_patterns_ranges(utterance_patterns: Sequence[Sequence[str]]) -> Sequence[Sequence[str]]:
     return tuple(chain.from_iterable(map(_expand_ranges, utterance_patterns)))
@@ -67,11 +67,6 @@ def _expand_tokens(range_token: Tuple[int, int, str]) -> Iterable[Sequence[str]]
         return ((token,),)
     return map(lambda i: (token,) * i, range(min_range, max_range))
 
-def _load_pattern_def(pattern_def_path: Path) -> Mapping:
-    with pattern_def_path.open(encoding='utf-8') as pattern_def_file:
-        pattern_def = yaml.load(pattern_def_file, Loader=yaml.BaseLoader)
-    return pattern_def
-
 def _get_token_patterns_map(pattern_def: Mapping,
                             *,
                             dynamic_token_patterns_map: Optional[Mapping[str, Sequence[Sequence[Sequence[str]]]]] = None
@@ -82,7 +77,7 @@ def _get_token_patterns_map(pattern_def: Mapping,
     token_patterns_map.update(dynamic_token_patterns_map or {})
     return token_patterns_map
 
-def _get_base_item_map(pattern_def: Mapping, base_key: str) -> Mapping[str, Sequence[str]]:
+def get_base_item_map(pattern_def: Mapping, base_key: str) -> Mapping[str, Sequence[str]]:
     if base_key in pattern_def:
         return {next(iter(base_item_map.keys())): tuple(next(iter(base_item_map.values())))
                 for base_item_map in pattern_def[base_key]}
@@ -112,7 +107,7 @@ def _convert_token_patterns_to_tuples(token_patterns: Sequence[Sequence[Sequence
 def _expand_base_tokens(pattern_def: Mapping,
                         token_patterns: Sequence[Sequence[Union[str, Sequence[str]]]]
                         ) -> Sequence[Sequence[Sequence[str]]]:
-    base_token_map = _get_base_item_map(pattern_def, 'base_tokens')
+    base_token_map = get_base_item_map(pattern_def, 'base_tokens')
     return tuple(tuple(base_token_map[component] if isinstance(component, str) else component
                        for component in token_pattern) for token_pattern in token_patterns)
 

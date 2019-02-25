@@ -2,6 +2,7 @@ import unittest
 from pathlib import Path
 
 from putput.expander import expand
+from putput.pipeline import _load_pattern_def
 from tests.unit.helper_functions import compare_all_pairs
 
 
@@ -12,7 +13,7 @@ class TestExpander(unittest.TestCase):
 
     def test_dynamic_token_patterns_only(self) -> None:
         dynamic_token_patterns_map = {'ARTIST': ((('the beatles', 'kanye'),),)}
-        pattern_def = self._base_dir / 'dynamic_token_patterns_only.yml'
+        pattern_def = _load_pattern_def(self._base_dir / 'dynamic_token_patterns_only.yml')
         expected_utterance_combo = ((('the beatles', 'kanye'),),)
         expected_tokens = (('ARTIST',),)
         expected_groups = (((('None', 1)),),)
@@ -24,7 +25,7 @@ class TestExpander(unittest.TestCase):
         compare_all_pairs(self, pairs)
 
     def test_static_token_patterns_only(self) -> None:
-        pattern_def = self._base_dir / 'static_token_patterns_only.yml'
+        pattern_def = _load_pattern_def(self._base_dir / 'static_token_patterns_only.yml')
         _, generator = expand(pattern_def)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
         expected_utterance_combo = ((('he will want', 'she will want'), ('to play', 'to listen')),)
@@ -37,7 +38,7 @@ class TestExpander(unittest.TestCase):
 
     def test_dynamic_and_static_token_patterns(self) -> None:
         dynamic_token_patterns_map = {'ARTIST': ((('the beatles', 'kanye'),),)}
-        pattern_def = self._base_dir / 'dynamic_and_static_token_patterns.yml'
+        pattern_def = _load_pattern_def(self._base_dir / 'dynamic_and_static_token_patterns.yml')
         _, generator = expand(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
         expected_utterance_combo = ((('he will want', 'she will want'),
@@ -51,7 +52,7 @@ class TestExpander(unittest.TestCase):
         compare_all_pairs(self, pairs)
 
     def test_static_and_base_tokens(self) -> None:
-        pattern_def = self._base_dir / 'static_and_base_tokens.yml'
+        pattern_def = _load_pattern_def(self._base_dir / 'static_and_base_tokens.yml')
         _, generator = expand(pattern_def)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
         expected_utterance_combo = ((('he will want', 'she will want'), ('to play', 'to listen')),)
@@ -63,7 +64,7 @@ class TestExpander(unittest.TestCase):
         compare_all_pairs(self, pairs)
 
     def test_static_and_base_tokens_and_group_tokens(self) -> None:
-        pattern_def = self._base_dir / 'static_and_base_tokens_and_group_tokens.yml'
+        pattern_def = _load_pattern_def(self._base_dir / 'static_and_base_tokens_and_group_tokens.yml')
         _, generator = expand(pattern_def)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
         expected_utterance_combo = ((('hi',), ('he will want', 'she will want'), ('to play', 'to listen')),)
@@ -76,7 +77,7 @@ class TestExpander(unittest.TestCase):
 
     def test_keys_in_addition_to_utterance_patterns_token_patterns(self) -> None:
         dynamic_token_patterns_map = {'ARTIST': ((('the beatles', 'kanye'),),)}
-        pattern_def = self._base_dir / 'keys_in_addition_to_utterance_patterns_tokens_patterns.yml'
+        pattern_def = _load_pattern_def(self._base_dir / 'keys_in_addition_to_utterance_patterns_tokens_patterns.yml')
         _, generator = expand(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
         expected_utterance_combo = ((('he will want', 'she will want'),
@@ -92,7 +93,7 @@ class TestExpander(unittest.TestCase):
     def test_groups_with_range(self) -> None:
         artists = ('the beatles', 'kanye', 'nico', 'tom waits')
         dynamic_token_patterns_map = {'ARTIST': ((artists,),)}
-        pattern_def = self._base_dir / 'groups_with_range.yml'
+        pattern_def = _load_pattern_def(self._base_dir / 'groups_with_range.yml')
         _, generator = expand(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
         expected_utterance_combo = ((('she wants',), ('to play',), artists),
@@ -112,7 +113,7 @@ class TestExpander(unittest.TestCase):
     def test_groups_with_single_range(self) -> None:
         artists = ('the beatles', 'kanye', 'nico', 'tom waits')
         dynamic_token_patterns_map = {'ARTIST': ((artists,),)}
-        pattern_def = self._base_dir / 'groups_with_single_range.yml'
+        pattern_def = _load_pattern_def(self._base_dir / 'groups_with_single_range.yml')
         _, generator = expand(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
         expected_utterance_combo = ((('she wants',), ('to play',), artists, artists, artists),)
@@ -126,7 +127,7 @@ class TestExpander(unittest.TestCase):
     def test_utterance_patterns_with_range(self) -> None:
         artists = ('the beatles', 'kanye', 'nico', 'tom waits')
         dynamic_token_patterns_map = {'ARTIST': ((artists,),)}
-        pattern_def = self._base_dir / 'utterance_patterns_with_range.yml'
+        pattern_def = _load_pattern_def(self._base_dir / 'utterance_patterns_with_range.yml')
         _, generator = expand(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
         expected_utterance_combo = ((('she wants',), ('to play',), artists),
@@ -147,7 +148,7 @@ class TestExpander(unittest.TestCase):
     def test_utterance_patterns_with_range_and_non_range(self) -> None:
         artists = ('the beatles', 'kanye', 'nico', 'tom waits')
         dynamic_token_patterns_map = {'ARTIST': ((artists,),)}
-        pattern_def = self._base_dir / 'utterance_patterns_with_range_and_non_range.yml'
+        pattern_def = _load_pattern_def(self._base_dir / 'utterance_patterns_with_range_and_non_range.yml')
         _, generator = expand(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
         expected_utterance_combo = ((('she wants',),),
@@ -171,7 +172,7 @@ class TestExpander(unittest.TestCase):
     def test_groups_with_range_and_non_range(self) -> None:
         artists = ('the beatles', 'kanye', 'nico', 'tom waits')
         dynamic_token_patterns_map = {'ARTIST': ((artists,),)}
-        pattern_def = self._base_dir / 'groups_with_range_and_non_range.yml'
+        pattern_def = _load_pattern_def(self._base_dir / 'groups_with_range_and_non_range.yml')
         _, generator = expand(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
         expected_utterance_combo = ((('she wants',), ('to play',), artists, artists, artists),
@@ -186,7 +187,7 @@ class TestExpander(unittest.TestCase):
         compare_all_pairs(self, pairs)
 
     def test_nested_group_tokens(self) -> None:
-        pattern_def = self._base_dir / 'nested_group_tokens.yml'
+        pattern_def = _load_pattern_def(self._base_dir / 'nested_group_tokens.yml')
         _, generator = expand(pattern_def)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
         expected_utterance_combo = ((('hi',), ('she wants',), ('to play', 'to listen'), ('to play', 'to listen')),)
@@ -198,7 +199,7 @@ class TestExpander(unittest.TestCase):
         compare_all_pairs(self, pairs)
 
     def test_nested_group_tokens_and_ranges(self) -> None:
-        pattern_def = self._base_dir / 'nested_group_tokens_and_ranges.yml'
+        pattern_def = _load_pattern_def(self._base_dir / 'nested_group_tokens_and_ranges.yml')
         _, generator = expand(pattern_def)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
         expected_utterance_combo = ((('hi',), ('she wants',),

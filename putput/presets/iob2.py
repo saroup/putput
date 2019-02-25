@@ -35,6 +35,7 @@ def _preset(*,
     group_handler_map = {'DEFAULT': _iob_group_handler}
 
     combo_hooks_map = {}
+    default_hooks = []
 
     tokens_hook = None
     if tokens_to_include:
@@ -42,7 +43,7 @@ def _preset(*,
     if tokens_to_exclude:
         tokens_hook = partial(_exclude_tokens, tokens_to_exclude=tokens_to_exclude)
     if tokens_hook:
-        combo_hooks_map.update({'DEFAULT': (tokens_hook,)})
+        default_hooks.append(tokens_hook)
 
     groups_hook = None
     if groups_to_include:
@@ -50,7 +51,10 @@ def _preset(*,
     if groups_to_exclude:
         groups_hook = partial(_exclude_groups, groups_to_exclude=groups_to_exclude)
     if groups_hook:
-        combo_hooks_map.update({'GROUP_DEFAULT': (groups_hook,)})
+        default_hooks.append(groups_hook)
+
+    if default_hooks:
+        combo_hooks_map.update({'DEFAULT': tuple(default_hooks)})
     return {
         'token_handler_map': token_handler_map,
         'group_handler_map': group_handler_map,

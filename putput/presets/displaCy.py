@@ -10,8 +10,7 @@ def preset() -> Callable:
 
 def _preset() -> Mapping:
     combo_hooks_map = {}
-    combo_hooks_map['DEFAULT'] = (_handled_tokens_to_ent,)
-    combo_hooks_map['GROUP_DEFAULT'] = (_handled_groups_to_ent,)
+    combo_hooks_map['DEFAULT'] = (_handled_tokens_to_ent, _handled_groups_to_ent)
     return {
         'combo_hooks_map': combo_hooks_map,
         'final_hook': _convert_to_displaCy_visualizer

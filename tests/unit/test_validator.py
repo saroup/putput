@@ -4,7 +4,7 @@ from typing import Type
 
 from yaml.scanner import ScannerError
 
-from putput.expander import expand
+from putput.pipeline import Pipeline
 from putput.validator import PatternDefinitionValidationError
 
 
@@ -19,8 +19,7 @@ class TestValidator(unittest.TestCase):
                          ) -> None:
         pattern_def = self._base_dir / pattern_def_file_name
         with self.assertRaises(exception) as cm:
-            for _ in expand(pattern_def):
-                break
+            Pipeline(pattern_def)
         self.assertIsInstance(cm.exception, exception)
 
     def test_token_pattern_too_few_lists(self) -> None:
@@ -135,6 +134,10 @@ class TestValidator(unittest.TestCase):
         input_file_name = 'reserved_name_in_groups.yml'
         self._raise_exception(input_file_name, PatternDefinitionValidationError)
 
+    def test_single_range(self) -> None:
+        # pylint: disable=no-self-use
+        pattern_def = Path(__file__).parent / 'pattern_definitions' / 'valid' / 'groups_with_single_range.yml'
+        Pipeline(pattern_def)
 
 if __name__ == '__main__':
     unittest.main()
