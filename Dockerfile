@@ -7,9 +7,7 @@ RUN for reqs in /app/requirements*.txt; do pip install --no-cache-dir -r $reqs; 
 COPY . /app
 WORKDIR /app
 RUN isort -rc . --check-only \
- && python setup.py mypy pylint \
- && coverage run setup.py test \
- && python setup.py sdist bdist_wheel \
+ && python setup.py mypy pylint test sdist bdist_wheel \
  && pip install --no-cache-dir dist/* \
  && jupyter nbconvert samples/**/*.ipynb --to python \
  && export CI=True \

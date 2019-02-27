@@ -20,9 +20,10 @@ class ComboOptions:
     Attributes:
         max_sample_size: Ceiling for number of components to sample.
         with_replacement: Option to include duplicates when randomly sampling. If True,
-            will sample max_sample_size. If False, will sample
-            min(max_sample_size, number of unique samples).
-        seed: initializer for random generator.
+            will sample max_sample_size. If False, will sample up to 'max_sample_size'
+            unique combinations.
+        seed: initializer for random generator. Set this value for repeatable results
+            across multiple runs.
     Raises:
         ValueError: If max_sample_size <= 0.
     """
@@ -35,27 +36,42 @@ class ComboOptions:
 
     @property
     def max_sample_size(self) -> int:
-        """Read only attribute."""
+        """Ceiling for number of components to sample."""
         return self._max_sample_size
 
     @property
     def with_replacement(self) -> bool:
-        """Read only attribute."""
+        """Option to include duplicates when randomly sampling."""
         return self._with_replacement
 
     @property
     def seed(self) -> int:
-        """Read only attribute."""
+        """Initializer for random generator."""
         return self._seed
 
 def join_combo(combo: Sequence[Sequence[T]], *, combo_options: Optional[ComboOptions] = None) -> Iterable[Sequence[T]]:
-    """Generates a joined combo.
+    """Generates the product of a combo, subject to 'combo_options'.
 
-    A joined combo is the product, or random sampling of the product, of each component
-    of a combo.
+    If 'combo_options' is not specified, 'join_combo' returns
+    an Iterable of the product of combo. If 'combo_options' is
+    specified, 'join_combo' returns an Iterable of samples of
+    the product of combo.
+
+    Sampling should be used to speed up the consumption of the
+    returned Iterable as well as to control size of the product,
+    especially in cases where oversampling/undersampling is
+    desired.
+
+    >>> combo = (('hey', 'ok'), ('speaker', 'sound system'), ('play',))
+    >>> tuple(join_combo(combo))
+    (('hey', 'speaker', 'play'), ('hey', 'sound system', 'play'),
+     ('ok', 'speaker', 'play'), ('ok', 'sound system', 'play'))
+    >>> combo_options = ComboOptions(max_sample_size=1, with_replacement=False, seed=0)
+    >>> tuple(join_combo(combo, combo_options=combo_options))
+    (('ok', 'sound system', 'play'),)
 
     Args:
-        combo: Tuples to join.
+        combo: Sequences to join.
         combo_options: Options for randomly sampling.
 
     Yields:

@@ -41,7 +41,178 @@ _T_UP_KEY = TypeVar('_T_UP_KEY',
 T_PIPELINE = TypeVar('T_PIPELINE', bound='Pipeline')
 
 class Pipeline:
-    """Transforms a pattern definition into labeled data for a variety of NLP tasks."""
+    """Transforms a pattern definition into labeled data.
+
+    To perform this transformation, initialize 'Pipeline' and
+    call 'flow'.
+
+    There are two ways to initialize 'Pipeline': by passing
+    in desired arguments or through the use of a 'preset' in
+    the method 'from_preset'. 'Presets' instantiate the 'Pipeline'
+    with arguments that cover common use cases. As these arguments
+    become attributes that the user can modify, using a 'preset' does
+    not give up customizability.
+
+    Once 'Pipeline' has been initialized, calling the method 'flow'
+    will cause labeled data to flow through 'Pipeline' to the user.
+
+    There are two stages in 'flow'. The first stage, 'expansion', expands
+    the pattern definition file into an 'utterance_combo', 'tokens', and 'groups'
+    for each utterance pattern. At the end of the first stage,
+    if hooks in 'expansion_hooks_map' are specified for the
+    current utterance pattern, they are applied in order where the output
+    of a previous hook becomes the input to the next hook.
+
+    The second stage, 'combination', yields a sequence of
+    'utterance', 'handled_tokens', and 'handled_groups'. This stage
+    applies handlers from 'token_handler_map' and 'group_handler_map' and
+    is subject to constraints specified in 'combo_options_map'.
+    At the end of the second stage, if hooks in 'combo_hooks_map' are
+    specified for the current 'utterance_pattern', they are applied
+    in order where the output of a previous hook becomes the input
+    to the next hook.
+
+    Finally, if a 'final_hook' is specified, it will be applied to the
+    output of the combination stage, and 'flow' will yield its result.
+    If a 'final_hook' is not specified, 'flow' will yield the result
+    of the combination stage, a sequence of 'utterance', 'handled_tokens',
+    and 'handled_groups'.
+
+    # Default behavior
+
+    >>> pattern_def_path = Path(__file__).parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
+    >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
+    >>> p = Pipeline(pattern_def_path, dynamic_token_patterns_map=dynamic_token_patterns_map)
+    >>> generator = p.flow(disable_progress_bar=True)
+    >>> for utterance, tokens, groups in generator:
+    ...     print(utterance)
+    ...     print(tokens)
+    ...     print(groups)
+    can she get fries can she get fries and fries
+    ('[ADD(can she get)]', '[ITEM(fries)]', '[ADD(can she get)]', '[ITEM(fries)]', '[CONJUNCTION(and)]',
+     '[ITEM(fries)]')
+    ('{ADD_ITEM([ADD(can she get)] [ITEM(fries)])}', '{ADD_ITEM([ADD(can she get)] [ITEM(fries)])}',
+     '{None([CONJUNCTION(and)])}', '{None([ITEM(fries)])}')
+    can she get fries may she get fries and fries
+    ('[ADD(can she get)]', '[ITEM(fries)]', '[ADD(may she get)]', '[ITEM(fries)]', '[CONJUNCTION(and)]',
+     '[ITEM(fries)]')
+    ('{ADD_ITEM([ADD(can she get)] [ITEM(fries)])}', '{ADD_ITEM([ADD(may she get)] [ITEM(fries)])}',
+     '{None([CONJUNCTION(and)])}', '{None([ITEM(fries)])}')
+    may she get fries can she get fries and fries
+    ('[ADD(may she get)]', '[ITEM(fries)]', '[ADD(can she get)]', '[ITEM(fries)]', '[CONJUNCTION(and)]',
+     '[ITEM(fries)]')
+    ('{ADD_ITEM([ADD(may she get)] [ITEM(fries)])}', '{ADD_ITEM([ADD(can she get)] [ITEM(fries)])}',
+     '{None([CONJUNCTION(and)])}', '{None([ITEM(fries)])}')
+    may she get fries may she get fries and fries
+    ('[ADD(may she get)]', '[ITEM(fries)]', '[ADD(may she get)]', '[ITEM(fries)]', '[CONJUNCTION(and)]',
+     '[ITEM(fries)]')
+    ('{ADD_ITEM([ADD(may she get)] [ITEM(fries)])}', '{ADD_ITEM([ADD(may she get)] [ITEM(fries)])}',
+     '{None([CONJUNCTION(and)])}', '{None([ITEM(fries)])}')
+
+    # Customized behavior
+    >>> import json
+    >>> import random
+    >>> def _just_tokens(token: str, _: str) -> str:
+    ...     return '[{token}]'.format(token=token)
+    >>> def _just_groups(group_name: str, _: Sequence[str]) -> str:
+    ...     return '[{group_name}]'.format(group_name=group_name)
+    >>> def _add_random_words(utterance: str,
+    ...                       handled_tokens: Sequence[str],
+    ...                       handled_groups: Sequence[str]
+    ...                       ) -> Tuple[str, Sequence[str], Sequence[str]]:
+    ...     utterances = utterance.split()
+    ...     random_words = ['hmmmm', 'uh', 'um', 'please']
+    ...     insert_index = random.randint(0, len(utterances))
+    ...     random_word = random.choice(random_words)
+    ...     utterances.insert(insert_index, random_word)
+    ...     utterance = ' '.join(utterances)
+    ...     return utterance, handled_tokens, handled_groups
+    >>> def jsonify(utterance: str,
+    ...             handled_tokens: Sequence[str],
+    ...             handled_groups: Sequence[str]
+    ...             ) -> str:
+    ...     return json.dumps(dict(utterance=utterance,
+    ...                            handled_tokens=handled_tokens,
+    ...                            handled_groups=handled_groups),
+    ...                       sort_keys=True)
+    >>> def _sample_utterance_combo(utterance_combo: Sequence[Sequence[str]],
+    ...                             tokens: Sequence[str],
+    ...                             groups: Sequence[Tuple[str, int]]
+    ...                             ) -> Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]:
+    ...        random.seed(0)
+    ...        TOKEN_INDEX = tokens.index('ADD')
+    ...        utterance_combo_list = list(utterance_combo)
+    ...        sampled_combos = tuple(random.sample(utterance_combo_list.pop(TOKEN_INDEX), 1))
+    ...        utterance_combo_list.insert(TOKEN_INDEX, sampled_combos)
+    ...        utterance_combo = tuple(utterance_combo_list)
+    ...        return utterance_combo, tokens, groups
+    >>> token_handler_map = {'ITEM': _just_tokens}
+    >>> group_handler_map = {'ADD_ITEM': _just_groups}
+    >>> expansion_hooks_map = {('ADD_ITEM', '2', 'CONJUNCTION', 'ITEM'): (_sample_utterance_combo,)}
+    >>> combo_hooks_map = {('ADD_ITEM', '2', 'CONJUNCTION', 'ITEM'): (_add_random_words, _add_random_words)}
+    >>> combo_options_map = {'DEFAULT': ComboOptions(max_sample_size=2, with_replacement=False, seed=0)}
+    >>> p = Pipeline(pattern_def_path,
+    ...              dynamic_token_patterns_map=dynamic_token_patterns_map,
+    ...              token_handler_map=token_handler_map,
+    ...              group_handler_map=group_handler_map,
+    ...              expansion_hooks_map=expansion_hooks_map,
+    ...              combo_hooks_map=combo_hooks_map,
+    ...              combo_options_map=combo_options_map,
+    ...              final_hook=jsonify)
+    >>> for json_result in p.flow(disable_progress_bar=True):
+    ...     print(json_result)
+    {"handled_groups": ["[ADD_ITEM]", "[ADD_ITEM]", "{None([CONJUNCTION(and)])}", "{None([ITEM])}"],
+     "handled_tokens": ["[ADD(may she get)]", "[ITEM]", "[ADD(may she get)]", "[ITEM]", "[CONJUNCTION(and)]", "[ITEM]"],
+     "utterance": "um may she get fries may she get please fries and fries"}
+    {"handled_groups": ["[ADD_ITEM]", "[ADD_ITEM]", "{None([CONJUNCTION(and)])}", "{None([ITEM])}"],
+     "handled_tokens": ["[ADD(may she get)]", "[ITEM]", "[ADD(can she get)]", "[ITEM]", "[CONJUNCTION(and)]", "[ITEM]"],
+     "utterance": "may she get fries can she um um get fries and fries"}
+
+    # Using a preset:
+    >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
+    >>> p = Pipeline.from_preset('IOB2',
+    ...                          pattern_def_path,
+    ...                          dynamic_token_patterns_map=dynamic_token_patterns_map)
+    >>> generator = p.flow(disable_progress_bar=True)
+    >>> for utterance, tokens, groups in generator:
+    ...     print(utterance)
+    ...     print(tokens)
+    ...     print(groups)
+    ...     break
+    can she get fries can she get fries and fries
+    ('B-ADD I-ADD I-ADD', 'B-ITEM', 'B-ADD I-ADD I-ADD', 'B-ITEM', 'B-CONJUNCTION', 'B-ITEM')
+    ('B-ADD_ITEM I-ADD_ITEM I-ADD_ITEM I-ADD_ITEM', 'B-ADD_ITEM I-ADD_ITEM I-ADD_ITEM I-ADD_ITEM', 'B-None', 'B-None')
+
+    Attributes:
+        pattern_def: A dictionary representation of the pattern definition.
+        dynamic_token_patterns_map: The dynamic counterpart to the static section in the
+            pattern definition. This mapping between token and token patterns is useful in
+            scenarios where tokens and token patterns cannot be known before runtime.
+        token_handler_map: A mapping between a token and a function with args
+            (token, phrase generated by token) that returns a handled token. If 'DEFAULT'
+            is specified as the token, the handler will apply to all tokens not otherwise
+            specified in the mapping.
+        group_handler_map: A mapping between a group name and a function with args
+            (group name, handled tokens) that returns a handled group. If 'DEFAULT' is
+            specified as the group name, the handler will apply to all groups not otherwise
+            specified in the mapping.
+        expansion_hooks_map: A mapping between an utterance pattern and hooks to apply after
+            the expansion phase. If 'DEFAULT' is specified as the utterance pattern, the hooks
+            will apply to all utterance patterns not otherwise specified in the mapping. During,
+            'flow', hooks are applied in order where the output of the previous hook becomes
+            the input to the next hook.
+        combo_hooks_map: A mapping between an utterance pattern and hooks to apply after
+            the combination phase. If 'DEFAULT' is specified as the utterance pattern, the hooks
+            will apply to all utterance patterns not otherwise specified in the mapping. During,
+            'flow', hooks are applied in order where the output of the previous hook becomes
+            the input to the next hook.
+        combo_options: A mapping between an utterance pattern and ComboOptions to apply during
+            the combination phase. If 'DEFAULT' is specified as the utterance pattern, the options
+            will apply to all utterance patterns not otherwise specified in the mapping.
+        final_hook: A function with args (utterance, handled tokens, handled groups) that returns
+            a value that will be returned by the flow method. If combo_hooks_map is specified,
+            the input args to final_hook will be the return values of the last hook in combo_hooks_map.
+    """
 
     # pylint: disable=too-many-instance-attributes
     def __init__(self,
@@ -54,34 +225,49 @@ class Pipeline:
                  combo_hooks_map: Optional[_C_H_MAP] = None,
                  combo_options_map: Optional[Mapping[Any, ComboOptions]] = None,
                  final_hook: Optional[Callable[[Any, Any, Any], Any]] = None,
-                 LOG_LEVEL: int = logging.WARNING
+                 log_level: int = logging.WARNING
                  ) -> None:
-        """Instantiates Pipeline.
+        """Instantiates 'Pipeline'.
 
         Validates the pattern definition, expands utterance patterns used as keys in maps,
         and sets public attributes.
 
         Args:
-            dynamic_token_patterns_map: The 'dynamic' counterpart to the 'static' section in the
-                pattern definition. This mapping between token and token patterns is useful in
-                scenarios where tokens and token patterns cannot be known before runtime.
-            token_handler_map: A mapping between a token and a function with args
-                (token, phrase generated by token) that returns a handled token. If 'DEFAULT'
-                is specified as the token, the handler will apply to all tokens not otherwise
-                specified in the mapping.
-            group_handler_map: A mapping between a group name and a function with args
-                (group name, handled tokens) that returns a handled group. If 'DEFAULT' is
-                specified as the group name, the handler will apply to all groups not otherwise
-                specified in the mapping.
-            expansion_hooks_map: A mapping between an utterance pattern and hooks to apply after
-                the expansion phase. If 'DEFAULT' is specified as the utterance pattern, the hooks
-                will apply to all utterance patterns not otherwise specified in the mapping.
-            combo_hooks_map: A mapping between an utterance pattern and hooks to apply after
-                the combination phase. If 'DEFAULT' is specified as the utterance pattern, the hooks
-                will apply to all utterance patterns not otherwise specified in the mapping.
-            final_hook: A function with args (utterance, handled tokens, handled groups) that returns
-                a value that will be returned by the flow method. If combo_hooks_map is specified,
-                the input args to final_hook will be the return values of the last hook in combo_hooks_map.
+            pattern_def_path: Path to the pattern definition file.
+        dynamic_token_patterns_map: The dynamic counterpart to the static section in the
+            pattern definition. This mapping between token and token patterns is useful in
+            scenarios where tokens and token patterns cannot be known before runtime.
+        token_handler_map: A mapping between a token and a function with args
+            (token, phrase generated by token) that returns a handled token. If 'DEFAULT'
+            is specified as the token, the handler will apply to all tokens not otherwise
+            specified in the mapping.
+        group_handler_map: A mapping between a group name and a function with args
+            (group name, handled tokens) that returns a handled group. If 'DEFAULT' is
+            specified as the group name, the handler will apply to all groups not otherwise
+            specified in the mapping.
+        expansion_hooks_map: A mapping between an utterance pattern and hooks to apply after
+            the expansion phase. If 'DEFAULT' is specified as the utterance pattern, the hooks
+            will apply to all utterance patterns not otherwise specified in the mapping. During,
+            'flow', hooks are applied in order where the output of the previous hook becomes
+            the input to the next hook.
+        combo_hooks_map: A mapping between an utterance pattern and hooks to apply after
+            the combination phase. If 'DEFAULT' is specified as the utterance pattern, the hooks
+            will apply to all utterance patterns not otherwise specified in the mapping. During,
+            'flow', hooks are applied in order where the output of the previous hook becomes
+            the input to the next hook.
+        combo_options: A mapping between an utterance pattern and ComboOptions to apply during
+            the combination phase. If 'DEFAULT' is specified as the utterance pattern, the options
+            will apply to all utterance patterns not otherwise specified in the mapping.
+        final_hook: A function with args (utterance, handled tokens, handled groups) that returns
+            a value that will be returned by the flow method. If combo_hooks_map is specified,
+            the input args to final_hook will be the return values of the last hook in combo_hooks_map.
+        log_level: Minimum logging level. Messages with this level or higher will be shown.
+
+        Raises:
+            PatternDefinitionValidationError: If the pattern definition file is invalid.
+            ScannerError: If the pattern definition file is not YAML.
+            # TODO: find the rest of the yaml errors or wrap in common error
+            # TODO: attributes should be properties that expand when new keys are set
         """
         self.pattern_def = _load_pattern_def(pattern_def_path)
         validate_pattern_def(self.pattern_def)
@@ -112,24 +298,101 @@ class Pipeline:
             self.combo_options_map = None
 
         self.final_hook = final_hook
-        self._logger = get_logger(__name__, LOG_LEVEL)
+        self._logger = get_logger(__name__, log_level)
 
     @classmethod
     def from_preset(cls: Type[T_PIPELINE],
                     preset: Union[str, Callable],
-                    pattern_def_path: Path,
+                    *args: Any,
                     **kwargs: Any) -> T_PIPELINE:
+        """Instantiates 'Pipeline' from a preset configuration.
+
+        There are two ways to use 'from_preset'. The simplest way is to use the
+        preset's name. However, presets may have optional arguments that allow
+        for more control. In that case, use a call to the preset's method, 'preset',
+        with the desired arguments.
+
+        # Preset str
+        >>> from pathlib import Path
+        >>> from putput.pipeline import Pipeline
+        >>> pattern_def_path = Path(__file__).parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
+        >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
+        >>> p = Pipeline.from_preset('IOB2',
+        ...                          pattern_def_path,
+        ...                          dynamic_token_patterns_map=dynamic_token_patterns_map)
+        >>> generator = p.flow(disable_progress_bar=True)
+        >>> for utterance, tokens, groups in generator:
+        ...     print(utterance)
+        ...     print(tokens)
+        ...     print(groups)
+        ...     break
+        can she get fries can she get fries and fries
+        ('B-ADD I-ADD I-ADD', 'B-ITEM', 'B-ADD I-ADD I-ADD', 'B-ITEM', 'B-CONJUNCTION', 'B-ITEM')
+        ('B-ADD_ITEM I-ADD_ITEM I-ADD_ITEM I-ADD_ITEM', 'B-ADD_ITEM I-ADD_ITEM I-ADD_ITEM I-ADD_ITEM',
+         'B-None', 'B-None')
+
+        # Preset function with arguments
+        >>> from putput.presets import iob2
+        >>> p = Pipeline.from_preset(iob2.preset(tokens_to_include=('ITEM',), groups_to_include=('ADD_ITEM',)),
+        ...                          pattern_def_path,
+        ...                          dynamic_token_patterns_map=dynamic_token_patterns_map)
+        >>> generator = p.flow(disable_progress_bar=True)
+        >>> for utterance, tokens, groups in generator:
+        ...     print(utterance)
+        ...     print(tokens)
+        ...     print(groups)
+        ...     break
+        can she get fries can she get fries and fries
+        ('O O O', 'B-ITEM', 'O O O', 'B-ITEM', 'O', 'B-ITEM')
+        ('B-ADD_ITEM I-ADD_ITEM I-ADD_ITEM I-ADD_ITEM', 'B-ADD_ITEM I-ADD_ITEM I-ADD_ITEM I-ADD_ITEM', 'O', 'O')
+
+        Args:
+            preset: A str that is the preset's name, or a Callable that is the
+                result of calling the preset's 'preset' function. The Callable
+                form allows more control over the preset's behavior.
+            args: See __init__ docstring.
+            kwargs: See __init__ docstring.
+        Returns:
+            An instance of Pipeline.
+        """
         if isinstance(preset, str):
             preset = get_preset(preset)
         init_kwargs = preset()
         init_kwargs.update(kwargs)
-        return cls(pattern_def_path, **init_kwargs)
+        return cls(*args, **init_kwargs)
 
     @property
     def logger(self) -> logging.Logger:
+        """Logger configured for Pipeline."""
         return self._logger
 
     def flow(self, *, disable_progress_bar: bool = False) -> Iterable:
+        """Generates labeled data one utterance at a time.
+
+        >>> from pathlib import Path
+        >>> from putput.pipeline import Pipeline
+        >>> pattern_def_path = Path(__file__).parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
+        >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
+        >>> p = Pipeline(pattern_def_path, dynamic_token_patterns_map=dynamic_token_patterns_map)
+        >>> generator = p.flow(disable_progress_bar=True)
+        >>> for utterance, tokens, groups in generator:
+        ...     print(utterance)
+        ...     print(tokens)
+        ...     print(groups)
+        ...     break
+        can she get fries can she get fries and fries
+        ('[ADD(can she get)]', '[ITEM(fries)]', '[ADD(can she get)]', '[ITEM(fries)]',
+         '[CONJUNCTION(and)]', '[ITEM(fries)]')
+        ('{ADD_ITEM([ADD(can she get)] [ITEM(fries)])}', '{ADD_ITEM([ADD(can she get)] [ITEM(fries)])}',
+         '{None([CONJUNCTION(and)])}', '{None([ITEM(fries)])}')
+
+        Args:
+            disable_progress_bar: Option to display progress of expansion
+                and combination stages as the Iterable is consumed.
+
+        Yields:
+            Labeled data.
+        """
         for utterance_combo, tokens, groups in self._expand(disable_progress_bar=disable_progress_bar):
             for utterance, handled_tokens, handled_groups in self._combine(utterance_combo,
                                                                            tokens,

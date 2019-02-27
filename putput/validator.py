@@ -14,7 +14,7 @@ _RANGE_OR_WORD_REGEX = r'(^[a-zA-Z_]+$|^\d+(\-\d+)?$)'
 _RESERVED_TOKEN = 'none'
 
 class PatternDefinitionValidationError(Exception):
-    """Exception that describes invalid pattern defintions"""
+    """Exception that describes an invalid pattern defintion."""
 
 def _validate_instance(item: Any, instance: Any, err_msg: str) -> None:
     if not item or not isinstance(item, instance):
@@ -126,16 +126,19 @@ def _parse_range_token(range_token: str) -> Tuple[Union[int, None], int]:
     return int(min_range), int(max_range) + 1
 
 def validate_pattern_def(pattern_def: Mapping) -> None:
-    """Validates pattern definition.
+    """Ensures the pattern definition is defined properly.
+
+    >>> from pathlib import Path
+    >>> from putput.pipeline import _load_pattern_def
+    >>> pattern_def_path = Path(__file__).parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
+    >>> pattern_def = _load_pattern_def(pattern_def_path)
+    >>> validate_pattern_def(pattern_def)
 
     Args:
-        pattern_def_path: Path to the pattern definition file.
+        pattern_def: A dictionary representation of the pattern definition.
 
     Raises:
         PatternDefinitionValidationError: If the pattern definition file is invalid.
-
-    Returns:
-        A valid pattern definition.
     """
     try:
         if not pattern_def:

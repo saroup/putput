@@ -68,7 +68,6 @@ class Mypy(_BaseCommand):
                 args.append('--config-file={}'.format(rcfile))
             main(None, args)
 
-
 with open('README.md', 'r', encoding='utf-8') as fh:
     long_description = fh.read().strip()
 
@@ -103,13 +102,15 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
     ],
-    python_requires='>=3.4.*',
+    python_requires='>=3.5.*',
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
     install_requires=requirements,
     extras_require={
         'dev': requirements_dev,
     },
     cmdclass={
         'pylint': Pylint,
-        'mypy': Mypy,
+        'mypy': Mypy
     },
 )
