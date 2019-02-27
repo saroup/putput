@@ -1,45 +1,175 @@
+base_tokens:
+  - SUBJECT_PERSONAL_PRONOUN: [i, he, she, we, they]
+  - OBJECT_PERSONAL_PRONOUN: [me, him, her, us]
+  - SUBJECT_PERSONAL_PRONOUN_IS: [i'm, i am, he is, he's, she is, she's, they are, they're,
+                                  we are, we're, everyone is, everyone's, everbody is,
+                                  everbody's, everything is, everything's]
 token_patterns:
   - static:
-    - ADD_TO_ORDER:
-      - [["can", "may", "could"], ["i", "he", "she", "we", "they"], ["get", "have", "order", "take", "do"]]
-      - [["i", "he", "she", "we", "they"], ["'d", "'ll"], ["like", "have", "take", "get", "want", "need", "order"]]
-      - [["set", "hook"], ["me", "him", "her", "us"], ["up with"]]
-      - [["me", "him", "her", "us"], ["give", "order"]]
-      - [["i", "he", "she", "we", "they"], ["'d", "'ll"], ["like", "have", "want", "need"], ["to get", "to have", "to take", "to order", "to do"]]
-      - [["i", "he", "she", "we", "they"], ["need", "would need", "will need", "would like", "would want", "want", "will have", "will want"], ["to get", "to have", "to take", "to order", "to do"]]
-      - [["i", "he", "she", "we", "they"], ["will", "would"], ["get", "have", "take", "order", "do", "like", "want"]]
-      - [["i", "he", "she", "we", "they"], ["want", "like"]]
+    - ADD:
+      - [[can, may, could], SUBJECT_PERSONAL_PRONOUN, [get, have, order, take, do]]
+      - [SUBJECT_PERSONAL_PRONOUN, ["'d", "'ll"], [like, have, take, get, want, need, order]]
+      - [[set, hook], OBJECT_PERSONAL_PRONOUN, [up with]]
+      - [[give, order], OBJECT_PERSONAL_PRONOUN]
+      - [SUBJECT_PERSONAL_PRONOUN, ["'d", "'ll"], [like, have, want, need],
+         [to get, to have, to take, to order, to do]]
+      - [SUBJECT_PERSONAL_PRONOUN, 
+         [need, would need, will need, would like, would want, want, will have, will want],
+         [to get, to have, to take, to order, to do]]
+      - [SUBJECT_PERSONAL_PRONOUN, [will, would], [get, have, take, order, do, like, want]]
+      - [SUBJECT_PERSONAL_PRONOUN, [want, like]]
     - CONJUNCTION:
-      - [["and"]]
+      - [[and]]
     - END_OF_ORDER:
-      - [["bye", "okay"]]
-      - [["i"], ["am", "'m"], ["done", "ready", "fine", "good", "okay", "finished", "all good", "all okay", "all done", "all finished", "all ready", "all fine", "all good"]]
-      - [["they", "we"], ["are", "'re"], ["done", "ready", "fine", "good", "okay", "finished", "all good", "all okay", "all done", "all finished", "all ready", "all fine", "all good"]]
-      - [["he", "she", "everyone", "everybody", "everything"], ["is", "'s"], ["done", "ready", "fine", "good", "okay", "finished", "all good", "all okay", "all done", "all finished", "all ready", "all fine", "all good"]]
-      - [["thank you", "thanks", "thanks so much", "thanks a lot", "thank you so much", "thanks for your help", "thanks, I appreciate it", "thanks appreciate it", "I really appreciate it", "thanks a bunch"]]
-      - [["is", "'s", "'ll be", "will be", "'ll do", "should be", "will do", "should do"], ["all", "everything", "it", "good", "fine", "okay"]]
-    - REMOVE_ITEM:
-      - [["lose", "remove", "drop", "forget", "skip", "cancel", "leave off", "without", "sans"], ["the", "those"]]
-      - [["lose", "remove", "drop", "forget", "skip", "cancel", "leave off", "without", "sans"]]
+      - [[bye, okay]]
+      - [SUBJECT_PERSONAL_PRONOUN_IS,
+         [done, ready, fine, good, okay, finished, all good, all okay,
+          all done, all finished, all ready, all fine, all good]]
+      - [[thank you, thanks, thanks so much, thanks a lot, thank you so much,
+          thanks for your help, thanks, I appreciate it, thanks appreciate it,
+          I really appreciate it, thanks a bunch]]
+      - [[that], [is, "'s", "'ll be", will be, "'ll do", should be, will do, should do],
+         [all, everything, it, good, fine, okay]]
+    - REMOVE:
+      - [[lose, remove, drop, forget, skip, cancel, leave off, without, sans], [the, those]]
+      - [[lose, remove, drop, forget, skip, cancel, leave off, without, sans]]
+    - SUBSTITUTE_WITH_TARGET:
+      - [[actually, can you, actually can you], [change, swap, make, replace, substitute, switch]]
+      - [[change, swap, make, can you make, replace, substitute, switch]]
+    - MEAL_UPGRADE: 
+      - [[combo, meal, combo meal]]
+    - POSITION:
+      - [[last, first, second, third, fourth, fifth]]
+      - [[last, first, second, third, fourth, fifth], [one, item]]
+    - ESCALATION:
+      - [[help, frustrating, frustrated]]
+      - [SUBJECT_PERSONAL_PRONOUN, [want, need, would like], [help]]
+      - [[this is], [frustrating, annoying]]
+      - [[that's not what], SUBJECT_PERSONAL_PRONOUN, [ordered, wanted, asked, said]]
+    - PREPOSITION_TARGET_BACK:
+      - [[with, to]]
+    - PREPOSITION_TARGET_FORWARD:
+      - [['on', from]]
+    - PRONOUN:
+      - [[that, them, those]]
+    - PRONOUN_REMAINING:
+      - [[both, other]]
+    - PRONOUN_ALL: 
+      - [[all, any], [of them, of those, them, those]]
+      - [[anything, everything]]
+      - [[none], [of them, of those, them, those]]
+      - [[every], [thing, one, one of those]]
+    - SIZE:
+      - [[small, tall, medium, grande, large, venti, extra large, extra small]]
+    - FLAVOR: 
+      - [[chocolate, strawberry, vanilla, pumpkin spice]]
+    - FOR:
+      - [[for, to]]
+    - THE:
+      - [[the]]
+    - PREPOSITION_QUANTITY:
+      - [[of]]
+    - NEED_MORE_TIME:
+      - [[wait, hold on, hang on, a minute, a moment, one minute, one moment,
+          give me a moment, give me a minute, me a moment, just a minute]]
+      - [SUBJECT_PERSONAL_PRONOUN, [need], [more time, a moment, a minute]]
   - dynamic:
     - ITEM
     - QUANTITY
+groups:
+  - ADD_ITEMS: [ITEM, 1-5]
+  - ADD_QUANTITY_ITEM: [QUANTITY, ITEM]
+  - ADD_CONJUNCTION_ITEM: [CONJUNCTION, ITEM]
+  - ADD_CONJUNCTION_QUANTITY_ITEM: [CONJUNCTION, ADD_QUANTITY_ITEM]
+  - ADD_ADD_ITEM: [ADD, ITEM]
+  - ADD_ADD_ITEMS: [ADD, ADD_ITEMS]
+  - ADD_ADD_WITH_ITEM: [ADD_ADD_ITEM_QUANTITY, PREPOSITION_TARGET_BACK, ITEM]
+  - ADD_ADD_WITH_QUANTITY_ITEM: [ADD_ADD_ITEM_QUANTITY, PREPOSITION_TARGET_BACK, ADD_QUANTITY_ITEM]
+  - ADD_ADD_WITH_MULTIPLE: [ADD_ADD_ITEM_QUANTITY, PREPOSITION_TARGET_BACK, ADD_QUANTITY_ITEM,
+                            ADD_CONJUNCTION_QUANTITY_ITEM, 1-2]
+  - ADD_ADD_WITH_ALL: [ADD_ADD_ITEM_QUANTITY, PREPOSITION_TARGET_BACK, ADD_QUANTITY_ITEM,
+                       PREPOSITION_TARGET_FORWARD, PRONOUN_ALL]
+  - ADD_ADD_ALL_WITH: [ADD_ADD_ITEM_QUANTITY, PRONOUN_ALL, PREPOSITION_TARGET_BACK, ADD_QUANTITY_ITEM]
+  - ADD_ADD_ITEM_QUANTITY: [ADD, ADD_QUANTITY_ITEM]
+  - ADD_ADD_ITEMS_QUANTITY: [ADD, ADD_QUANTITY_ITEM, 1-5]
+  - ADD_ADD_ITEMS_CONJUNCTION_ITEM: [ADD_ADD_ITEM_QUANTITY, ADD_CONJUNCTION_ITEM, 1-5]
+  - ADD_ADD_ITEMS_CONJUNCTION_QUANTITY_ITEM: [ADD_ADD_ITEM_QUANTITY, ADD_CONJUNCTION_QUANTITY_ITEM, 1-4]
+# REMOVE
+  - REMOVE_CONJUNCTION_QUANTITY_ITEM: [REMOVE, CONJUNCTION, ADD_QUANTITY_ITEM]
+  - REMOVE_ITEM: [REMOVE, ITEM]
+  - REMOVE_ITEMS: [REMOVE, ADD_ITEMS]
+  - REMOVE_ITEM_POSITION: [REMOVE, THE, POSITION, ITEM]
+  - REMOVE_ITEMS_QUANTITY: [REMOVE, ADD_QUANTITY_ITEM, 1-5]
+  - REMOVE_ITEMS_CONJUNCTION_ITEM: [REMOVE, ADD_CONJUNCTION_ITEM, 1-5]
+  - REMOVE_ITEMS_CONJUNCTION_QUANTITY_ITEM: [REMOVE, ADD_CONJUNCTION_QUANTITY_ITEM, 1-5]
+  - REMOVE_WITH_ALL: [REMOVE, ADD_QUANTITY_ITEM, PREPOSITION_TARGET_FORWARD, PRONOUN_ALL]
+  - REMOVE_ALL_WITH: [PRONOUN_ALL, REMOVE, ADD_QUANTITY_ITEM]
+# SUBSTITUTE
+  - SUBSTITUTE_ITEM_FOR_ITEM: [SUBSTITUTE_WITH_TARGET, THE, ITEM, FOR, ADD_QUANTITY_ITEM]
+  - SUBSTITUTE_ITEM_QUANTITY_SIZE: [SUBSTITUTE_WITH_TARGET, QUANTITY, PREPOSITION_QUANTITY, PRONOUN, SIZE]
+  - SUBSTITUTE_ITEM_SIZE: [SUBSTITUTE_WITH_TARGET, PRONOUN, SIZE]
+  - SUBSTITUTE_ITEM_QUANTITY_FLAVOR: [SUBSTITUTE_WITH_TARGET, QUANTITY, PREPOSITION_QUANTITY, PRONOUN, FLAVOR]
+  - SUBSTITUTE_ITEM_FLAVOR: [SUBSTITUTE_WITH_TARGET, PRONOUN, FLAVOR]
+  - SUBSTITUTE_ITEM_QUANTITY: [SUBSTITUTE_WITH_TARGET, PRONOUN, QUANTITY]
+  - SUBSTITUTE_POSITION_FOR_ITEM: [SUBSTITUTE_WITH_TARGET, THE, POSITION, FOR, ADD_QUANTITY_ITEM]
+  - SUBSTITUTE_PRONOUN_FOR_ITEM: [SUBSTITUTE_WITH_TARGET, PRONOUN, FOR, ADD_QUANTITY_ITEM]
+  - SUBSTITUTE_ITEM: [SUBSTITUTE_WITH_TARGET, THE, ITEM, FOR, ADD_QUANTITY_ITEM]
+  - SUBSTITUTE_MEAL_UPGRADE: [SUBSTITUTE_WITH_TARGET, PRONOUN, QUANTITY, MEAL_UPGRADE]
 utterance_patterns:
-  - [ADD_TO_ORDER, QUANTITY, ITEM, CONJUNCTION, QUANTITY, ITEM]
-  - [REMOVE_ITEM, ITEM]
-  - [ADD_TO_ORDER, ITEM]
-  - [ADD_TO_ORDER, ITEM, REMOVE_ITEM, ITEM, ADD_TO_ORDER, ITEM]
-  - [REMOVE_ITEM, ITEM, ADD_TO_ORDER, ITEM, END_OF_ORDER]
-  - [ADD_TO_ORDER, QUANTITY, ITEM, REMOVE_ITEM, ITEM, CONJUNCTION, ADD_TO_ORDER, ITEM]
-  - [QUANTITY, ITEM]
-  - [ITEM, ITEM]
-  - [QUANTITY, ITEM, QUANTITY, ITEM]
-  - [ITEM, ITEM, CONJUNCTION, ITEM]
-  - [ADD_TO_ORDER, QUANTITY, ITEM]
-  - [ADD_TO_ORDER, ITEM, REMOVE_ITEM, ITEM]
-  - [ADD_TO_ORDER, ITEM, CONJUNCTION, REMOVE_ITEM, ITEM]
-  - [REMOVE_ITEM, QUANTITY, ITEM]
-  - [REMOVE_ITEM, ITEM, ADD_TO_ORDER, ITEM]
-  - [QUANTITY, ITEM, REMOVE_ITEM, ITEM]
-  - [QUANTITY, ITEM, REMOVE_ITEM, ITEM, CONJUNCTION, ADD_TO_ORDER, ITEM]
-  - [QUANTITY, ITEM, QUANTITY, ITEM, CONJUNCTION, QUANTITY, ITEM]
+# Single
+  - [ADD_ITEMS]
+  - [ADD_ADD_WITH_MULTIPLE]
+  - [ADD_ADD_WITH_QUANTITY_ITEM]
+  - [ADD_ADD_WITH_ITEM]
+  - [ADD_ADD_WITH_ALL]
+  - [ADD_ADD_ALL_WITH]
+  - [ADD_ADD_ITEMS]
+  - [REMOVE_ITEMS]
+  - [REMOVE_ITEMS_QUANTITY]
+  - [REMOVE_ITEMS_CONJUNCTION_ITEM]
+  - [REMOVE_ITEMS_CONJUNCTION_QUANTITY_ITEM]
+  - [REMOVE_WITH_ALL]
+  - [REMOVE_ALL_WITH]
+  - [SUBSTITUTE_ITEM_FOR_ITEM]
+  - [SUBSTITUTE_ITEM_QUANTITY_SIZE]
+  - [SUBSTITUTE_ITEM_SIZE]
+  - [SUBSTITUTE_ITEM_FLAVOR]
+  - [SUBSTITUTE_ITEM_QUANTITY_FLAVOR]
+  - [SUBSTITUTE_ITEM_QUANTITY]
+  - [SUBSTITUTE_POSITION_FOR_ITEM]
+  - [SUBSTITUTE_PRONOUN_FOR_ITEM]
+  - [SUBSTITUTE_ITEM]
+  - [SIZE]
+  - [FLAVOR]
+  - [SUBSTITUTE_MEAL_UPGRADE]
+  - [ADD_ADD_ITEMS_QUANTITY]
+  - [ADD_ADD_ITEMS_CONJUNCTION_ITEM]
+  - [ADD_ADD_ITEMS_CONJUNCTION_QUANTITY_ITEM]
+  - [END_OF_ORDER]
+  - [NEED_MORE_TIME]
+# Complex
+  - [ADD_ADD_ITEM_QUANTITY, CONJUNCTION, SUBSTITUTE_MEAL_UPGRADE]
+  - [ADD_ADD_ITEM_QUANTITY, CONJUNCTION,  REMOVE_ITEM_POSITION]
+  - [ADD_ADD_ITEM_QUANTITY, CONJUNCTION, REMOVE_WITH_ALL]
+  - [ADD_ADD_ITEM_QUANTITY, CONJUNCTION, REMOVE_ALL_WITH]
+  - [ADD_ADD_ITEM_QUANTITY, CONJUNCTION, REMOVE_ITEM, CONJUNCTION, ADD_ADD_ITEM_QUANTITY]
+  - [ADD_ADD_ITEM_QUANTITY, REMOVE_ITEM, ADD_ADD_ITEM_QUANTITY, CONJUNCTION, SUBSTITUTE_MEAL_UPGRADE]
+  - [REMOVE_ITEM, CONJUNCTION, ADD_ADD_ITEM_QUANTITY, END_OF_ORDER]
+  - [ADD_ADD_ITEM_QUANTITY, REMOVE_ITEM, CONJUNCTION, ADD_ADD_ITEM_QUANTITY]
+  - [ADD_QUANTITY_ITEM, 1-5, END_OF_ORDER]
+  - [ADD_QUANTITY_ITEM, SUBSTITUTE_ITEM_QUANTITY]
+  - [ADD_ADD_ITEM_QUANTITY, REMOVE_ITEM, END_OF_ORDER]
+  - [ADD_ADD_ITEM_QUANTITY, CONJUNCTION, REMOVE_ITEM]
+  - [REMOVE_ITEM, CONJUNCTION, SUBSTITUTE_PRONOUN_FOR_ITEM, CONJUNCTION, ADD_ADD_ITEM_QUANTITY]
+  - [ADD_ADD_ITEM_QUANTITY, CONJUNCTION, SUBSTITUTE_ITEM_FOR_ITEM, CONJUNCTION, REMOVE_ITEM]
+  - [REMOVE_ITEM, ADD_ADD_ITEM_QUANTITY]
+  - [ADD_QUANTITY_ITEM, REMOVE_ITEM]
+  - [ADD_QUANTITY_ITEM, REMOVE_ITEM, CONJUNCTION, ADD_ADD_ITEM_QUANTITY]
+  - [ADD_ADD_ITEMS_QUANTITY, CONJUNCTION,  SUBSTITUTE_ITEM_FOR_ITEM]
+  - [ADD_ADD_ITEMS_QUANTITY, SUBSTITUTE_ITEM_QUANTITY_SIZE]
+  - [ADD_ADD_ITEMS_QUANTITY, CONJUNCTION, SUBSTITUTE_ITEM_SIZE]
+  - [ADD_ADD_ITEMS_QUANTITY, SUBSTITUTE_POSITION_FOR_ITEM]
+  - [ADD_ADD_ITEMS_CONJUNCTION_QUANTITY_ITEM, SUBSTITUTE_POSITION_FOR_ITEM]
+  - [ADD_ADD_ITEMS_QUANTITY, SUBSTITUTE_PRONOUN_FOR_ITEM]
+  - [ADD_ADD_ITEMS_QUANTITY, SUBSTITUTE_ITEM]
+  - [SUBSTITUTE_ITEM_FOR_ITEM, CONJUNCTION, ADD_ADD_ITEM_QUANTITY, CONJUNCTION, REMOVE_ITEM]
