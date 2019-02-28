@@ -21,39 +21,44 @@ def preset(*,
     This function should be used as the 'preset' argument of putput.Pipeline instead of
     the 'IOB2' str to specify which tokens and groups map to 'O'.
 
-    >>> from pathlib import Path
-    >>> from putput.pipeline import Pipeline
-    >>> pattern_def_path = Path(__file__).parent.parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
-    >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
-    >>> p = Pipeline.from_preset(preset(tokens_to_include=('ITEM',), groups_to_include=('ADD_ITEM',)),
-    ...                          pattern_def_path,
-    ...                          dynamic_token_patterns_map=dynamic_token_patterns_map)
-    >>> generator = p.flow(disable_progress_bar=True)
-    >>> for utterance, tokens, groups in generator:
-    ...     print(utterance)
-    ...     print(tokens)
-    ...     print(groups)
-    ...     break
-    can she get fries can she get fries and fries
-    ('O O O', 'B-ITEM', 'O O O', 'B-ITEM', 'O', 'B-ITEM')
-    ('B-ADD_ITEM I-ADD_ITEM I-ADD_ITEM I-ADD_ITEM', 'B-ADD_ITEM I-ADD_ITEM I-ADD_ITEM I-ADD_ITEM', 'O', 'O')
-
     Args:
         tokens_to_include: A sequence of tokens that should not be mapped to 'O'.
             Useful if the majority of tokens should be excluded. Cannot be
             used in conjunction with 'tokens_to_exclude'.
+
         tokens_to_exclude: A sequence of tokens that should map to 'O'.
             Useful if the majority of tokens should be included. Cannot be
             used in conjunction with 'tokens_to_include'.
+
         groups_to_include: A sequence of groups that should not be mapped to 'O'.
             Useful if the majority of groups should be excluded. Cannot be
             used in conjunction with 'groups_to_exclude'.
+
         groups_to_exclude: A sequence of groups that should map to 'O'.
             Useful if the majority of groups should be included. Cannot be
             used in conjunction with 'groups_to_include'.
+
     Returns:
         A Callable that when called returns parameters for instantiating a Pipeline.
         This Callable can be passed into putput.Pipeline as the 'preset' argument.
+
+    Examples:
+        >>> from pathlib import Path
+        >>> from putput.pipeline import Pipeline
+        >>> pattern_def_path = Path(__file__).parent.parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
+        >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
+        >>> p = Pipeline.from_preset(preset(tokens_to_include=('ITEM',), groups_to_include=('ADD_ITEM',)),
+        ...                          pattern_def_path,
+        ...                          dynamic_token_patterns_map=dynamic_token_patterns_map)
+        >>> generator = p.flow(disable_progress_bar=True)
+        >>> for utterance, tokens, groups in generator:
+        ...     print(utterance)
+        ...     print(tokens)
+        ...     print(groups)
+        ...     break
+        can she get fries can she get fries and fries
+        ('O O O', 'B-ITEM', 'O O O', 'B-ITEM', 'O', 'B-ITEM')
+        ('B-ADD_ITEM I-ADD_ITEM I-ADD_ITEM I-ADD_ITEM', 'B-ADD_ITEM I-ADD_ITEM I-ADD_ITEM I-ADD_ITEM', 'O', 'O')
     """
     return partial(_preset,
                    tokens_to_include=tokens_to_include,

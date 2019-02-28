@@ -23,24 +23,9 @@ def expand(pattern_def: Mapping,
            ) -> Tuple[int, Iterable[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]]]:
     """Expands the pattern_def to prepare for combination.
 
-    >>> from pathlib import Path
-    >>> from putput.pipeline import _load_pattern_def
-    >>> pattern_def_path = Path(__file__).parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
-    >>> pattern_def = _load_pattern_def(pattern_def_path)
-    >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
-    >>> num_utterance_patterns, generator = expand(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
-    >>> num_utterance_patterns
-    1
-    >>> for utterance_combo, unhandled_tokens, unhandled_groups in generator:
-    ...     print(utterance_combo)
-    ...     print(unhandled_tokens)
-    ...     print(unhandled_groups)
-    (('can she get', 'may she get'), ('fries',), ('can she get', 'may she get'), ('fries',), ('and',), ('fries',))
-    ('ADD', 'ITEM', 'ADD', 'ITEM', 'CONJUNCTION', 'ITEM')
-    (('ADD_ITEM', 2), ('ADD_ITEM', 2), ('None', 1), ('None', 1))
-
     Args:
         pattern_def: A dictionary representation of the pattern definition.
+
         dynamic_token_patterns_map: The 'dynamic' counterpart to the 'static' section in the
             pattern definition. This mapping between token and token patterns is useful in
             scenarios where tokens and token patterns cannot be known before runtime.
@@ -49,6 +34,24 @@ def expand(pattern_def: Mapping,
         The length of the Iterable, and the Iterable consisting of
         an utterance_combo, tokens (that have yet to be handled),
         and groups (that have yet to be handled).
+
+    Examples:
+        >>> from pathlib import Path
+        >>> from putput.pipeline import _load_pattern_def
+        >>> pattern_def_path = Path(__file__).parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
+        >>> pattern_def = _load_pattern_def(pattern_def_path)
+        >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
+        >>> num_utterance_patterns, generator = expand(pattern_def,
+        ...                                            dynamic_token_patterns_map=dynamic_token_patterns_map)
+        >>> num_utterance_patterns
+        1
+        >>> for utterance_combo, unhandled_tokens, unhandled_groups in generator:
+        ...     print(utterance_combo)
+        ...     print(unhandled_tokens)
+        ...     print(unhandled_groups)
+        (('can she get', 'may she get'), ('fries',), ('can she get', 'may she get'), ('fries',), ('and',), ('fries',))
+        ('ADD', 'ITEM', 'ADD', 'ITEM', 'CONJUNCTION', 'ITEM')
+        (('ADD_ITEM', 2), ('ADD_ITEM', 2), ('None', 1), ('None', 1))
     """
     utterance_patterns_expanded_ranges_and_groups, groups = expand_utterance_patterns_ranges_and_groups(
         pattern_def['utterance_patterns'], get_base_item_map(pattern_def, 'groups'))
@@ -66,21 +69,23 @@ def expand_utterance_patterns_ranges_and_groups(utterance_patterns: Sequence[Seq
                                                            Sequence[Sequence[Tuple[str, int]]]]:
     """Expands ranges and groups in utterance patterns, ensuring each utterance pattern is unique.
 
-    >>> utterance_patterns = [['WAKE', 'PLAY_ARTIST', '1-2']]
-    >>> group_map = {'PLAY_ARTIST': ('PLAY', 'ARTIST')}
-    >>> patterns, groups = expand_utterance_patterns_ranges_and_groups(utterance_patterns, group_map)
-    >>> tuple(sorted(patterns, key=lambda item: len(item)))
-    (('WAKE', 'PLAY', 'ARTIST'), ('WAKE', 'PLAY', 'ARTIST', 'PLAY', 'ARTIST'))
-    >>> tuple(sorted(groups, key=lambda item: len(item)))
-    ((('None', 1), ('PLAY_ARTIST', 2)), (('None', 1), ('PLAY_ARTIST', 2), ('PLAY_ARTIST', 2)))
-
     Args:
         utterance_patterns: utterance_patterns section of pattern_def.
+
         group_map: A mapping between a group name and the tokens that make up the group.
 
     Returns:
         A tuple of utterance patterns with group names and ranges replaced by tokens, and
         groups which are tuples of (group_name, number of tokens the group spans).
+
+    Examples:
+        >>> utterance_patterns = [['WAKE', 'PLAY_ARTIST', '1-2']]
+        >>> group_map = {'PLAY_ARTIST': ('PLAY', 'ARTIST')}
+        >>> patterns, groups = expand_utterance_patterns_ranges_and_groups(utterance_patterns, group_map)
+        >>> tuple(sorted(patterns, key=lambda item: len(item)))
+        (('WAKE', 'PLAY', 'ARTIST'), ('WAKE', 'PLAY', 'ARTIST', 'PLAY', 'ARTIST'))
+        >>> tuple(sorted(groups, key=lambda item: len(item)))
+        ((('None', 1), ('PLAY_ARTIST', 2)), (('None', 1), ('PLAY_ARTIST', 2), ('PLAY_ARTIST', 2)))
     """
     expanded_ranges = _expand_utterance_patterns_ranges(utterance_patterns)
     expanded_ranges_groups, groups = _expand_utterance_patterns_groups(expanded_ranges, group_map)
@@ -128,22 +133,25 @@ def get_base_item_map(pattern_def: Mapping, base_key: str) -> Mapping[str, Seque
 
     # TODO: rename this function so it is clear what a base item map is
 
-    >>> from pathlib import Path
-    >>> from putput.pipeline import _load_pattern_def
-    >>> pattern_def_path = Path(__file__).parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
-    >>> pattern_def = _load_pattern_def(pattern_def_path)
-    >>> get_base_item_map(pattern_def, 'groups')
-    {'ADD_ITEM': ('ADD', 'ITEM')}
-    >>> get_base_item_map(pattern_def, 'base_tokens')
-    {'PRONOUNS': ('she',)}
-    >>> get_base_item_map(pattern_def, 'not_a_key')
-    {}
-
     Args:
         pattern_def: A dictionary representation of the pattern definition.
+
         base_key: Key in pattern_def corresponding to the base item map.
+
     Returns:
         A base item map or empty dictionary if one does not exist.
+
+    Examples:
+        >>> from pathlib import Path
+        >>> from putput.pipeline import _load_pattern_def
+        >>> pattern_def_path = Path(__file__).parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
+        >>> pattern_def = _load_pattern_def(pattern_def_path)
+        >>> get_base_item_map(pattern_def, 'groups')
+        {'ADD_ITEM': ('ADD', 'ITEM')}
+        >>> get_base_item_map(pattern_def, 'base_tokens')
+        {'PRONOUNS': ('she',)}
+        >>> get_base_item_map(pattern_def, 'not_a_key')
+        {}
     """
     if base_key in pattern_def:
         return {next(iter(base_item_map.keys())): tuple(next(iter(base_item_map.values())))

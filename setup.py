@@ -95,7 +95,6 @@ setup(
     packages=find_packages(exclude=support_packages + tuple(mod + '.*' for mod in support_packages)),
     classifiers=[
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',

@@ -128,17 +128,18 @@ def _parse_range_token(range_token: str) -> Tuple[Union[int, None], int]:
 def validate_pattern_def(pattern_def: Mapping) -> None:
     """Ensures the pattern definition is defined properly.
 
-    >>> from pathlib import Path
-    >>> from putput.pipeline import _load_pattern_def
-    >>> pattern_def_path = Path(__file__).parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
-    >>> pattern_def = _load_pattern_def(pattern_def_path)
-    >>> validate_pattern_def(pattern_def)
-
     Args:
         pattern_def: A dictionary representation of the pattern definition.
 
     Raises:
         PatternDefinitionValidationError: If the pattern definition file is invalid.
+
+    Examples:
+        >>> from pathlib import Path
+        >>> from putput.pipeline import _load_pattern_def
+        >>> pattern_def_path = Path(__file__).parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
+        >>> pattern_def = _load_pattern_def(pattern_def_path)
+        >>> validate_pattern_def(pattern_def)
     """
     try:
         if not pattern_def:

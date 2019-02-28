@@ -7,6 +7,7 @@ def get_logger(module_name: str, level: int = logging.INFO) -> logging.Logger:
 
     Args:
         module_name: __name__ for the calling module.
+
         level: Minimum logging level. Messages with this level or
             higher will be shown.
     """

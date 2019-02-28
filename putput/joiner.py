@@ -19,11 +19,14 @@ class ComboOptions:
 
     Attributes:
         max_sample_size: Ceiling for number of components to sample.
+
         with_replacement: Option to include duplicates when randomly sampling. If True,
             will sample max_sample_size. If False, will sample up to 'max_sample_size'
             unique combinations.
+
         seed: initializer for random generator. Set this value for repeatable results
             across multiple runs.
+
     Raises:
         ValueError: If max_sample_size <= 0.
     """
@@ -62,20 +65,22 @@ def join_combo(combo: Sequence[Sequence[T]], *, combo_options: Optional[ComboOpt
     especially in cases where oversampling/undersampling is
     desired.
 
-    >>> combo = (('hey', 'ok'), ('speaker', 'sound system'), ('play',))
-    >>> tuple(join_combo(combo))
-    (('hey', 'speaker', 'play'), ('hey', 'sound system', 'play'),
-     ('ok', 'speaker', 'play'), ('ok', 'sound system', 'play'))
-    >>> combo_options = ComboOptions(max_sample_size=1, with_replacement=False, seed=0)
-    >>> tuple(join_combo(combo, combo_options=combo_options))
-    (('ok', 'sound system', 'play'),)
-
     Args:
         combo: Sequences to join.
+
         combo_options: Options for randomly sampling.
 
     Yields:
         A joined combo.
+
+    Examples:
+        >>> combo = (('hey', 'ok'), ('speaker', 'sound system'), ('play',))
+        >>> tuple(join_combo(combo))
+        (('hey', 'speaker', 'play'), ('hey', 'sound system', 'play'),
+        ('ok', 'speaker', 'play'), ('ok', 'sound system', 'play'))
+        >>> combo_options = ComboOptions(max_sample_size=1, with_replacement=False, seed=0)
+        >>> tuple(join_combo(combo, combo_options=combo_options))
+        (('ok', 'sound system', 'play'),)
     """
     if not all(combo):
         raise ValueError('Invalid combo: components must not be empty.')
