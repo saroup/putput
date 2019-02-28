@@ -10,6 +10,7 @@ from putput import ComboOptions
 from putput import Pipeline
 from putput.presets import displaCy
 from putput.presets import iob2
+from putput.presets import luis
 from tests.unit.helper_functions import compare_all_pairs
 
 
@@ -924,6 +925,78 @@ class TestPipeline(unittest.TestCase):
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
         p = Pipeline.from_preset(iob2.preset(groups_to_exclude=('PLAY_PHRASE',)), pattern_def_path)
         self.assertEqual(p.logger.level, logging.WARNING)
+
+    def test_luis_preset_no_entities_one_intent(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        patterns_to_intents = {
+            'WAKE, PLAY_PHRASE': "PLAY_INTENT"
+        }
+        p = Pipeline.from_preset(luis.preset(patterns_to_intents=patterns_to_intents), pattern_def_path)
+        generator = p.flow(disable_progress_bar=self._disable_progress_bar)
+        luis_tests = list(generator)
+        expected_luis_tests = [
+            {'text': 'hi he will want to play', 'intent': 'PLAY_INTENT', 'entities': []},
+            {'text': 'hi he will want to listen', 'intent': 'PLAY_INTENT', 'entities': []},
+            {'text': 'hi she will want to play', 'intent': 'PLAY_INTENT', 'entities': []},
+            {'text': 'hi she will want to listen', 'intent': 'PLAY_INTENT', 'entities': []}
+        ]
+        pairs = [(luis_tests, expected_luis_tests)]
+        compare_all_pairs(self, pairs)
+
+    def test_luis_preset_no_entities_multiple_intent(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        patterns_to_intents = {
+            'WAKE, PLAY_PHRASE': "PLAY_INTENT",
+            'WAKE': "WAKE_INTENT"
+        }
+        p = Pipeline.from_preset(luis.preset(patterns_to_intents=patterns_to_intents), pattern_def_path)
+        generator = p.flow(disable_progress_bar=self._disable_progress_bar)
+        luis_tests = list(generator)
+        expected_luis_tests = [
+            {'text': 'hi', 'intent': 'WAKE_INTENT', 'entities': []},
+            {'text': 'hi he will want to play', 'intent': 'PLAY_INTENT', 'entities': []},
+            {'text': 'hi he will want to listen', 'intent': 'PLAY_INTENT', 'entities': []},
+            {'text': 'hi she will want to play', 'intent': 'PLAY_INTENT', 'entities': []},
+            {'text': 'hi she will want to listen', 'intent': 'PLAY_INTENT', 'entities': []}
+        ]
+        pairs = [(luis_tests, expected_luis_tests)]
+        compare_all_pairs(self, pairs)
+
+    def test_luis_preset_intent_and_entities(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        patterns_to_intents = {
+            'WAKE, PLAY_PHRASE': "PLAY_INTENT"
+        }
+        entities = ('PLAY')
+        p = Pipeline.from_preset(luis.preset(patterns_to_intents=patterns_to_intents,
+                                             entities=entities),
+                                 pattern_def_path)
+        generator = p.flow(disable_progress_bar=self._disable_progress_bar)
+        luis_tests = list(generator)
+        expected_luis_tests = [
+            {
+                'text': 'hi he will want to play',
+                'intent': 'PLAY_INTENT',
+                'entities': [{'entity': 'PLAY', 'startPos': 16, 'endPos': 23}]
+            },
+            {
+                'text': 'hi he will want to listen',
+                'intent': 'PLAY_INTENT',
+                'entities': [{'entity': 'PLAY', 'startPos': 16, 'endPos': 25}]
+            },
+            {
+                'text': 'hi she will want to play',
+                'intent': 'PLAY_INTENT',
+                'entities': [{'entity': 'PLAY', 'startPos': 17, 'endPos': 24}]
+            },
+            {
+                'text': 'hi she will want to listen',
+                'intent': 'PLAY_INTENT',
+                'entities': [{'entity': 'PLAY', 'startPos': 17, 'endPos': 26}]
+            }
+        ]
+        pairs = [(luis_tests, expected_luis_tests)]
+        compare_all_pairs(self, pairs)
 
 def _just_groups(group_name: str, _: Sequence[str]) -> str:
     return '[{group_name}]'.format(group_name=group_name)

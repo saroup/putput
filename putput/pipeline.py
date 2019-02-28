@@ -427,7 +427,9 @@ class Pipeline:
                                                                            groups,
                                                                            disable_progress_bar=disable_progress_bar):
                 if self.final_hook:
-                    yield self.final_hook(utterance, handled_tokens, handled_groups)
+                    final_result = self.final_hook(utterance, handled_tokens, handled_groups)
+                    if final_result:
+                        yield final_result
                 else:
                     yield utterance, handled_tokens, handled_groups
 

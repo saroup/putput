@@ -1,0 +1,73 @@
+base_tokens:
+  - SINGULAR_PRONOUNS: [i, we, they]
+  - PLURAL_PRONOUNS: [he, she]
+token_patterns:
+  - static:
+    - AVAILABILITY:
+      - [[open, available]]
+    - QUESTION:
+      - [[are there , is there], [any, a], [currently ]]
+      - [[are there , is there], [any, a]]
+    - WANT_INFO:
+      - [SINGULAR_PRONOUNS, [want, need, would like], [a, more information on, to know about]]
+      - [PLURAL_PRONOUNS, [wants, needs, would like], [a, more information on, to know about]]
+    - FIND:
+      - [[Please find, find, tell me about, look for, search for]]
+    - POSITION:
+      - [[job, jobs, position]]
+    - QUESTION_MARK:
+      - [['?']]
+    - QUEUE:
+      - [[then, and then, and after]]
+    - IN:
+      - [[in, around, near, nearby, close to]]
+    - OR:
+      - [[or]]
+    - APPLY:
+      - [SINGULAR_PRONOUNS, [want, need, would like], [to], [apply, try out, interview]]
+      - [PLURAL_PRONOUNS, [wants, needs, would like], [to], [apply, try out, interview]]
+    - CURRENT:
+      - [[i'm, i am, i am currently], [a]]
+    - FOR_THE:
+      - [[for, to, at], [the]]
+    - GIVE:
+      - [[here is, here's, this is, take], [my]]
+    - MY:
+      - [[my]]
+    - ATTACHED:
+      - [[is], [enclosed, attached, here, included]]
+    - RESUME:
+      - [[resume, application, c.v., curriculum vitae]]
+  - dynamic:
+    - Job
+    - Field
+    - Locations
+    - datetimeV2
+utterance_patterns:
+  - [QUESTION, AVAILABILITY, Field, POSITION, QUESTION_MARK]
+  - [QUESTION, Field, POSITION, AVAILABILITY, QUESTION_MARK]
+  - [QUESTION, AVAILABILITY, Field, POSITION, OR, Field, POSITION, QUESTION_MARK]
+  - [QUESTION, Field, POSITION, OR, Field, POSITION, AVAILABILITY, QUESTION_MARK]
+  - [QUESTION, AVAILABILITY, Field, POSITION, IN, Locations, QUESTION_MARK]
+  - [QUESTION, Field, POSITION, AVAILABILITY, IN, Locations, QUESTION_MARK]
+  - [QUESTION, AVAILABILITY, Field, POSITION, datetimeV2, QUESTION_MARK]
+  - [QUESTION, Field, POSITION, AVAILABILITY, datetimeV2, QUESTION_MARK]
+  - [QUESTION, AVAILABILITY, Field, POSITION, IN, Locations, datetimeV2, QUESTION_MARK]
+  - [QUESTION, Field, POSITION, AVAILABILITY, IN, Locations, datetimeV2, QUESTION_MARK]
+  - [FIND, Field, POSITION, AVAILABILITY]
+  - [FIND, Field, POSITION, AVAILABILITY, datetimeV2]
+  - [FIND, Field, POSITION, AVAILABILITY, IN, Locations]
+  - [FIND, Field, POSITION, AVAILABILITY, datetimeV2, IN, Locations]
+  - [GIVE, RESUME, FOR_THE, Job, POSITION]
+  - [GIVE, RESUME, FOR_THE, Field, POSITION]
+  - [GIVE, Field, RESUME]
+  - [GIVE, Job, RESUME]
+  - [GIVE, Field, POSITION, RESUME]
+  - [GIVE, Job, POSITION, RESUME]
+  - [APPLY, FOR_THE, Field, POSITION]
+  - [APPLY, FOR_THE, Job, POSITION]
+  - [CURRENT, Job, GIVE, RESUME]
+  - [MY, RESUME, ATTACHED]
+  - [MY, RESUME, FOR_THE, Job, ATTACHED]
+  - [MY, RESUME, FOR_THE, Job, POSITION, ATTACHED]
+

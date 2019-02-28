@@ -10,7 +10,7 @@ from typing import Tuple
 from typing import Union
 
 RANGE_REGEX = r'^\d+(\-\d+)?$'
-_RANGE_OR_WORD_REGEX = r'(^[a-zA-Z_]+$|^\d+(\-\d+)?$)'
+_RANGE_OR_WORD_REGEX = r'(^[a-zA-Z_0-9]+$|^\d+(\-\d+)?$)'
 _RESERVED_TOKEN = 'none'
 
 class PatternDefinitionValidationError(Exception):
