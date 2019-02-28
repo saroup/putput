@@ -17,29 +17,32 @@ def preset(*,
 
     This function should be used as the 'preset' argument of putput.Pipeline and patterns_to_intents must be included.
 
-    >>> from pathlib import Path
-    >>> from putput.pipeline import Pipeline
-    >>> from pprint import pprint
-    >>> import random
-    >>> random.seed(0)
-    >>> pattern_def_path = Path(__file__).parent.parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
-    >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
-    >>> patterns_to_intents = {'ADD_ITEM, 2, CONJUNCTION, ITEM': 'ADD_INTENT'}
-    >>> p = Pipeline.from_preset(preset(patterns_to_intents=patterns_to_intents, entities=('ITEM',)),
-    ...                          pattern_def_path,
-    ...                          dynamic_token_patterns_map=dynamic_token_patterns_map)
-    >>> generator = p.flow(disable_progress_bar=True)
-    >>> first_test = next(generator)
-    >>> first_test == {'entities': [{'endPos': 17, 'entity': 'ITEM', 'startPos': 12},
-    ...                             {'endPos': 35, 'entity': 'ITEM', 'startPos': 30},
-    ...                             {'endPos': 45, 'entity': 'ITEM', 'startPos': 40}],
-    ...                'intent': 'ADD_INTENT',
-    ...                'text': 'can she get fries can she get fries and fries'}
-    True
+    Examples:
+        >>> from pathlib import Path
+        >>> from putput.pipeline import Pipeline
+        >>> from pprint import pprint
+        >>> import random
+        >>> random.seed(0)
+        >>> pattern_def_path = Path(__file__).parent.parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
+        >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
+        >>> patterns_to_intents = {'ADD_ITEM, 2, CONJUNCTION, ITEM': 'ADD_INTENT'}
+        >>> p = Pipeline.from_preset(preset(patterns_to_intents=patterns_to_intents, entities=('ITEM',)),
+        ...                          pattern_def_path,
+        ...                          dynamic_token_patterns_map=dynamic_token_patterns_map)
+        >>> generator = p.flow(disable_progress_bar=True)
+        >>> first_test = next(generator)
+        >>> first_test == {'entities': [{'endPos': 17, 'entity': 'ITEM', 'startPos': 12},
+        ...                             {'endPos': 35, 'entity': 'ITEM', 'startPos': 30},
+        ...                             {'endPos': 45, 'entity': 'ITEM', 'startPos': 40}],
+        ...                'intent': 'ADD_INTENT',
+        ...                'text': 'can she get fries can she get fries and fries'}
+        True
 
     Args:
         patterns_to_intents: Required. A mapping from an utterance pattern string to a single intent.
+
         entities: A sequence of tokens that are considered entities.
+
     Returns:
         A Callable that when called returns parameters for instantiating a Pipeline.
         This Callable can be passed into putput.Pipeline as the 'preset' argument.

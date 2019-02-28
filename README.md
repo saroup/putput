@@ -2,10 +2,10 @@
 [![Build Status](https://travis-ci.org/michaelperel/putput.svg?branch=master)](https://travis-ci.org/michaelperel/putput)
 [![codecov](https://codecov.io/gh/michaelperel/putput/branch/master/graph/badge.svg)](https://codecov.io/gh/michaelperel/putput)
 [![PyPI version](https://badge.fury.io/py/putput.svg)](https://badge.fury.io/py/putput)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/putput.svg)
-![Read the Docs](https://img.shields.io/readthedocs/putput.svg)
-![PyPI - License](https://img.shields.io/pypi/l/putput.svg)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/putput.svg)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/putput.svg)](https://pypi.org/project/putput/)
+[![Read the Docs](https://img.shields.io/readthedocs/putput.svg)](https://putput.readthedocs.io/en/latest/)
+[![PyPI - License](https://img.shields.io/pypi/l/putput.svg)](https://pypi.org/project/putput/)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/putput.svg)](https://pypi.org/project/putput/)
 
 ```putput``` is a library that generates labeled data for chatbots. It's simple to use, highly customizable, and can handle big data generation on a consumer grade laptop. ```putput``` takes minutes to setup and seconds to generate millions of labeled data points.
 

@@ -28,6 +28,14 @@ putput.presets.iob2 module
     :undoc-members:
     :show-inheritance:
 
+putput.presets.luis module
+--------------------------
+
+.. automodule:: putput.presets.luis
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

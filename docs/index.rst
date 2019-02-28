@@ -253,8 +253,9 @@ Some common use cases are limiting the size of the output,
 oversampling/undersampling ``utterance_patterns``, specifying how
 ``tokens`` and ``groups`` are tokenized, etc. Customization of the
 ``Pipeline`` is extensive and is covered in the ``Pipeline``'s
-`docs <https://putput.readthedocs.io/en/latest/source/putput.html>`__. Common ``preset`` configurations are covered in
-the ``preset`` `docs <https://putput.readthedocs.io/en/latest/source/putput.presets.html>`__.
+`docs <https://putput.readthedocs.io/en/latest/source/putput.html>`__.
+Common ``preset`` configurations are covered in the ``preset``
+`docs <https://putput.readthedocs.io/en/latest/source/putput.presets.html>`__.
 
 .. |Build Status| image:: https://travis-ci.org/michaelperel/putput.svg?branch=master
    :target: https://travis-ci.org/michaelperel/putput
@@ -263,9 +264,14 @@ the ``preset`` `docs <https://putput.readthedocs.io/en/latest/source/putput.pres
 .. |PyPI version| image:: https://badge.fury.io/py/putput.svg
    :target: https://badge.fury.io/py/putput
 .. |PyPI - Python Version| image:: https://img.shields.io/pypi/pyversions/putput.svg
+   :target: https://pypi.org/project/putput/
 .. |Read the Docs| image:: https://img.shields.io/readthedocs/putput.svg
+   :target: https://putput.readthedocs.io/en/latest/
 .. |PyPI - License| image:: https://img.shields.io/pypi/l/putput.svg
+   :target: https://pypi.org/project/putput/
 .. |PyPI - Downloads| image:: https://img.shields.io/pypi/dm/putput.svg
+   :target: https://pypi.org/project/putput/
 .. |multi intent| image:: _static/multiintent.png
 .. |utterance 1| image:: _static/utterance.png
 .. |utterance 2| image:: _static/utterance.png
+
