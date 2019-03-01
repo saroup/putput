@@ -10,7 +10,7 @@ from typing import Tuple
 from typing import Union
 
 RANGE_REGEX = r'^\d+(\-\d+)?$'
-_RANGE_OR_WORD_REGEX = r'(^[a-zA-Z_0-9]+$|^\d+(\-\d+)?$)'
+_RANGE_OR_WORD_REGEX = r'(^[a-zA-Z_0-9\|><]+$|^\d+(\-\d+)?$)'
 _RESERVED_TOKEN = 'none'
 
 class PatternDefinitionValidationError(Exception):
@@ -55,7 +55,8 @@ def _check_for_undefined_tokens(token_set_to_check: Set[str],
                                 ) -> None:
     defined_tokens = set.union(*defined_token_sets)
     undefined_tokens = token_set_to_check - defined_tokens
-    undefined_tokens_and_not_range = {token for token in undefined_tokens if not re.match(RANGE_REGEX, token)}
+    undefined_tokens_and_not_range = {token for token in undefined_tokens
+                                      if not re.match(RANGE_REGEX, token) and '|' not in token}
     if undefined_tokens_and_not_range:
         err_msg = 'Undefined tokens: {}'.format(undefined_tokens_and_not_range)
         raise PatternDefinitionValidationError(err_msg)
@@ -88,7 +89,7 @@ def _validate_component(component: Union[list, str], base_tokens: Set[str]) -> N
             _validate_instance(word, str, err_msg)
     else:
         _validate_instance(component, str, err_msg)
-        if component not in base_tokens:
+        if component not in base_tokens and '|' not in component:
             raise PatternDefinitionValidationError(err_msg)
 
 def _validate_static_token_patterns(static_maps: list, base_tokens: Set[str]) -> None:
@@ -147,6 +148,7 @@ def validate_pattern_def(pattern_def: Mapping) -> None:
         if not ({'token_patterns', 'utterance_patterns'} <= set(pattern_def)):
             err_msg = 'At the top level, token_patterns and utterance_patterns must exist.'
             raise PatternDefinitionValidationError(err_msg)
+        # breakpoint()
 
         base_tokens = _get_base_keys(pattern_def, 'base_tokens')
         groups = _get_base_keys(pattern_def, 'groups')

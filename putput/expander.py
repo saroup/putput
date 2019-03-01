@@ -171,9 +171,41 @@ def _get_static_token_patterns_map(pattern_def: Mapping) -> Mapping[str, Sequenc
 def _expand_static_token_patterns(pattern_def: Mapping,
                                   token_patterns: Sequence[Sequence[Union[str, Sequence[str]]]]
                                   ) -> Sequence[Sequence[Sequence[str]]]:
+    token_patterns = _expand_optional_token_patterns(token_patterns)
+    print(token_patterns)
     if 'base_tokens' in pattern_def:
         token_patterns = _expand_base_tokens(pattern_def, token_patterns)
     return _convert_token_patterns_to_tuples(token_patterns)
+
+def _expand_optional_token_patterns(token_patterns: Sequence[Sequence[Union[str, Sequence[str]]]]
+                                    ) -> Sequence[Sequence[Union[str, Sequence[str]]]]:
+    if not any('|' in token for token_pattern in token_patterns for token in token_pattern if isinstance(token, str)):
+        return token_patterns
+    expanded_token_patterns = []
+    for token_pattern in token_patterns:
+        index = _get_index_of_optional_token(token_pattern)
+        if index:
+            optional_token = token_pattern[index]
+            if '<' in optional_token and '>' in optional_token:
+                # Add with only left option
+                expanded_token_patterns.append(token_pattern[:index] + token_pattern[index + 2:]) # type: ignore
+                # Add with only right option
+                expanded_token_patterns.append(token_pattern[:index-1] + token_pattern[index + 1:]) # type: ignore
+            else:
+                # Add without option
+                expanded_token_patterns.append(token_pattern[:index] + token_pattern[index + 2:]) # type: ignore
+                # Add with option
+                expanded_token_patterns.append(token_pattern[:index] + token_pattern[index + 1:]) # type: ignore
+        else:
+            expanded_token_patterns.append(token_pattern)
+    return _expand_optional_token_patterns(expanded_token_patterns)
+
+def _get_index_of_optional_token(token_pattern: Sequence[Union[str, Sequence[str]]]
+                                 ) -> Optional[int]:
+    for index, token in enumerate(token_pattern):
+        if isinstance(token, str) and '|' in token:
+            return index
+    return None
 
 def _convert_token_patterns_to_tuples(token_patterns: Sequence[Sequence[Sequence[str]]]
                                       ) -> Tuple[Tuple[Tuple[str, ...], ...], ...]:
