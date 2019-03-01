@@ -224,6 +224,32 @@ class TestPipeline(unittest.TestCase):
                  (keys, p.combo_options_map.keys())] # type: ignore
         compare_all_pairs(self, pairs)
 
+    def test_property_maps_with_utterance_pattern_as_key_expands(self) -> None:
+        pattern_def_path = self._base_dir / 'nested_group_tokens_and_ranges.yml'
+        expansion_hooks_map = {
+            ('WAKE', 'PLAY_PHRASE'): (_group_nonsense,)
+        }
+        combo_hooks_map = {
+            ('WAKE', 'PLAY_PHRASE') : (_add_random_words,)
+        }
+        combo_options_map = {
+            ('WAKE', 'PLAY_PHRASE'): ComboOptions(max_sample_size=2, with_replacement=False, seed=0)
+        }
+
+        p = Pipeline(pattern_def_path)
+        p.expansion_hooks_map = expansion_hooks_map
+        p.combo_hooks_map = combo_hooks_map
+        p.combo_options_map = combo_options_map
+
+        keys = (('WAKE', 'START', 'PLAY'),
+                ('WAKE', 'START', 'PLAY', 'PLAY'),
+                ('WAKE', 'START', 'PLAY', 'PLAY', 'PLAY'),
+                ('WAKE', 'START', 'PLAY', 'PLAY', 'PLAY', 'PLAY'))
+
+        pairs = [(keys, p.expansion_hooks_map.keys()), # type: ignore
+                 (keys, p.combo_hooks_map.keys()), # type: ignore
+                 (keys, p.combo_options_map.keys())] # type: ignore
+        compare_all_pairs(self, pairs)
 
     def test_maps_with_utterance_pattern_as_key_applies(self) -> None:
         # pylint: disable=too-many-locals
@@ -921,15 +947,16 @@ class TestPipeline(unittest.TestCase):
                  (actual_groups_visualizer, exp_groups_visualizer)]
         compare_all_pairs(self, pairs)
 
-    def test_default_logger(self) -> None:
+    def test_default_read_only_properties(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
         p = Pipeline.from_preset(iob2.preset(groups_to_exclude=('PLAY_PHRASE',)), pattern_def_path)
-        self.assertEqual(p.logger.level, logging.WARNING)
+        self.assertEqual(p.logger.level, logging.WARNING) # pylint: disable=no-member
+        self.assertIn('multiple_group_patterns.yml', str(p.pattern_def_path))
 
     def test_luis_preset_no_entities_one_intent(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
         patterns_to_intents = {
-            'WAKE, PLAY_PHRASE': "PLAY_INTENT"
+            'WAKE, PLAY_PHRASE': 'PLAY_INTENT'
         }
         p = Pipeline.from_preset(luis.preset(patterns_to_intents=patterns_to_intents), pattern_def_path)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
@@ -946,8 +973,8 @@ class TestPipeline(unittest.TestCase):
     def test_luis_preset_no_entities_multiple_intent(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
         patterns_to_intents = {
-            'WAKE, PLAY_PHRASE': "PLAY_INTENT",
-            'WAKE': "WAKE_INTENT"
+            'WAKE, PLAY_PHRASE': 'PLAY_INTENT',
+            'WAKE': 'WAKE_INTENT'
         }
         p = Pipeline.from_preset(luis.preset(patterns_to_intents=patterns_to_intents), pattern_def_path)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
@@ -965,7 +992,7 @@ class TestPipeline(unittest.TestCase):
     def test_luis_preset_intent_and_entities(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
         patterns_to_intents = {
-            'WAKE, PLAY_PHRASE': "PLAY_INTENT"
+            'WAKE, PLAY_PHRASE': 'PLAY_INTENT'
         }
         entities = ('PLAY')
         p = Pipeline.from_preset(luis.preset(patterns_to_intents=patterns_to_intents,
@@ -997,6 +1024,45 @@ class TestPipeline(unittest.TestCase):
         ]
         pairs = [(luis_tests, expected_luis_tests)]
         compare_all_pairs(self, pairs)
+
+    def test_properties_getter_setters_access_level(self) -> None:
+        pattern_def_path = self._base_dir / 'nested_group_tokens_and_ranges.yml'
+        props = {} # type: dict
+        props['dynamic_token_patterns_map'] = {
+            'ARTIST': ((('kanye west', 'the beatles'),),)
+        }
+        props['token_handler_map'] = {
+            'START': _just_tokens,
+        }
+        props['group_handler_map'] = {
+            'PLAY_PHRASE': _remove_group,
+        }
+        props['expansion_hooks_map'] = {
+            ('WAKE',): (_group_nonsense,)
+        }
+        props['combo_hooks_map'] = {
+            ('WAKE',) : (_add_random_words,)
+        }
+        props['combo_options_map'] = {
+            ('WAKE',): ComboOptions(max_sample_size=2, with_replacement=False, seed=0)
+        }
+        props['final_hook'] = lambda x, y, z: (x, y, z)
+
+        p = Pipeline(pattern_def_path)
+        p.dynamic_token_patterns_map = props['dynamic_token_patterns_map']
+        p.token_handler_map = props['token_handler_map']
+        p.group_handler_map = props['group_handler_map']
+        p.expansion_hooks_map = props['expansion_hooks_map']
+        p.combo_hooks_map = props['combo_hooks_map']
+        p.combo_options_map = props['combo_options_map']
+        p.final_hook = props['final_hook']
+        for name, value in props.items():
+            prop = getattr(p, name)
+            self.assertEqual(prop, value)
+        with self.assertRaises(AttributeError):
+            p.logger = "some value" # type: ignore
+        with self.assertRaises(AttributeError):
+            p.pattern_def_path = "some value" # type: ignore
 
 def _just_groups(group_name: str, _: Sequence[str]) -> str:
     return '[{group_name}]'.format(group_name=group_name)

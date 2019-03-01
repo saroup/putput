@@ -88,7 +88,7 @@ setup(
     version=version,
     author='Michael Perel',
     author_email='michaelsethperel@gmail.com',
-    description='Generate utterances and tokens by defining patterns',
+    description='Generate labeled data for chatbots.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/michaelperel/putput',

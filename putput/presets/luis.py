@@ -79,9 +79,9 @@ def _convert_to_luis_entities(utterance: str,
         end = start + len(phrase)
         if label in entities:
             ent = {
-                "entity": label,
-                "startPos": start,
-                "endPos": end
+                'entity': label,
+                'startPos': start,
+                'endPos': end
             }
             ents.append(ent)
         offset = end
@@ -106,7 +106,7 @@ def _handle_entities(utterance: str,
     if entities:
         luis_entities = _convert_to_luis_entities(utterance, entities, list(handled_tokens), label_extractor)
     return {
-        "text": utterance,
-        "intent": intent,
-        "entities": luis_entities
+        'text': utterance,
+        'intent': intent,
+        'entities': luis_entities
     }
