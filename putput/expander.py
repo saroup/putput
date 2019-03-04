@@ -177,6 +177,47 @@ def _expand_static_token_patterns(pattern_def: Mapping,
         token_patterns = _expand_base_tokens(pattern_def, token_patterns)
     return _convert_token_patterns_to_tuples(token_patterns)
 
+def _convert_token_patterns_to_tuples(token_patterns: Sequence[Sequence[Sequence[str]]]
+                                      ) -> Tuple[Tuple[Tuple[str, ...], ...], ...]:
+    return tuple(tuple(tuple(phrases) for phrases in token_pattern) for token_pattern in token_patterns)
+
+def _expand_base_tokens(pattern_def: Mapping,
+                        token_patterns: Sequence[Sequence[Union[str, Sequence[str]]]]
+                        ) -> Sequence[Sequence[Sequence[str]]]:
+    base_token_map = get_base_item_map(pattern_def, 'base_tokens')
+    return tuple(tuple(base_token_map[component] if isinstance(component, str) else component
+                       for component in token_pattern) for token_pattern in token_patterns)
+
+def _expand_utterance_patterns_groups(utterance_patterns: Sequence[Sequence[str]],
+                                      group_map: Mapping[str, Sequence[str]]
+                                      ) -> Tuple[Sequence[Sequence[str]], Sequence[Sequence[Tuple[str, int]]]]:
+    expanded_group_map = _expand_group_map(group_map)
+    utterance_pattern_expanded_groups = tuple(chain.from_iterable(map(_expand_groups,
+                                                                      utterance_patterns, repeat(expanded_group_map))))
+    expanded_groups = tuple(chain.from_iterable(map(_create_groups,
+                                                    utterance_patterns, repeat(expanded_group_map))))
+    return utterance_pattern_expanded_groups, expanded_groups
+
+def _expand_group_map(group_map: Mapping[str, Sequence[str]]) -> Mapping[str, Sequence[Sequence[str]]]:
+    group_map_expanded_ranges = {name: _expand_optional(pattern) for name, pattern in group_map.items()}
+    group_map_expanded_ranges = {name: _expand_ranges(pattern) for name, pattern in group_map.items()}
+    expanded_group_map = {name : _expand_group_map_groups(patterns, group_map_expanded_ranges)
+                          for name, patterns in group_map_expanded_ranges.items()}
+    return expanded_group_map
+
+def _expand_optional(utterance_pattern: Sequence[str]) -> Sequence[Sequence[str]]:
+    if not any('(' in token in utterance_pattern):
+        return utterance_pattern
+    for token in utterance_pattern:
+
+    ranges = tuple(map(_parse_ranges, utterance_pattern))
+    aligned_ranges_and_tokens = zip(ranges[1:] + ((0, 0),), utterance_pattern)
+    aligned_range_tokens = map(lambda r_and_t: r_and_t[0] + (r_and_t[1],), aligned_ranges_and_tokens)
+    range_tokens = filter(lambda r_and_t: not re.match(RANGE_REGEX, r_and_t[2]), aligned_range_tokens)
+    utterance_pattern_expanded_ranges = tuple(map(tuple, map(chain.from_iterable, product( # type: ignore
+        *map(_expand_tokens, range_tokens)))))  # type: ignore
+    return cast(Sequence[Sequence[str]], utterance_pattern_expanded_ranges)
+
 def _expand_optional_token_patterns(token_patterns: Sequence[Sequence[Union[str, Sequence[str]]]]
                                     ) -> Sequence[Sequence[Union[str, Sequence[str]]]]:
     if not any('|' in token for token_pattern in token_patterns for token in token_pattern if isinstance(token, str)):
@@ -206,33 +247,6 @@ def _get_index_of_optional_token(token_pattern: Sequence[Union[str, Sequence[str
         if isinstance(token, str) and '|' in token:
             return index
     return None
-
-def _convert_token_patterns_to_tuples(token_patterns: Sequence[Sequence[Sequence[str]]]
-                                      ) -> Tuple[Tuple[Tuple[str, ...], ...], ...]:
-    return tuple(tuple(tuple(phrases) for phrases in token_pattern) for token_pattern in token_patterns)
-
-def _expand_base_tokens(pattern_def: Mapping,
-                        token_patterns: Sequence[Sequence[Union[str, Sequence[str]]]]
-                        ) -> Sequence[Sequence[Sequence[str]]]:
-    base_token_map = get_base_item_map(pattern_def, 'base_tokens')
-    return tuple(tuple(base_token_map[component] if isinstance(component, str) else component
-                       for component in token_pattern) for token_pattern in token_patterns)
-
-def _expand_utterance_patterns_groups(utterance_patterns: Sequence[Sequence[str]],
-                                      group_map: Mapping[str, Sequence[str]]
-                                      ) -> Tuple[Sequence[Sequence[str]], Sequence[Sequence[Tuple[str, int]]]]:
-    expanded_group_map = _expand_group_map(group_map)
-    utterance_pattern_expanded_groups = tuple(chain.from_iterable(map(_expand_groups,
-                                                                      utterance_patterns, repeat(expanded_group_map))))
-    expanded_groups = tuple(chain.from_iterable(map(_create_groups,
-                                                    utterance_patterns, repeat(expanded_group_map))))
-    return utterance_pattern_expanded_groups, expanded_groups
-
-def _expand_group_map(group_map: Mapping[str, Sequence[str]]) -> Mapping[str, Sequence[Sequence[str]]]:
-    group_map_expanded_ranges = {name: _expand_ranges(pattern) for name, pattern in group_map.items()}
-    expanded_group_map = {name : _expand_group_map_groups(patterns, group_map_expanded_ranges)
-                          for name, patterns in group_map_expanded_ranges.items()}
-    return expanded_group_map
 
 def _expand_group_map_groups(patterns: Sequence[Sequence[str]],
                              expanded_group_map: Mapping[str, Sequence[Sequence[str]]]) -> Sequence[Sequence[str]]:

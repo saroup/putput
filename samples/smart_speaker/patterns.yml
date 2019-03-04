@@ -6,11 +6,7 @@ token_patterns:
     - WAKE:
       - [[hey, ok], [speaker, sound system]]
     - PLAY:
-      - [ PLURAL_PRONOUNS|SINGULAR_PRONOUNS,  [want, need], |[to play, to listen to]]
-      # - [PLURAL_PRONOUNS, [wants, needs], [to play, to listen to]]
-      # - [SINGULAR_PRONOUNS, [wants, needs], [to play, to listen to]]
-      # - [PLURAL_PRONOUNS, [wants, needs]]
-      # - [SINGULAR_PRONOUNS, [wants, needs]]
+      - [ (PLURAL_PRONOUNS|SINGULAR_PRONOUNS),  [want, need], [to play, to listen to]]
       - [[play, turn on]]
     - INDICATOR:
       - [[by, performed by]]
@@ -21,7 +17,7 @@ token_patterns:
   - dynamic:
     - SONG
 groups:
-  - PLAY_SONG: [|PLAY, SONG]
+  - PLAY_SONG: [(|PLAY), SONG]
   - PLAY_SONGS: [PLAY, SONG, 2-5]
   - PLAY_ARTIST: [PLAY, ARTIST|SONG, 2-5]
 utterance_patterns:
