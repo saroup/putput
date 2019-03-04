@@ -484,7 +484,9 @@ class Pipeline:
 
         sample_size, combo_gen = combine(utterance_combo,
                                          tokens,
+                                         groups,
                                          token_handler_map=self._token_handler_map,
+                                         group_handler_map=self._group_handler_map,
                                          combo_options=combo_options)
         with tqdm(combo_gen,
                   desc='Combination...',
@@ -492,8 +494,7 @@ class Pipeline:
                   disable=disable_progress_bar,
                   leave=False,
                   miniters=1) as pbar:
-            for utterance, handled_tokens in pbar:
-                handled_groups = self._compute_handled_groups(groups, handled_tokens)
+            for utterance, handled_tokens, handled_groups in pbar:
                 if self._combo_hooks_map:
                     utterance, handled_tokens, handled_groups = self._execute_joining_hooks(tokens,
                                                                                             (utterance,
@@ -559,29 +560,6 @@ class Pipeline:
         if key in hooks_map:
             args = reduce(lambda args, hook: hook(*args), hooks_map[key], args)
         return args
-
-    def _compute_handled_groups(self,
-                                groups: Sequence[Tuple[str, int]],
-                                handled_tokens: Sequence[str],
-                                ) -> Sequence[str]:
-        start_index = 0
-        handled_groups = []
-        for group in groups:
-            group_name, end_index = group
-            group_handler = self._get_group_handler(group_name)
-            handled_group = group_handler(group_name, handled_tokens[start_index: start_index + end_index])
-            handled_groups.append(handled_group)
-            start_index += end_index
-        return tuple(handled_groups)
-
-    def _get_group_handler(self, group_name: str) -> Callable[[str, Sequence[str]], str]:
-        default_group_handler = lambda group_name, handled_tokens: '{{{}({})}}'.format(group_name,
-                                                                                       ' '.join(handled_tokens))
-        if self._group_handler_map:
-            return (self._group_handler_map.get(group_name) or
-                    self._group_handler_map.get('DEFAULT') or
-                    default_group_handler)
-        return default_group_handler
 
     def _expand_map_with_utterance_pattern_as_key(self,
                                                   map_with_utterance_pattern_as_key: _T_UP_KEY,
