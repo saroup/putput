@@ -114,7 +114,7 @@ class TestCombiner(unittest.TestCase):
         utterance_combo = (('he will want', 'she will want'), ('to play', 'to listen'))
         tokens = ('START', 'PLAY')
         groups = (('None', 1), ('None', 1))
-        combo_options = ComboOptions(max_sample_size=6, with_replacement=False, seed=0)
+        combo_options = ComboOptions(max_sample_size=6, with_replacement=False)
         _, generator = combine(utterance_combo, tokens, groups, combo_options=combo_options)
         actual_utterances, actual_handled_tokens, actual_handled_groups = zip(*generator)
         expected_utterances = ('he will want to play', 'he will want to listen',
@@ -136,7 +136,7 @@ class TestCombiner(unittest.TestCase):
         utterance_combo = (('he will want', 'she will want'), ('to play', 'to listen'))
         tokens = ('START', 'PLAY')
         groups = (('None', 1), ('None', 1))
-        combo_options = ComboOptions(max_sample_size=6, with_replacement=True, seed=0)
+        combo_options = ComboOptions(max_sample_size=6, with_replacement=True)
         _, generator = combine(utterance_combo, tokens, groups, combo_options=combo_options)
         actual_utterances, actual_handled_tokens, actual_handled_groups = zip(*generator)
         expected_utterances = ('she will want to listen', 'she will want to listen',

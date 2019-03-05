@@ -14,7 +14,7 @@ def main() -> None:
     }
 
     combo_options_map = {
-        'DEFAULT': ComboOptions(max_sample_size=5, with_replacement=False, seed=0)
+        'DEFAULT': ComboOptions(max_sample_size=5, with_replacement=False)
     }
 
     # default format

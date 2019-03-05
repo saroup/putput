@@ -20,6 +20,7 @@ class TestPipeline(unittest.TestCase):
         self._disable_progress_bar = True
         self.maxDiff = None
         self._base_dir = Path(__file__).parent / 'pattern_definitions' / 'valid'
+        random.seed(0)
 
     def test_before_joining_hooks_tokens(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
@@ -161,8 +162,10 @@ class TestPipeline(unittest.TestCase):
                      dynamic_token_patterns_map=dynamic_token_patterns_map)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
-        expected_utterances = ('he will want to play the please beatles', 'he will want to listen the please beatles',
-                               'she will want to play the please beatles', 'she will want to listen the please beatles')
+        expected_utterances = ('he will want to play the please beatles',
+                               'um he will want to listen the beatles',
+                               'she will want to play the beatles please',
+                               'she will want to please listen the beatles')
         expected_tokens_list = (('[START(he will want)]', '[PLAY(to play)]', '[ARTIST(the beatles)]'),
                                 ('[START(he will want)]', '[PLAY(to listen)]', '[ARTIST(the beatles)]'),
                                 ('[START(she will want)]', '[PLAY(to play)]', '[ARTIST(the beatles)]'),
@@ -175,7 +178,6 @@ class TestPipeline(unittest.TestCase):
                             '{None([ARTIST(the beatles)])}'),
                            ('{None([START(she will want)])}', '{None([PLAY(to listen)])}',
                             '{None([ARTIST(the beatles)])}'))
-
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
                  (actual_groups, expected_groups)]
@@ -206,7 +208,7 @@ class TestPipeline(unittest.TestCase):
             ('WAKE', 'PLAY_PHRASE') : (_add_random_words,)
         }
         combo_options_map = {
-            ('WAKE', 'PLAY_PHRASE'): ComboOptions(max_sample_size=2, with_replacement=False, seed=0)
+            ('WAKE', 'PLAY_PHRASE'): ComboOptions(max_sample_size=2, with_replacement=False)
         }
 
         p = Pipeline(pattern_def_path,
@@ -233,7 +235,7 @@ class TestPipeline(unittest.TestCase):
             ('WAKE', 'PLAY_PHRASE') : (_add_random_words,)
         }
         combo_options_map = {
-            ('WAKE', 'PLAY_PHRASE'): ComboOptions(max_sample_size=2, with_replacement=False, seed=0)
+            ('WAKE', 'PLAY_PHRASE'): ComboOptions(max_sample_size=2, with_replacement=False)
         }
 
         p = Pipeline(pattern_def_path)
@@ -267,34 +269,35 @@ class TestPipeline(unittest.TestCase):
         }
 
         combo_options_map = {
-            ('WAKE', 'PLAY_PHRASE'): ComboOptions(max_sample_size=1, with_replacement=False, seed=0)
+            ('WAKE', 'PLAY_PHRASE'): ComboOptions(max_sample_size=1, with_replacement=False)
         }
 
         p = Pipeline(pattern_def_path,
                      combo_options_map=combo_options_map,
                      combo_hooks_map=combo_hooks_map,
                      expansion_hooks_map=expansion_hooks_map,
-                     dynamic_token_patterns_map=dynamic_token_patterns_map)
+                     dynamic_token_patterns_map=dynamic_token_patterns_map,
+                     seed=0)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
-        expected_utterances = ('hi she wants please to listen',
-                               'hi she wants to listen to please listen',
-                               'hi she wants to listen to please listen to play to play',
-                               'hi she wants to listen to please listen to play')
+        expected_utterances = ('hi she wants hmmmm to listen',
+                               'hi she wants to listen to play please',
+                               'hi she wants to listen to play um to play',
+                               'hi she wants to play to listen to uh listen to play')
         expected_tokens_list = (('[WAKE(hi)]', '[START(she wants)]', '[PLAY(to listen)]'),
-                                ('[WAKE(hi)]', '[START(she wants)]', '[PLAY(to listen)]', '[PLAY(to listen)]'),
-                                ('[WAKE(hi)]', '[START(she wants)]', '[PLAY(to listen)]', '[PLAY(to listen)]',
+                                ('[WAKE(hi)]', '[START(she wants)]', '[PLAY(to listen)]', '[PLAY(to play)]'),
+                                ('[WAKE(hi)]', '[START(she wants)]', '[PLAY(to listen)]', '[PLAY(to play)]',
                                  '[PLAY(to play)]'),
-                                ('[WAKE(hi)]', '[START(she wants)]', '[PLAY(to listen)]', '[PLAY(to listen)]',
-                                 '[PLAY(to play)]', '[PLAY(to play)]'))
+                                ('[WAKE(hi)]', '[START(she wants)]', '[PLAY(to play)]', '[PLAY(to listen)]',
+                                 '[PLAY(to listen)]', '[PLAY(to play)]'))
         expected_groups = (('{nonsense([WAKE(hi)])},', '{PLAY_PHRASE([START(she wants)] [PLAY(to listen)])},'),
                            ('{nonsense([WAKE(hi)])},',
-                            '{PLAY_PHRASE([START(she wants)] [PLAY(to listen)] [PLAY(to listen)])},'),
+                            '{PLAY_PHRASE([START(she wants)] [PLAY(to listen)] [PLAY(to play)])},'),
                            ('{nonsense([WAKE(hi)])},',
-                            '{PLAY_PHRASE([START(she wants)] [PLAY(to listen)] [PLAY(to listen)] [PLAY(to play)])},'),
+                            '{PLAY_PHRASE([START(she wants)] [PLAY(to listen)] [PLAY(to play)] [PLAY(to play)])},'),
                            ('{nonsense([WAKE(hi)])},',
-                            '{PLAY_PHRASE([START(she wants)] [PLAY(to listen)] [PLAY(to listen)] \
-[PLAY(to play)] [PLAY(to play)])},'))
+                            '{PLAY_PHRASE([START(she wants)] [PLAY(to play)] [PLAY(to listen)] [PLAY(to listen)] \
+[PLAY(to play)])},'))
 
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
@@ -316,8 +319,10 @@ class TestPipeline(unittest.TestCase):
                      dynamic_token_patterns_map=dynamic_token_patterns_map)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
-        expected_utterances = ('he will want to play the please beatles', 'he will want to listen the please beatles',
-                               'she will want to play the please beatles', 'she will want to listen the please beatles')
+        expected_utterances = ('he will want to play the please beatles',
+                               'um he will want to listen the beatles',
+                               'she will want to play the beatles please',
+                               'she will want to please listen the beatles')
         expected_tokens_list = (('[START(he will want)]', '[PLAY(to play)]', '[ARTIST(the beatles)]'),
                                 ('[START(he will want)]', '[PLAY(to listen)]', '[ARTIST(the beatles)]'),
                                 ('[START(she will want)]', '[PLAY(to play)]', '[ARTIST(the beatles)]'),
@@ -352,23 +357,25 @@ class TestPipeline(unittest.TestCase):
                      dynamic_token_patterns_map=dynamic_token_patterns_map)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
-        expected_utterances = ('he will want to play the please beatles', 'he will want to listen the please beatles',
-                               'she will want to play the please beatles', 'she will want to listen the please beatles',
-                               'the beatles')
-        expected_tokens_list = (('[START(he will want)]', '[PLAY(to play)]', '[ARTIST(the beatles)]'),
+        expected_utterances = ('the beatles',
+                               'he will want to play the please beatles',
+                               'um he will want to listen the beatles',
+                               'she will want to play the beatles please',
+                               'she will want to please listen the beatles')
+        expected_tokens_list = (('[artist(the beatles)]',),
+                                ('[START(he will want)]', '[PLAY(to play)]', '[ARTIST(the beatles)]'),
                                 ('[START(he will want)]', '[PLAY(to listen)]', '[ARTIST(the beatles)]'),
                                 ('[START(she will want)]', '[PLAY(to play)]', '[ARTIST(the beatles)]'),
-                                ('[START(she will want)]', '[PLAY(to listen)]', '[ARTIST(the beatles)]'),
-                                ('[artist(the beatles)]',))
-        expected_groups = (('{None([START(he will want)])}', '{None([PLAY(to play)])}',
+                                ('[START(she will want)]', '[PLAY(to listen)]', '[ARTIST(the beatles)]'))
+        expected_groups = (('{None([ARTIST(the beatles)])}',),
+                           ('{None([START(he will want)])}', '{None([PLAY(to play)])}',
                             '{None([ARTIST(the beatles)])}'),
                            ('{None([START(he will want)])}', '{None([PLAY(to listen)])}',
                             '{None([ARTIST(the beatles)])}'),
                            ('{None([START(she will want)])}', '{None([PLAY(to play)])}',
                             '{None([ARTIST(the beatles)])}'),
                            ('{None([START(she will want)])}', '{None([PLAY(to listen)])}',
-                            '{None([ARTIST(the beatles)])}'),
-                           ('{None([ARTIST(the beatles)])}',))
+                            '{None([ARTIST(the beatles)])}'))
 
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
@@ -557,7 +564,7 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles',),),)
         }
         combo_options_map = {
-            ('START', 'PLAY', 'ARTIST'): ComboOptions(max_sample_size=5, with_replacement=False, seed=0)
+            ('START', 'PLAY', 'ARTIST'): ComboOptions(max_sample_size=5, with_replacement=False)
         }
 
         p = Pipeline(pattern_def_path,
@@ -593,8 +600,7 @@ class TestPipeline(unittest.TestCase):
         max_sample_size = 5
         combo_options_map = {
             ('START', 'PLAY', 'ARTIST'): ComboOptions(max_sample_size=max_sample_size,
-                                                      with_replacement=True,
-                                                      seed=0)
+                                                      with_replacement=True)
         }
 
         p = Pipeline(pattern_def_path,
@@ -633,7 +639,7 @@ class TestPipeline(unittest.TestCase):
         }
         max_sample_size = 5
         combo_options_map = {
-            'DEFAULT': ComboOptions(max_sample_size=max_sample_size, with_replacement=True, seed=0)
+            'DEFAULT': ComboOptions(max_sample_size=max_sample_size, with_replacement=True)
         }
 
         p = Pipeline(pattern_def_path,
@@ -673,8 +679,8 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles', 'kanye'),),)
         }
         combo_options_map = {
-            ('ARTIST',): ComboOptions(max_sample_size=1, with_replacement=True, seed=0),
-            'DEFAULT': ComboOptions(max_sample_size=3, with_replacement=True, seed=0)
+            ('ARTIST',): ComboOptions(max_sample_size=1, with_replacement=True),
+            'DEFAULT': ComboOptions(max_sample_size=3, with_replacement=True)
         }
 
         p = Pipeline(pattern_def_path,
@@ -682,19 +688,21 @@ class TestPipeline(unittest.TestCase):
                      combo_options_map=combo_options_map)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
-        expected_utterances = ('she will want to listen the beatles', 'she will want to listen the beatles',
-                               'he will want to play the beatles', 'kanye')
-        expected_tokens_list = (('[START(she will want)]', '[PLAY(to listen)]', '[ARTIST(the beatles)]'),
+        expected_utterances = ('kanye',
+                               'she will want to listen the beatles',
+                               'he will want to play the beatles',
+                               'she will want to play the beatles')
+        expected_tokens_list = (('[ARTIST(kanye)]',),
                                 ('[START(she will want)]', '[PLAY(to listen)]', '[ARTIST(the beatles)]'),
                                 ('[START(he will want)]', '[PLAY(to play)]', '[ARTIST(the beatles)]'),
-                                ('[ARTIST(kanye)]',))
-        expected_groups = (('{None([START(she will want)])}', '{None([PLAY(to listen)])}',
-                            '{None([ARTIST(the beatles)])}'),
+                                ('[START(she will want)]', '[PLAY(to play)]', '[ARTIST(the beatles)]'))
+        expected_groups = (('{None([ARTIST(kanye)])}',),
                            ('{None([START(she will want)])}', '{None([PLAY(to listen)])}',
                             '{None([ARTIST(the beatles)])}'),
                            ('{None([START(he will want)])}', '{None([PLAY(to play)])}',
                             '{None([ARTIST(the beatles)])}'),
-                           ('{None([ARTIST(kanye)])}',))
+                           ('{None([START(she will want)])}', '{None([PLAY(to play)])}',
+                            '{None([ARTIST(the beatles)])}'))
 
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
@@ -1044,18 +1052,12 @@ class TestPipeline(unittest.TestCase):
             ('WAKE',) : (_add_random_words,)
         }
         props['combo_options_map'] = {
-            ('WAKE',): ComboOptions(max_sample_size=2, with_replacement=False, seed=0)
+            ('WAKE',): ComboOptions(max_sample_size=2, with_replacement=False)
         }
         props['final_hook'] = lambda x, y, z: (x, y, z)
+        props['seed'] = 0
 
-        p = Pipeline(pattern_def_path)
-        p.dynamic_token_patterns_map = props['dynamic_token_patterns_map']
-        p.token_handler_map = props['token_handler_map']
-        p.group_handler_map = props['group_handler_map']
-        p.expansion_hooks_map = props['expansion_hooks_map']
-        p.combo_hooks_map = props['combo_hooks_map']
-        p.combo_options_map = props['combo_options_map']
-        p.final_hook = props['final_hook']
+        p = Pipeline(pattern_def_path, **props)
         for name, value in props.items():
             prop = getattr(p, name)
             self.assertEqual(prop, value)
@@ -1082,7 +1084,6 @@ def _sample_utterance_combo(utterance_combo: Sequence[Sequence[str]],
                             token_to_sample: str,
                             sample_size: int,
                             ) -> Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]:
-    random.seed(0)
     TOKEN_INDEX = tokens.index(token_to_sample)
     utterance_combo_list = list(utterance_combo)
     sampled_combos = tuple(random.sample(utterance_combo_list.pop(TOKEN_INDEX), sample_size))
@@ -1114,7 +1115,6 @@ def _add_random_words(utterance: str,
                       handled_tokens: Sequence[str],
                       handled_groups: Sequence[str],
                       ) -> Tuple[str, Sequence[str], Sequence[str]]:
-    random.seed(0)
     utterances = utterance.split()
     random_words = ['hmmmm', 'uh', 'um', 'please']
     insert_index = random.randint(0, len(utterances))

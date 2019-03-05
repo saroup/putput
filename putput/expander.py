@@ -89,7 +89,7 @@ def expand_utterance_patterns_ranges_and_groups(utterance_patterns: Sequence[Seq
     """
     expanded_ranges = _expand_utterance_patterns_ranges(utterance_patterns)
     expanded_ranges_groups, groups = _expand_utterance_patterns_groups(expanded_ranges, group_map)
-    deduped_expanded_ranges_groups, groups = zip(*set(zip(expanded_ranges_groups, groups)))
+    deduped_expanded_ranges_groups, groups = zip(*sorted(set(zip(expanded_ranges_groups, groups))))
     return deduped_expanded_ranges_groups, groups
 
 def _expand_utterance_patterns_ranges(utterance_patterns: Sequence[Sequence[str]]) -> Sequence[Sequence[str]]:

@@ -1,4 +1,5 @@
 import logging
+import random
 from functools import reduce
 from pathlib import Path
 from typing import Any
@@ -141,7 +142,6 @@ class Pipeline:
         ...                             tokens: Sequence[str],
         ...                             groups: Sequence[Tuple[str, int]]
         ...                             ) -> Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]:
-        ...        random.seed(0)
         ...        TOKEN_INDEX = tokens.index('ADD')
         ...        utterance_combo_list = list(utterance_combo)
         ...        sampled_combos = tuple(random.sample(utterance_combo_list.pop(TOKEN_INDEX), 1))
@@ -152,7 +152,7 @@ class Pipeline:
         >>> group_handler_map = {'ADD_ITEM': _just_groups}
         >>> expansion_hooks_map = {('ADD_ITEM', '2', 'CONJUNCTION', 'ITEM'): (_sample_utterance_combo,)}
         >>> combo_hooks_map = {('ADD_ITEM', '2', 'CONJUNCTION', 'ITEM'): (_add_random_words, _add_random_words)}
-        >>> combo_options_map = {'DEFAULT': ComboOptions(max_sample_size=2, with_replacement=False, seed=0)}
+        >>> combo_options_map = {'DEFAULT': ComboOptions(max_sample_size=2, with_replacement=False)}
         >>> p = Pipeline(pattern_def_path,
         ...              dynamic_token_patterns_map=dynamic_token_patterns_map,
         ...              token_handler_map=token_handler_map,
@@ -160,17 +160,18 @@ class Pipeline:
         ...              expansion_hooks_map=expansion_hooks_map,
         ...              combo_hooks_map=combo_hooks_map,
         ...              combo_options_map=combo_options_map,
-        ...              final_hook=jsonify)
+        ...              final_hook=jsonify,
+        ...              seed=0)
         >>> for json_result in p.flow(disable_progress_bar=True):
         ...     print(json_result)
         {"handled_groups": ["[ADD_ITEM]", "[ADD_ITEM]", "{None([CONJUNCTION(and)])}", "{None([ITEM])}"],
          "handled_tokens": ["[ADD(may she get)]", "[ITEM]", "[ADD(may she get)]", "[ITEM]", "[CONJUNCTION(and)]",
                             "[ITEM]"],
-         "utterance": "um may she get fries may she get please fries and fries"}
+         "utterance": "may she get fries please may um she get fries and fries"}
         {"handled_groups": ["[ADD_ITEM]", "[ADD_ITEM]", "{None([CONJUNCTION(and)])}", "{None([ITEM])}"],
          "handled_tokens": ["[ADD(may she get)]", "[ITEM]", "[ADD(can she get)]", "[ITEM]", "[CONJUNCTION(and)]",
                             "[ITEM]"],
-         "utterance": "may she get fries can she um um get fries and fries"}
+         "utterance": "may she get fries can she get um fries uh and fries"}
 
         With a preset
 
@@ -200,7 +201,8 @@ class Pipeline:
                  combo_hooks_map: Optional[_C_H_MAP] = None,
                  combo_options_map: Optional[Mapping[Any, ComboOptions]] = None,
                  final_hook: Optional[Callable[[Any, Any, Any], Any]] = None,
-                 log_level: int = logging.WARNING
+                 log_level: int = logging.WARNING,
+                 seed: Optional[int] = None
                  ) -> None:
         """Instantiates 'Pipeline'.
 
@@ -226,20 +228,22 @@ class Pipeline:
 
             log_level: Messages with this level or higher will be shown.
 
+            seed: See property docstring.
+
         Raises:
             PatternDefinitionValidationError: If the pattern definition file is invalid.
             ScannerError: If the pattern definition file is not YAML.
             # TODO: find the rest of the yaml errors or wrap in common error
             # TODO: attributes should be properties that expand when new keys are set
         """
-        # Set private attributes
+        self.seed = seed
+
         pattern_def = _load_pattern_def(pattern_def_path)
         validate_pattern_def(pattern_def)
         self._pattern_def_path = pattern_def_path
         self._pattern_def = pattern_def
         self._logger = get_logger(__name__, log_level)
 
-        # Set properties
         self.dynamic_token_patterns_map = dynamic_token_patterns_map
         self.token_handler_map = token_handler_map
         self.group_handler_map = group_handler_map
@@ -358,13 +362,24 @@ class Pipeline:
         return self._final_hook
 
     @final_hook.setter
-    def final_hook(self, hook: Optional[Callable[[Any, Any, Any], Any]]):
+    def final_hook(self, hook: Optional[Callable[[Any, Any, Any], Any]]) -> None:
         self._final_hook = hook
 
     @property
     def logger(self) -> logging.Logger:
         """Read-only logger configured for Pipeline."""
         return self._logger
+
+    @property
+    def seed(self) -> Optional[int]:
+        """Seed to control random behavior for Pipeline."""
+        return self._seed
+
+    @seed.setter
+    def seed(self, seed_val: Optional[int]) -> None:
+        if seed_val is not None:
+            random.seed(seed_val)
+            self._seed = seed_val
 
     @classmethod
     def from_preset(cls: Type[T_PIPELINE],

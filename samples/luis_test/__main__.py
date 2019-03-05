@@ -27,7 +27,7 @@ def main() -> None:
     }
 
     combo_options_map = {
-        'DEFAULT': ComboOptions(max_sample_size=50, with_replacement=False, seed=0)
+        'DEFAULT': ComboOptions(max_sample_size=50, with_replacement=False)
     }
 
     patterns_to_intents = {

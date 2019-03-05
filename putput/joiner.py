@@ -24,18 +24,14 @@ class ComboOptions:
             will sample max_sample_size. If False, will sample up to 'max_sample_size'
             unique combinations.
 
-        seed: initializer for random generator. Set this value for repeatable results
-            across multiple runs.
-
     Raises:
         ValueError: If max_sample_size <= 0.
     """
-    def __init__(self, *, max_sample_size: int, with_replacement: bool, seed: int) -> None:
+    def __init__(self, *, max_sample_size: int, with_replacement: bool) -> None:
         if max_sample_size <= 0:
             raise ValueError('max_sample_size = {}, but needs to be > 0'.format(max_sample_size))
         self._max_sample_size = max_sample_size
         self._with_replacement = with_replacement
-        self._seed = seed
 
     @property
     def max_sample_size(self) -> int:
@@ -46,11 +42,6 @@ class ComboOptions:
     def with_replacement(self) -> bool:
         """Option to include duplicates when randomly sampling."""
         return self._with_replacement
-
-    @property
-    def seed(self) -> int:
-        """Initializer for random generator."""
-        return self._seed
 
 def join_combo(combo: Sequence[Sequence[T]], *, combo_options: Optional[ComboOptions] = None) -> Iterable[Sequence[T]]:
     """Generates the product of a combo, subject to 'combo_options'.
@@ -74,11 +65,12 @@ def join_combo(combo: Sequence[Sequence[T]], *, combo_options: Optional[ComboOpt
         A joined combo.
 
     Examples:
+        >>> random.seed(0)
         >>> combo = (('hey', 'ok'), ('speaker', 'sound system'), ('play',))
         >>> tuple(join_combo(combo))
         (('hey', 'speaker', 'play'), ('hey', 'sound system', 'play'),
         ('ok', 'speaker', 'play'), ('ok', 'sound system', 'play'))
-        >>> combo_options = ComboOptions(max_sample_size=1, with_replacement=False, seed=0)
+        >>> combo_options = ComboOptions(max_sample_size=1, with_replacement=False)
         >>> tuple(join_combo(combo, combo_options=combo_options))
         (('ok', 'sound system', 'play'),)
     """
@@ -92,9 +84,6 @@ def _join_without_sampling(combo: Sequence[Sequence[T]]) -> Iterable[Sequence[T]
     return itertools.product(*combo)
 
 def _join_with_sampling(combo: Sequence[Sequence[T]], combo_options: ComboOptions) -> Iterable[Sequence[T]]:
-    random.seed(combo_options.seed)
-    np.random.seed(combo_options.seed)
-
     component_lengths = tuple(len(item) for item in combo)
     num_unique_samples = reduce(lambda x, y: x * y, component_lengths)
 

@@ -49,7 +49,7 @@ def combine(utterance_combo: Sequence[Sequence[str]],
         ...     return '[{}]'.format(group_name)
         >>> token_handler_map = {'DEFAULT': _iob_token_handler}
         >>> group_handler_map = {'DEFAULT': _just_groups}
-        >>> combo_options = ComboOptions(max_sample_size=2, with_replacement=False, seed=0)
+        >>> combo_options = ComboOptions(max_sample_size=2, with_replacement=False)
         >>> utterance_combo = (('can she get', 'may she get'), ('fries',))
         >>> tokens = ('ADD', 'ITEM')
         >>> groups = (('ADD_ITEM', 2),)
