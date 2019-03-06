@@ -29,7 +29,7 @@ class TestPipeline(unittest.TestCase):
         }
 
         expansion_hooks_map = {
-            ('START', 'PLAY', 'ARTIST'): (_sample_artist, _sample_play)
+            'START, PLAY, ARTIST': (_sample_artist, _sample_play)
         }
 
         p = Pipeline(pattern_def_path,
@@ -85,7 +85,7 @@ class TestPipeline(unittest.TestCase):
         }
 
         expansion_hooks_map = {
-            ('START', 'PLAY', 'ARTIST'): (_sample_play,),
+            'START, PLAY, ARTIST': (_sample_play,),
             'DEFAULT': (_sample_artist,)
         }
 
@@ -154,7 +154,7 @@ class TestPipeline(unittest.TestCase):
         }
 
         combo_hooks_map = {
-            ('START', 'PLAY', 'ARTIST') : (_add_random_words,)
+            'START, PLAY, ARTIST' : (_add_random_words,)
         }
 
         p = Pipeline(pattern_def_path,
@@ -183,32 +183,16 @@ class TestPipeline(unittest.TestCase):
                  (actual_groups, expected_groups)]
         compare_all_pairs(self, pairs)
 
-    def test_combo_hooks_tuple_non_str(self) -> None:
-        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        combo_hooks_map = {
-            ('START', 'PLAY', 10) : (_add_random_words,)
-        }
-        with self.assertRaises(ValueError):
-            Pipeline(pattern_def_path, combo_hooks_map=combo_hooks_map)
-
-    def test_combo_hooks_non_str(self) -> None:
-        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        combo_hooks_map = {
-            10 : (_add_random_words,)
-        }
-        with self.assertRaises(ValueError):
-            Pipeline(pattern_def_path, combo_hooks_map=combo_hooks_map)
-
     def test_maps_with_utterance_pattern_as_key_expands(self) -> None:
         pattern_def_path = self._base_dir / 'nested_group_tokens_and_ranges.yml'
         expansion_hooks_map = {
-            ('WAKE', 'PLAY_PHRASE'): (_group_nonsense,)
+            'WAKE, PLAY_PHRASE': (_group_nonsense,)
         }
         combo_hooks_map = {
-            ('WAKE', 'PLAY_PHRASE') : (_add_random_words,)
+            'WAKE, PLAY_PHRASE': (_add_random_words,)
         }
         combo_options_map = {
-            ('WAKE', 'PLAY_PHRASE'): ComboOptions(max_sample_size=2, with_replacement=False)
+            'WAKE, PLAY_PHRASE': ComboOptions(max_sample_size=2, with_replacement=False)
         }
 
         p = Pipeline(pattern_def_path,
@@ -216,10 +200,10 @@ class TestPipeline(unittest.TestCase):
                      combo_hooks_map=combo_hooks_map,
                      combo_options_map=combo_options_map)
 
-        keys = (('WAKE', 'START', 'PLAY'),
-                ('WAKE', 'START', 'PLAY', 'PLAY'),
-                ('WAKE', 'START', 'PLAY', 'PLAY', 'PLAY'),
-                ('WAKE', 'START', 'PLAY', 'PLAY', 'PLAY', 'PLAY'))
+        keys = ('WAKE, START, PLAY',
+                'WAKE, START, PLAY, PLAY',
+                'WAKE, START, PLAY, PLAY, PLAY',
+                'WAKE, START, PLAY, PLAY, PLAY, PLAY')
 
         pairs = [(keys, p.expansion_hooks_map.keys()), # type: ignore
                  (keys, p.combo_hooks_map.keys()), # type: ignore
@@ -229,13 +213,13 @@ class TestPipeline(unittest.TestCase):
     def test_property_maps_with_utterance_pattern_as_key_expands(self) -> None:
         pattern_def_path = self._base_dir / 'nested_group_tokens_and_ranges.yml'
         expansion_hooks_map = {
-            ('WAKE', 'PLAY_PHRASE'): (_group_nonsense,)
+            'WAKE, PLAY_PHRASE': (_group_nonsense,)
         }
         combo_hooks_map = {
-            ('WAKE', 'PLAY_PHRASE') : (_add_random_words,)
+            'WAKE, PLAY_PHRASE' : (_add_random_words,)
         }
         combo_options_map = {
-            ('WAKE', 'PLAY_PHRASE'): ComboOptions(max_sample_size=2, with_replacement=False)
+            'WAKE, PLAY_PHRASE': ComboOptions(max_sample_size=2, with_replacement=False)
         }
 
         p = Pipeline(pattern_def_path)
@@ -243,10 +227,10 @@ class TestPipeline(unittest.TestCase):
         p.combo_hooks_map = combo_hooks_map
         p.combo_options_map = combo_options_map
 
-        keys = (('WAKE', 'START', 'PLAY'),
-                ('WAKE', 'START', 'PLAY', 'PLAY'),
-                ('WAKE', 'START', 'PLAY', 'PLAY', 'PLAY'),
-                ('WAKE', 'START', 'PLAY', 'PLAY', 'PLAY', 'PLAY'))
+        keys = ('WAKE, START, PLAY',
+                'WAKE, START, PLAY, PLAY',
+                'WAKE, START, PLAY, PLAY, PLAY',
+                'WAKE, START, PLAY, PLAY, PLAY, PLAY')
 
         pairs = [(keys, p.expansion_hooks_map.keys()), # type: ignore
                  (keys, p.combo_hooks_map.keys()), # type: ignore
@@ -261,15 +245,15 @@ class TestPipeline(unittest.TestCase):
         }
 
         expansion_hooks_map = {
-            ('WAKE', 'PLAY_PHRASE'): (_group_nonsense,)
+            'WAKE, PLAY_PHRASE': (_group_nonsense,)
         }
 
         combo_hooks_map = {
-            ('WAKE', 'PLAY_PHRASE'): (_add_random_words, _add_commas_to_groups)
+            'WAKE, PLAY_PHRASE': (_add_random_words, _add_commas_to_groups)
         }
 
         combo_options_map = {
-            ('WAKE', 'PLAY_PHRASE'): ComboOptions(max_sample_size=1, with_replacement=False)
+            'WAKE, PLAY_PHRASE': ComboOptions(max_sample_size=1, with_replacement=False)
         }
 
         p = Pipeline(pattern_def_path,
@@ -348,7 +332,7 @@ class TestPipeline(unittest.TestCase):
         }
 
         combo_hooks_map = {
-            ('START', 'PLAY', 'ARTIST') : (_add_random_words,),
+            'START, PLAY, ARTIST' : (_add_random_words,),
             'DEFAULT' : (_lowercase_handled_tokens,)
         }
 
@@ -564,7 +548,7 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles',),),)
         }
         combo_options_map = {
-            ('START', 'PLAY', 'ARTIST'): ComboOptions(max_sample_size=5, with_replacement=False)
+            'START, PLAY, ARTIST': ComboOptions(max_sample_size=5, with_replacement=False)
         }
 
         p = Pipeline(pattern_def_path,
@@ -599,8 +583,8 @@ class TestPipeline(unittest.TestCase):
         }
         max_sample_size = 5
         combo_options_map = {
-            ('START', 'PLAY', 'ARTIST'): ComboOptions(max_sample_size=max_sample_size,
-                                                      with_replacement=True)
+            'START, PLAY, ARTIST': ComboOptions(max_sample_size=max_sample_size,
+                                                with_replacement=True)
         }
 
         p = Pipeline(pattern_def_path,
@@ -679,7 +663,7 @@ class TestPipeline(unittest.TestCase):
             'ARTIST': ((('the beatles', 'kanye'),),)
         }
         combo_options_map = {
-            ('ARTIST',): ComboOptions(max_sample_size=1, with_replacement=True),
+            'ARTIST': ComboOptions(max_sample_size=1, with_replacement=True),
             'DEFAULT': ComboOptions(max_sample_size=3, with_replacement=True)
         }
 
@@ -1046,13 +1030,13 @@ class TestPipeline(unittest.TestCase):
             'PLAY_PHRASE': _remove_group,
         }
         props['expansion_hooks_map'] = {
-            ('WAKE',): (_group_nonsense,)
+            'WAKE': (_group_nonsense,)
         }
         props['combo_hooks_map'] = {
-            ('WAKE',) : (_add_random_words,)
+            'WAKE' : (_add_random_words,)
         }
         props['combo_options_map'] = {
-            ('WAKE',): ComboOptions(max_sample_size=2, with_replacement=False)
+            'WAKE': ComboOptions(max_sample_size=2, with_replacement=False)
         }
         props['final_hook'] = lambda x, y, z: (x, y, z)
         props['seed'] = 0

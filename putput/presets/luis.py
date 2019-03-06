@@ -57,7 +57,7 @@ def _preset(*,
             ) -> Mapping:
     combo_hooks_map = {}
     for pattern, intent in patterns_to_intents.items():
-        combo_hooks_map[tuple(pattern.replace(',', '').split())] = (partial(_handle_intent, intent=intent),)
+        combo_hooks_map[pattern] = (partial(_handle_intent, intent=intent),)
     combo_hooks_map['DEFAULT'] = (partial(_handle_intent, intent='No Intent'),) # type: ignore
 
     return {
