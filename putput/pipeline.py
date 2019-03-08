@@ -200,7 +200,7 @@ class Pipeline:
                  expansion_hooks_map: Optional[_E_H_MAP] = None,
                  combo_hooks_map: Optional[_C_H_MAP] = None,
                  combo_options_map: Optional[Mapping[str, ComboOptions]] = None,
-                 final_hook: Optional[Callable[[Any, Any, Any], Any]] = None,
+                 final_hook: Optional[Callable[[Any, Any, Any], Optional[Any]]] = None,
                  log_level: int = logging.WARNING,
                  seed: Optional[int] = None
                  ) -> None:
@@ -351,7 +351,7 @@ class Pipeline:
             self._combo_options_map = options_map
 
     @property
-    def final_hook(self) -> Optional[Callable[[Any, Any, Any], Any]]:
+    def final_hook(self) -> Optional[Callable[[Any, Any, Any], Optional[Any]]]:
         """A function with args (utterance, handled tokens, handled groups) that returns
         a value that will be returned by the flow method. If combo_hooks_map is specified,
         the input args to final_hook will be the return values of the last hook in combo_hooks_map.
@@ -359,7 +359,7 @@ class Pipeline:
         return self._final_hook
 
     @final_hook.setter
-    def final_hook(self, hook: Optional[Callable[[Any, Any, Any], Any]]) -> None:
+    def final_hook(self, hook: Optional[Callable[[Any, Any, Any], Optional[Any]]]) -> None:
         self._final_hook = hook
 
     @property
