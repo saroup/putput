@@ -15,6 +15,7 @@ from typing import cast
 
 from putput.joiner import join_combo
 from putput.validator import RANGE_REGEX
+from putput.validator import OPTIONAL_REGEX
 
 
 def expand(pattern_def: Mapping,
@@ -93,7 +94,8 @@ def expand_utterance_patterns_ranges_and_groups(utterance_patterns: Sequence[Seq
     return deduped_expanded_ranges_groups, groups
 
 def _expand_utterance_patterns_ranges(utterance_patterns: Sequence[Sequence[str]]) -> Sequence[Sequence[str]]:
-    return tuple(chain.from_iterable(map(_expand_ranges, utterance_patterns)))
+    utterance_patterns_expanded_optional = tuple(chain.from_iterable(map(_expand_optional, utterance_patterns)))
+    return tuple(chain.from_iterable(map(_expand_ranges, utterance_patterns_expanded_optional)))
 
 def _expand_ranges(utterance_pattern: Sequence[str]) -> Sequence[Sequence[str]]:
     ranges = tuple(map(_parse_ranges, utterance_pattern))
@@ -111,6 +113,12 @@ def _parse_ranges(token: str) -> Tuple[int, int]:
         min_range, max_range = token.split('-')
         return int(min_range), int(max_range) + 1
     return (0, 0)
+
+def _parse_optional(token: str) -> Sequence[str]:
+    if re.match(OPTIONAL_REGEX, token):
+        token_without_parantheses = token[1:-1]
+        return tuple(token_without_parantheses.split('|'))
+    return tuple([token])
 
 def _expand_tokens(range_token: Tuple[int, int, str]) -> Iterable[Sequence[str]]:
     min_range, max_range, token = range_token
@@ -171,8 +179,6 @@ def _get_static_token_patterns_map(pattern_def: Mapping) -> Mapping[str, Sequenc
 def _expand_static_token_patterns(pattern_def: Mapping,
                                   token_patterns: Sequence[Sequence[Union[str, Sequence[str]]]]
                                   ) -> Sequence[Sequence[Sequence[str]]]:
-    token_patterns = _expand_optional_token_patterns(token_patterns)
-    print(token_patterns)
     if 'base_tokens' in pattern_def:
         token_patterns = _expand_base_tokens(pattern_def, token_patterns)
     return _convert_token_patterns_to_tuples(token_patterns)
@@ -199,54 +205,16 @@ def _expand_utterance_patterns_groups(utterance_patterns: Sequence[Sequence[str]
     return utterance_pattern_expanded_groups, expanded_groups
 
 def _expand_group_map(group_map: Mapping[str, Sequence[str]]) -> Mapping[str, Sequence[Sequence[str]]]:
-    group_map_expanded_ranges = {name: _expand_optional(pattern) for name, pattern in group_map.items()}
-    group_map_expanded_ranges = {name: _expand_ranges(pattern) for name, pattern in group_map.items()}
-    expanded_group_map = {name : _expand_group_map_groups(patterns, group_map_expanded_ranges)
-                          for name, patterns in group_map_expanded_ranges.items()}
+    group_map_expanded_optional = {name: _expand_optional(pattern) for name, pattern in group_map.items()}
+    group_map_expanded_optional_and_range = {name: tuple(chain(*map(_expand_ranges, patterns)))
+                                             for name, patterns in group_map_expanded_optional.items()}
+    expanded_group_map = {name : _expand_group_map_groups(patterns, group_map_expanded_optional_and_range)
+                          for name, patterns in group_map_expanded_optional_and_range.items()}
     return expanded_group_map
 
 def _expand_optional(utterance_pattern: Sequence[str]) -> Sequence[Sequence[str]]:
-    if not any('(' in token in utterance_pattern):
-        return utterance_pattern
-    for token in utterance_pattern:
-
-    ranges = tuple(map(_parse_ranges, utterance_pattern))
-    aligned_ranges_and_tokens = zip(ranges[1:] + ((0, 0),), utterance_pattern)
-    aligned_range_tokens = map(lambda r_and_t: r_and_t[0] + (r_and_t[1],), aligned_ranges_and_tokens)
-    range_tokens = filter(lambda r_and_t: not re.match(RANGE_REGEX, r_and_t[2]), aligned_range_tokens)
-    utterance_pattern_expanded_ranges = tuple(map(tuple, map(chain.from_iterable, product( # type: ignore
-        *map(_expand_tokens, range_tokens)))))  # type: ignore
-    return cast(Sequence[Sequence[str]], utterance_pattern_expanded_ranges)
-
-def _expand_optional_token_patterns(token_patterns: Sequence[Sequence[Union[str, Sequence[str]]]]
-                                    ) -> Sequence[Sequence[Union[str, Sequence[str]]]]:
-    if not any('|' in token for token_pattern in token_patterns for token in token_pattern if isinstance(token, str)):
-        return token_patterns
-    expanded_token_patterns = []
-    for token_pattern in token_patterns:
-        index = _get_index_of_optional_token(token_pattern)
-        if index:
-            optional_token = token_pattern[index]
-            if '<' in optional_token and '>' in optional_token:
-                # Add with only left option
-                expanded_token_patterns.append(token_pattern[:index] + token_pattern[index + 2:]) # type: ignore
-                # Add with only right option
-                expanded_token_patterns.append(token_pattern[:index-1] + token_pattern[index + 1:]) # type: ignore
-            else:
-                # Add without option
-                expanded_token_patterns.append(token_pattern[:index] + token_pattern[index + 2:]) # type: ignore
-                # Add with option
-                expanded_token_patterns.append(token_pattern[:index] + token_pattern[index + 1:]) # type: ignore
-        else:
-            expanded_token_patterns.append(token_pattern)
-    return _expand_optional_token_patterns(expanded_token_patterns)
-
-def _get_index_of_optional_token(token_pattern: Sequence[Union[str, Sequence[str]]]
-                                 ) -> Optional[int]:
-    for index, token in enumerate(token_pattern):
-        if isinstance(token, str) and '|' in token:
-            return index
-    return None
+    optional_parsed = map(_parse_optional, utterance_pattern)
+    return cast(Sequence[Sequence[str]], tuple(map(lambda x: tuple(filter(None, x)), product(*optional_parsed))))
 
 def _expand_group_map_groups(patterns: Sequence[Sequence[str]],
                              expanded_group_map: Mapping[str, Sequence[Sequence[str]]]) -> Sequence[Sequence[str]]:

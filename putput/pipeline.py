@@ -25,8 +25,6 @@ from putput.joiner import ComboOptions
 from putput.logger import get_logger
 from putput.presets.factory import get_preset
 from putput.validator import validate_pattern_def
-import re
-import itertools
 
 try:
     get_ipython() # type: ignore
@@ -596,34 +594,5 @@ class Pipeline:
 
 def _load_pattern_def(pattern_def_path: Path) -> Mapping:
     with pattern_def_path.open(encoding='utf-8') as pattern_def_file:
-        data = pattern_def_file.read()
-        clean_data = _remove_extra_spaces(data)
-        pipe_handled = _handle_pipe_characters(clean_data)
-        pattern_def = yaml.load(pipe_handled, Loader=yaml.BaseLoader)
+        pattern_def = yaml.load(pattern_def_file, Loader=yaml.BaseLoader)
     return pattern_def
-
-def _handle_pipe_characters(pattern_def_file_string: str):
-    pipe_handled = []
-    for index, character in enumerate(pattern_def_file_string):
-        if character == '|':
-            prev_char = pattern_def_file_string[index - 1]
-            new_pipe = ',\'<|>\','
-            if prev_char == ',' or prev_char == '[':
-                new_pipe = '\'|>\','
-            pipe_handled.append(new_pipe)
-        else:
-            pipe_handled.append(character)
-    return ''.join(pipe_handled)
-
-def _remove_extra_spaces(string: str):
-    comma_regex = r" *, *"
-    left_bracket_regex = r" *\[ *"
-    right_bracket_regex = r" *\] *"
-    pipe_regex = r" *\| *"
-    string = re.sub(comma_regex, ",", string)
-    string = re.sub(left_bracket_regex, "[", string)
-    string = re.sub(right_bracket_regex, "]", string)
-    string = re.sub(pipe_regex, "|", string)
-    string = string.replace('-[', '- [')
-    string = string.replace(':[', ': [')
-    return string

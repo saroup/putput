@@ -10,7 +10,8 @@ from typing import Tuple
 from typing import Union
 
 RANGE_REGEX = r'^\d+(\-\d+)?$'
-_RANGE_OR_WORD_REGEX = r'(^[a-zA-Z_0-9\|><]+$|^\d+(\-\d+)?$)'
+OPTIONAL_REGEX = r'^\(\|?\w+(\|\w+)*\)$'
+_TOKEN_REGEX = r'(^[\w\|\(\)]+$|^\d+(\-\d+)?$)'
 _RESERVED_TOKEN = 'none'
 
 class PatternDefinitionValidationError(Exception):
@@ -20,22 +21,25 @@ def _validate_instance(item: Any, instance: Any, err_msg: str) -> None:
     if not item or not isinstance(item, instance):
         raise PatternDefinitionValidationError(err_msg)
 
-def _validate_range_pattern(range_pattern: Sequence[str]) -> None:
+def _validate_pattern_with_range_or_optional(pattern: Sequence[str]) -> None:
     is_previous_word_range = False
-    for index, word in enumerate(range_pattern):
-        if not re.match(_RANGE_OR_WORD_REGEX, word):
+    for index, word in enumerate(pattern):
+        if not re.match(_TOKEN_REGEX, word):
             raise PatternDefinitionValidationError('Not valid syntax: {}'.format(word))
         if re.match(RANGE_REGEX, word):
             if is_previous_word_range:
-                raise PatternDefinitionValidationError('Can\'t have two ranges in a row: {}'.format(range_pattern))
+                raise PatternDefinitionValidationError('Can\'t have two ranges in a row: {}'.format(pattern))
             is_previous_word_range = True
             if index == 0:
-                raise PatternDefinitionValidationError('First token is a range: {}'.format(range_pattern))
+                raise PatternDefinitionValidationError('First token is a range: {}'.format(pattern))
             min_range, max_range = _parse_range_token(word)
             if min_range and min_range >= max_range:
                 raise PatternDefinitionValidationError('Not valid range syntax, max must be > min: {}'.format(word))
         else:
             is_previous_word_range = False
+        if '(' in word or '|' in word or ')' in word:
+            if not re.match(OPTIONAL_REGEX, word):
+                raise PatternDefinitionValidationError('Not valid optional syntax: {}'.format(word))
 
 def _check_for_overlap(token_sets: Sequence[Set[str]]) -> None:
     for token_set_1, token_set_2 in itertools.combinations(token_sets, 2):
@@ -72,14 +76,14 @@ def _validate_base_pattern(pattern_def: Mapping, key: str) -> None:
             for base_token in base_token_dict[base_token_group_name]:
                 _validate_instance(base_token, str, 'token must be string or int')
             if key == 'groups':
-                _validate_range_pattern(base_token_dict[base_token_group_name])
+                _validate_pattern_with_range_or_optional(base_token_dict[base_token_group_name])
 
 def _validate_utterance_patterns(pattern_def: Mapping) -> None:
     for utterance_pattern_tokens in pattern_def['utterance_patterns']:
         _validate_instance(utterance_pattern_tokens, list, 'utterance_patterns must contain a list')
         for token in utterance_pattern_tokens:
             _validate_instance(token, str, 'token must be string or int')
-        _validate_range_pattern(utterance_pattern_tokens)
+        _validate_pattern_with_range_or_optional(utterance_pattern_tokens)
 
 def _validate_component(component: Union[list, str], base_tokens: Set[str]) -> None:
     err_msg = 'invalid component'
