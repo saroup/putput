@@ -540,7 +540,7 @@ class Pipeline:
                                    Tuple[str, Sequence[str], Sequence[str]]],
                        hooks_map: Union[_E_H_MAP, _C_H_MAP]
                        ) -> Union[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
-                                  Tuple[str, Sequence[str], Sequence[str]]]:
+                                  Any]:
         # pylint: disable=no-self-use
         key = ', '.join(tokens)
         if key not in hooks_map:
