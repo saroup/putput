@@ -8,7 +8,7 @@ from typing import Tuple
 
 
 def preset(*,
-           patterns_to_intents: Mapping[str, str] = None,
+           intent_map: Mapping[str, str] = None,
            entities: Optional[Sequence[str]] = None
            ) -> Callable:
     """Configures the Pipeline for LUIS test format.
@@ -27,8 +27,8 @@ def preset(*,
         >>> random.seed(0)
         >>> pattern_def_path = Path(__file__).parent.parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
         >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
-        >>> patterns_to_intents = {'ADD_ITEM, 2, CONJUNCTION, ITEM': 'ADD_INTENT'}
-        >>> p = Pipeline.from_preset(preset(patterns_to_intents=patterns_to_intents, entities=('ITEM',)),
+        >>> intent_map = {'ADD_ITEM, 2, CONJUNCTION, ITEM': 'ADD_INTENT'}
+        >>> p = Pipeline.from_preset(preset(intent_map=intent_map, entities=('ITEM',)),
         ...                          pattern_def_path,
         ...                          dynamic_token_patterns_map=dynamic_token_patterns_map)
         >>> for luis_result in p.flow(disable_progress_bar=True):
@@ -41,7 +41,7 @@ def preset(*,
          "text": "can she get fries can she get fries and fries"}
 
     Args:
-        patterns_to_intents: A mapping from an utterance pattern string to a single intent.
+        intent_map: A mapping from an utterance pattern string to a single intent.
             If not specified, the first group's name will be the intent. The value '__DISCARD'
             is reserved.
 
@@ -52,24 +52,22 @@ def preset(*,
         A Callable that when called returns parameters for instantiating a Pipeline.
         This Callable can be passed into putput.Pipeline as the 'preset' argument.
     """
-    if patterns_to_intents:
-        if '__DISCARD' in set(patterns_to_intents.values()):
+    if intent_map:
+        if '__DISCARD' in set(intent_map.values()):
             raise ValueError('__DISCARD is a reserved value.')
     return partial(_preset,
-                   patterns_to_intents=patterns_to_intents,
+                   intent_map=intent_map,
                    entities=entities)
 
-def _preset(patterns_to_intents: Optional[Mapping[str, str]], entities: Optional[Sequence[str]]) -> Mapping:
+def _preset(intent_map: Optional[Mapping[str, str]], entities: Optional[Sequence[str]]) -> Mapping:
     combo_hooks_map = {}
-    if patterns_to_intents is not None:
-        for pattern, intent in patterns_to_intents.items():
-            combo_hooks_map[pattern] = (partial(_handle_intent, intent=intent),
-                                        partial(_handle_entities, entities=entities))
-        combo_hooks_map['DEFAULT'] = (partial(_handle_intent, intent='__DISCARD'),
-                                      partial(_handle_entities, entities=entities))
-    else:
-        combo_hooks_map['DEFAULT'] = (partial(_handle_intent,), partial(_handle_entities, entities=entities))
-
+    if intent_map is not None: # caller specified intent_map
+        if intent_map:
+            for pattern, intent in intent_map.items():
+                combo_hooks_map[pattern] = (partial(_handle_intents_and_entities, intent=intent, entities=entities),)
+        combo_hooks_map['DEFAULT'] = (partial(_handle_intents_and_entities, intent='__DISCARD', entities=entities),)
+    else: # caller specified empty intent_map
+        combo_hooks_map['DEFAULT'] = (partial(_handle_intents_and_entities, entities=entities),)
     return {
         'combo_hooks_map': combo_hooks_map
     }
@@ -101,29 +99,20 @@ def _token_extractor(handled_item: str) -> str:
 def _group_name_extractor(handled_group: str) -> str:
     return handled_group[handled_group.index('{') + 1: handled_group.index('(')]
 
-def _handle_intent(utterance: str,
-                   handled_tokens: Sequence[str],
-                   handled_groups: Sequence[str],
-                   *,
-                   intent: Optional[str] = None
-                   ) -> Tuple[str, Sequence[str], str]:
-    if intent is None:
-        intent = _group_name_extractor(handled_groups[0])
-    return utterance, handled_tokens, intent
-
-def _handle_entities(utterance: str,
-                     handled_tokens: Sequence[str],
-                     intent: str,
-                     entities: Optional[Sequence[str]]
-                     ) -> Optional[Mapping]:
+def _handle_intents_and_entities(utterance: str,
+                                 handled_tokens: Sequence[str],
+                                 handled_groups: Sequence[str],
+                                 *,
+                                 intent: Optional[str] = None,
+                                 entities: Optional[Sequence[str]] = None
+                                 ) -> Optional[Mapping]:
     if intent == '__DISCARD':
         return None
+    if intent is None:
+        intent = _group_name_extractor(handled_groups[0])
     if entities is None:
         entities = list(map(_token_extractor, handled_tokens))
-    if entities:
-        luis_entities = _convert_to_luis_entities(utterance, entities, handled_tokens)
-    else:
-        luis_entities = []
+    luis_entities = _convert_to_luis_entities(utterance, entities, handled_tokens)
     return {
         'text': utterance,
         'intent': intent,

@@ -30,7 +30,7 @@ def main() -> None:
         'DEFAULT': ComboOptions(max_sample_size=50, with_replacement=False)
     }
 
-    patterns_to_intents = {
+    intent_map = {
         'QUESTION, AVAILABILITY, Field, POSITION, QUESTION_MARK': "GetJobInformation",
         'QUESTION, Field, POSITION, AVAILABILITY, QUESTION_MARK': "GetJobInformation",
         'QUESTION, AVAILABILITY, Field, POSITION, OR, Field, POSITION, QUESTION_MARK': "GetJobInformation",
@@ -59,7 +59,7 @@ def main() -> None:
         'MY, RESUME, FOR_THE, Job, POSITION, ATTACHED': 'ApplyForJob'
     }
     entities = ('Job', 'datetimeV2', 'Locations')
-    p = Pipeline.from_preset(luis.preset(patterns_to_intents=patterns_to_intents, entities=entities),
+    p = Pipeline.from_preset(luis.preset(intent_map=intent_map, entities=entities),
                              pattern_def_path,
                              combo_options_map=combo_options_map,
                              dynamic_token_patterns_map=dynamic_token_patterns_map)

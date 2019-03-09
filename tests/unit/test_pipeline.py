@@ -918,10 +918,10 @@ class TestPipeline(unittest.TestCase):
 
     def test_luis_preset_no_entities_one_intent(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        patterns_to_intents = {
+        intent_map = {
             'WAKE, PLAY_PHRASE': 'PLAY_INTENT'
         }
-        p = Pipeline.from_preset(luis.preset(patterns_to_intents=patterns_to_intents,
+        p = Pipeline.from_preset(luis.preset(intent_map=intent_map,
                                              entities=[]),
                                  pattern_def_path,
                                  seed=0)
@@ -938,11 +938,11 @@ class TestPipeline(unittest.TestCase):
 
     def test_luis_preset_no_entities_multiple_intent(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        patterns_to_intents = {
+        intent_map = {
             'WAKE, PLAY_PHRASE': 'PLAY_INTENT',
             'WAKE': 'WAKE_INTENT'
         }
-        p = Pipeline.from_preset(luis.preset(patterns_to_intents=patterns_to_intents, entities=[]),
+        p = Pipeline.from_preset(luis.preset(intent_map=intent_map, entities=[]),
                                  pattern_def_path,
                                  seed=0)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
@@ -959,8 +959,8 @@ class TestPipeline(unittest.TestCase):
 
     def test_luis_preset_no_intents(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        patterns_to_intents = {} # type: Mapping[str, str]
-        p = Pipeline.from_preset(luis.preset(patterns_to_intents=patterns_to_intents), pattern_def_path, seed=0)
+        intent_map = {} # type: Mapping[str, str]
+        p = Pipeline.from_preset(luis.preset(intent_map=intent_map), pattern_def_path, seed=0)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
         luis_tests = list(generator)
         expected_luis_tests = [] # type: Sequence[Mapping]
@@ -969,11 +969,11 @@ class TestPipeline(unittest.TestCase):
 
     def test_luis_preset_intent_and_entities(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        patterns_to_intents = {
+        intent_map = {
             'WAKE, PLAY_PHRASE': 'PLAY_INTENT'
         }
         entities = ('PLAY')
-        p = Pipeline.from_preset(luis.preset(patterns_to_intents=patterns_to_intents,
+        p = Pipeline.from_preset(luis.preset(intent_map=intent_map,
                                              entities=entities),
                                  pattern_def_path,
                                  seed=0)
@@ -1038,11 +1038,11 @@ class TestPipeline(unittest.TestCase):
 
     def test_luis_preset_reserved_word(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        patterns_to_intents = {
+        intent_map = {
             'WAKE, PLAY_PHRASE': '__DISCARD'
         }
         with self.assertRaises(ValueError):
-            Pipeline.from_preset(luis.preset(patterns_to_intents=patterns_to_intents),
+            Pipeline.from_preset(luis.preset(intent_map=intent_map),
                                  pattern_def_path,
                                  seed=0)
 
