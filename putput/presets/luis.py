@@ -63,14 +63,15 @@ def _preset(patterns_to_intents: Optional[Mapping[str, str]], entities: Optional
     combo_hooks_map = {}
     if patterns_to_intents is not None:
         for pattern, intent in patterns_to_intents.items():
-            combo_hooks_map[pattern] = (partial(_handle_intent, intent=intent),)
-        combo_hooks_map['DEFAULT'] = (partial(_handle_intent, intent='__DISCARD'),)
+            combo_hooks_map[pattern] = (partial(_handle_intent, intent=intent),
+                                        partial(_handle_entities, entities=entities))
+        combo_hooks_map['DEFAULT'] = (partial(_handle_intent, intent='__DISCARD'),
+                                      partial(_handle_entities, entities=entities))
     else:
-        combo_hooks_map['DEFAULT'] = (partial(_handle_intent,),)
+        combo_hooks_map['DEFAULT'] = (partial(_handle_intent,), partial(_handle_entities, entities=entities))
 
     return {
-        'combo_hooks_map': combo_hooks_map,
-        'final_hook': partial(_handle_entities, entities=entities)
+        'combo_hooks_map': combo_hooks_map
     }
 
 def _convert_to_luis_entities(utterance: str,

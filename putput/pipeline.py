@@ -452,10 +452,12 @@ class Pipeline:
             '{None([CONJUNCTION(and)])}', '{None([ITEM(fries)])}')
         """
         for utterance_combo, tokens, groups in self._expand(disable_progress_bar=disable_progress_bar):
-            yield from self._combine(utterance_combo,
-                                     tokens,
-                                     groups,
-                                     disable_progress_bar=disable_progress_bar)
+            for result in self._combine(utterance_combo,
+                                        tokens,
+                                        groups,
+                                        disable_progress_bar=disable_progress_bar):
+                if result is not None:
+                    yield result
 
     def _combine(self,
                  utterance_combo: Sequence[Sequence[str]],
