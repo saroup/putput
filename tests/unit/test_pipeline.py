@@ -117,36 +117,6 @@ class TestPipeline(unittest.TestCase):
                  (actual_groups, expected_groups)]
         compare_all_pairs(self, pairs)
 
-    def test_final_hook(self) -> None:
-        pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
-        dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles',),),)
-        }
-        p = Pipeline(pattern_def_path,
-                     final_hook=lambda x, y, z: (x, y, z),
-                     dynamic_token_patterns_map=dynamic_token_patterns_map)
-        generator = p.flow(disable_progress_bar=self._disable_progress_bar)
-        actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
-        expected_utterances = ('he will want to play the beatles', 'he will want to listen the beatles',
-                               'she will want to play the beatles', 'she will want to listen the beatles')
-        expected_tokens_list = (('[START(he will want)]', '[PLAY(to play)]', '[ARTIST(the beatles)]'),
-                                ('[START(he will want)]', '[PLAY(to listen)]', '[ARTIST(the beatles)]'),
-                                ('[START(she will want)]', '[PLAY(to play)]', '[ARTIST(the beatles)]'),
-                                ('[START(she will want)]', '[PLAY(to listen)]', '[ARTIST(the beatles)]'))
-        expected_groups = (('{None([START(he will want)])}', '{None([PLAY(to play)])}',
-                            '{None([ARTIST(the beatles)])}'),
-                           ('{None([START(he will want)])}', '{None([PLAY(to listen)])}',
-                            '{None([ARTIST(the beatles)])}'),
-                           ('{None([START(she will want)])}', '{None([PLAY(to play)])}',
-                            '{None([ARTIST(the beatles)])}'),
-                           ('{None([START(she will want)])}', '{None([PLAY(to listen)])}',
-                            '{None([ARTIST(the beatles)])}'))
-
-        pairs = [(actual_utterances, expected_utterances),
-                 (actual_tokens_list, expected_tokens_list),
-                 (actual_groups, expected_groups)]
-        compare_all_pairs(self, pairs)
-
     def test_after_joining_hooks_tokens(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
         dynamic_token_patterns_map = {
@@ -1038,7 +1008,6 @@ class TestPipeline(unittest.TestCase):
         props['combo_options_map'] = {
             'WAKE': ComboOptions(max_sample_size=2, with_replacement=False)
         }
-        props['final_hook'] = lambda x, y, z: (x, y, z)
         props['seed'] = 0
 
         p = Pipeline(pattern_def_path, **props)
