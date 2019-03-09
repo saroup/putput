@@ -4,7 +4,6 @@ from typing import Callable
 from typing import Mapping
 from typing import Optional
 from typing import Sequence
-from typing import Tuple
 
 
 def preset(*,
