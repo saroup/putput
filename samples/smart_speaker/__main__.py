@@ -8,7 +8,6 @@ from putput import Pipeline
 
 
 def main() -> None:
-    # pylint: disable=too-many-statements
     pattern_def_path = Path(__file__).parent / 'patterns.yml'
     dynamic_token_patterns_map = {
         'SONG': ((('here comes the sun', 'stronger'),),)
@@ -102,20 +101,6 @@ def main() -> None:
         print('group visualizer: ', group_visualizer)
 
     print('*' * 50 + 'displaCy' + '*' * 50)
-
-    # stochastic preset
-    print('*' * 50 + 'STOCHASTIC' + '*' * 50)
-    p = Pipeline.from_preset('STOCHASTIC',
-                             pattern_def_path,
-                             dynamic_token_patterns_map=dynamic_token_patterns_map,
-                             combo_options_map=combo_options_map,
-                             seed=0)
-    for utterance, tokens, groups in p.flow():
-        print('utterance:', utterance)
-        print('tokens:', tokens)
-        print('groups:', groups)
-
-    print('*' * 50 + 'STOCHASTIC' + '*' * 50)
 
 def _add_random_words_to_utterance(utterance: str,
                                    handled_tokens: Sequence[str],
