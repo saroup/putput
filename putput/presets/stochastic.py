@@ -10,6 +10,7 @@ from typing import Tuple
 
 import gensim.downloader as api
 from gensim.models import Word2Vec
+
 from putput.logger import get_logger
 
 
