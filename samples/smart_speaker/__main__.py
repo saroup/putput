@@ -50,7 +50,7 @@ def main() -> None:
     # default format with after joining hook
     print('*' * 50 + 'AFTER JOINING HOOK' + '*' * 50)
     combo_hooks_map = {
-        'WAKE, PLAY, ARTIST': (_add_random_words_to_utterance,)
+        'WAKE, PLAY_ARTIST, 7, QUEUE, PLAY_SONG, QUEUE, ARTIST': (_add_synonyms,)
     }
 
     p = Pipeline(pattern_def_path,
@@ -132,6 +132,26 @@ def _sample_utterance_component(utterance_combination: Sequence[Sequence[str]],
     utterance_combination_list.insert(token_index, sampled_combinations)
     utterance_combination = tuple(utterance_combination_list)
     return utterance_combination, tokens, groups
+
+import gensim.downloader as api
+from gensim.models import Word2Vec
+
+text8_corpus = api.load('text8') 
+model = Word2Vec(text8_corpus)
+
+def _add_synonyms(utterance: str,
+                  handled_tokens: Sequence[str],
+                  handled_groups: Sequence[str]
+                  ) -> Tuple[str, Sequence[str], Sequence[str]]:
+    words = utterance.split()
+    for i in range(len(words)):
+        if random.random() < .10:
+            try:
+                words[i] = random.choice(model.most_similar(words[i]))[0]
+            except KeyError:
+                pass
+    utterance = ' '.join(words)
+    return utterance, handled_tokens, handled_groups
 
 if __name__ == '__main__':
     main()
