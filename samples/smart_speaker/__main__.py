@@ -32,7 +32,7 @@ def main() -> None:
     # default format with before joining hook
     print('*' * 50 + 'BEFORE JOINING HOOK' + '*' * 50)
     expansion_hooks_map = {
-        'WAKE, PLAY_ARTIST, 1-3, ARTIST': (_sample_play, _sample_play)
+        'WAKE, PLAY_ARTIST, 7, QUEUE, PLAY_SONG, QUEUE, ARTIST': (_add_synonyms, _sample_play)
     }
 
     p = Pipeline(pattern_def_path,
@@ -50,7 +50,7 @@ def main() -> None:
     # default format with after joining hook
     print('*' * 50 + 'AFTER JOINING HOOK' + '*' * 50)
     combo_hooks_map = {
-        'WAKE, PLAY_ARTIST, 7, QUEUE, PLAY_SONG, QUEUE, ARTIST': (_add_synonyms,)
+        'WAKE, PLAY_ARTIST, 7, QUEUE, PLAY_SONG, QUEUE, ARTIST': (_add_random_words_to_utterance,)
     }
 
     p = Pipeline(pattern_def_path,
@@ -133,25 +133,33 @@ def _sample_utterance_component(utterance_combination: Sequence[Sequence[str]],
     utterance_combination = tuple(utterance_combination_list)
     return utterance_combination, tokens, groups
 
+import copy
 import gensim.downloader as api
 from gensim.models import Word2Vec
 
 text8_corpus = api.load('text8') 
 model = Word2Vec(text8_corpus)
 
-def _add_synonyms(utterance: str,
-                  handled_tokens: Sequence[str],
-                  handled_groups: Sequence[str]
-                  ) -> Tuple[str, Sequence[str], Sequence[str]]:
-    words = utterance.split()
-    for i in range(len(words)):
-        if random.random() < .10:
-            try:
-                words[i] = random.choice(model.most_similar(words[i]))[0]
-            except KeyError:
-                pass
-    utterance = ' '.join(words)
-    return utterance, handled_tokens, handled_groups
+def _add_synonyms(utterance_combination: Sequence[Sequence[str]],
+                  tokens: Sequence[str],
+                  groups: Sequence[Tuple[str, int]]
+                  ) -> Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]:
+    utterance_combination_with_synonyms = tuple(map(_get_utterance_combination_with_synonyms, utterance_combination))
+    return utterance_combination_with_synonyms, tokens, groups
+
+def _get_utterance_combination_with_synonyms(component):
+    return tuple(map(_get_phrase_with_synonym, component))
+
+def _get_phrase_with_synonym(phrase):
+    return ' '.join(map(_get_synonym, phrase.split()))
+
+def _get_synonym(word):
+    try:
+        if random.random() < .20:
+            return random.choice(model.most_similar(word))[0]
+    except KeyError:
+        pass
+    return word
 
 if __name__ == '__main__':
     main()
