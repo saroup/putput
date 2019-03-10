@@ -12,6 +12,7 @@ from putput import Pipeline
 from putput.presets import displaCy
 from putput.presets import iob2
 from putput.presets import luis
+from putput.presets import stochastic
 from tests.unit.helper_functions import compare_all_pairs
 
 
@@ -1077,6 +1078,56 @@ class TestPipeline(unittest.TestCase):
             p.logger = "some value" # type: ignore
         with self.assertRaises(AttributeError):
             p.pattern_def_path = "some value" # type: ignore
+
+    def test_stochastic_preset_str(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        p = Pipeline.from_preset('STOCHASTIC', pattern_def_path, seed=1)
+        generator = p.flow(disable_progress_bar=self._disable_progress_bar)
+        actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
+        expected_utterances = ('cb',
+                               'hi he will want to play',
+                               'hi he will want to listen',
+                               'hi she would want to play',
+                               'hi she would want to listen')
+        expected_tokens_list = (('[WAKE(cb)]',),
+                                ('[WAKE(hi)]', '[START(he will want)]', '[PLAY(to play)]'),
+                                ('[WAKE(hi)]', '[START(he will want)]', '[PLAY(to listen)]'),
+                                ('[WAKE(hi)]', '[START(she would want)]', '[PLAY(to play)]'),
+                                ('[WAKE(hi)]', '[START(she would want)]', '[PLAY(to listen)]'))
+        expected_groups = (('{None([WAKE(cb)])}',),
+                           ('{None([WAKE(hi)])}', '{PLAY_PHRASE([START(he will want)] [PLAY(to play)])}'),
+                           ('{None([WAKE(hi)])}', '{PLAY_PHRASE([START(he will want)] [PLAY(to listen)])}'),
+                           ('{None([WAKE(hi)])}', '{PLAY_PHRASE([START(she would want)] [PLAY(to play)])}'),
+                           ('{None([WAKE(hi)])}', '{PLAY_PHRASE([START(she would want)] [PLAY(to listen)])}'))
+        pairs = [(actual_utterances, expected_utterances),
+                 (actual_tokens_list, expected_tokens_list),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
+
+    def test_stochastic_preset_obj(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        p = Pipeline.from_preset(stochastic.preset(chance=80), pattern_def_path, seed=0)
+        generator = p.flow(disable_progress_bar=self._disable_progress_bar)
+        actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
+        expected_utterances = ('hi',
+                               'tan nobody shall want would play',
+                               'tan nobody shall want trying listen',
+                               'tan bogart shall intend would play',
+                               'tan bogart shall intend trying listen')
+        expected_tokens_list = (('[WAKE(hi)]',),
+                                ('[WAKE(tan)]', '[START(nobody shall want)]', '[PLAY(would play)]'),
+                                ('[WAKE(tan)]', '[START(nobody shall want)]', '[PLAY(trying listen)]'),
+                                ('[WAKE(tan)]', '[START(bogart shall intend)]', '[PLAY(would play)]'),
+                                ('[WAKE(tan)]', '[START(bogart shall intend)]', '[PLAY(trying listen)]'))
+        expected_groups = (('{None([WAKE(hi)])}',),
+                           ('{None([WAKE(tan)])}', '{PLAY_PHRASE([START(nobody shall want)] [PLAY(would play)])}'),
+                           ('{None([WAKE(tan)])}', '{PLAY_PHRASE([START(nobody shall want)] [PLAY(trying listen)])}'),
+                           ('{None([WAKE(tan)])}', '{PLAY_PHRASE([START(bogart shall intend)] [PLAY(would play)])}'),
+                           ('{None([WAKE(tan)])}', '{PLAY_PHRASE([START(bogart shall intend)] [PLAY(trying listen)])}'))
+        pairs = [(actual_utterances, expected_utterances),
+                 (actual_tokens_list, expected_tokens_list),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
 
 def _just_groups(group_name: str, _: Sequence[str]) -> str:
     return '[{group_name}]'.format(group_name=group_name)

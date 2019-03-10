@@ -1,3 +1,4 @@
+import random
 import unittest
 
 from putput.combiner import combine
@@ -6,6 +7,9 @@ from tests.unit.helper_functions import compare_all_pairs
 
 
 class TestCombiner(unittest.TestCase):
+    def setUp(self):
+        random.seed(0)
+
     def test_one_token(self) -> None:
         utterance_combo = (('the beatles', 'kanye'),)
         tokens = ('ARTIST',)
