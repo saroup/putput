@@ -42,6 +42,6 @@ def get_preset(preset: str) -> Callable:
         return displaCy.preset()
     if preset == 'LUIS':
         return luis.preset()
-    if preset == 'STOCHASTIC':
+    if preset == 'STOCHASTIC': # pragma: no cover
         return stochastic.preset()
     raise ValueError('Unrecoginzed preset. Please choose from the supported presets: {}'.format(supported_presets))

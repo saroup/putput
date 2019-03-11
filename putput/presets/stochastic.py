@@ -14,7 +14,7 @@ from gensim.models import Word2Vec
 from putput.logger import get_logger
 
 
-def preset(*, model_name: str = 'word2vec.model', corpus: str = 'text8', chance: int = 20) -> Callable:
+def preset(*, model_name: str = 'word2vec.model', corpus: str = 'glove-twitter-25', chance: int = 20) -> Callable:
     """Randomly replaces words with similar words based on embeddings.
 
     For every word, given a chance randomly replace it with a similar word based on
@@ -47,7 +47,7 @@ def preset(*, model_name: str = 'word2vec.model', corpus: str = 'text8', chance:
         >>> from putput.pipeline import Pipeline
         >>> pattern_def_path = Path(__file__).parent.parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
         >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
-        >>> p = Pipeline.from_preset(preset(chance=50),
+        >>> p = Pipeline.from_preset(preset(model_name='word2vec.test.model', chance=50),
         ...                          pattern_def_path,
         ...                          dynamic_token_patterns_map=dynamic_token_patterns_map,
         ...                          seed=0)
