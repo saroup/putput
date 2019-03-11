@@ -6,8 +6,7 @@ COPY samples/**/requirements*.txt /app/
 RUN for reqs in /app/requirements*.txt; do pip install --no-cache-dir -r $reqs; done
 COPY . /app
 WORKDIR /app
-RUN isort -rc . --check-only \
- && python setup.py mypy pylint test sdist bdist_wheel \
+RUN python setup.py mypy pylint test sdist bdist_wheel \
  && pip install --no-cache-dir dist/* \
  && jupyter nbconvert samples/**/*.ipynb --to python \
  && export CI=True \
