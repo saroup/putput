@@ -14,8 +14,8 @@ from typing import Union
 from typing import cast
 
 from putput.joiner import join_combo
-from putput.validator import RANGE_REGEX
 from putput.validator import OPTIONAL_REGEX
+from putput.validator import RANGE_REGEX
 
 
 def expand(pattern_def: Mapping,

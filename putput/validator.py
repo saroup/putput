@@ -11,7 +11,8 @@ from typing import Union
 
 RANGE_REGEX = r'^\d+(\-\d+)?$'
 OPTIONAL_REGEX = r'^\(\|?\w+(\|\w+)*\)$'
-_TOKEN_REGEX = r'(^[\w\|\(\)]+$|^\d+(\-\d+)?$)'
+_ALL_VALID_REGEX = r'(^[\w\|\(\)]+$|^\d+(\-\d+)?$)'
+_TOKEN_REGEX = r'^[^\(\)\|]+$'
 _RESERVED_TOKEN = 'none'
 
 class PatternDefinitionValidationError(Exception):
@@ -24,7 +25,7 @@ def _validate_instance(item: Any, instance: Any, err_msg: str) -> None:
 def _validate_pattern_with_range_or_optional(pattern: Sequence[str]) -> None:
     is_previous_word_range = False
     for index, word in enumerate(pattern):
-        if not re.match(_TOKEN_REGEX, word):
+        if not re.match(_ALL_VALID_REGEX, word):
             raise PatternDefinitionValidationError('Not valid syntax: {}'.format(word))
         if re.match(RANGE_REGEX, word):
             if is_previous_word_range:
@@ -75,6 +76,10 @@ def _validate_base_pattern(pattern_def: Mapping, key: str) -> None:
                 raise PatternDefinitionValidationError('{} is not defined'.format(base_token_group_name))
             for base_token in base_token_dict[base_token_group_name]:
                 _validate_instance(base_token, str, 'token must be string or int')
+                if key == 'base_tokens':
+                    if not re.match(_TOKEN_REGEX, base_token):
+                        error_msg = 'Invalid token: {}'.format(base_token)
+                        raise PatternDefinitionValidationError(error_msg)
             if key == 'groups':
                 _validate_pattern_with_range_or_optional(base_token_dict[base_token_group_name])
 
@@ -86,14 +91,18 @@ def _validate_utterance_patterns(pattern_def: Mapping) -> None:
         _validate_pattern_with_range_or_optional(utterance_pattern_tokens)
 
 def _validate_component(component: Union[list, str], base_tokens: Set[str]) -> None:
-    err_msg = 'invalid component'
+    err_msg = 'Invalid token: {}'
     if isinstance(component, list):
-        _validate_instance(component, list, err_msg)
+        _validate_instance(component, list, err_msg.format(str(component)))
         for word in component:
-            _validate_instance(word, str, err_msg)
+            _validate_instance(word, str, err_msg.format(word))
+            if not re.match(_TOKEN_REGEX, word):
+                raise PatternDefinitionValidationError(err_msg.format(word))
     else:
-        _validate_instance(component, str, err_msg)
-        if component not in base_tokens and '|' not in component:
+        _validate_instance(component, str, err_msg.format(component))
+        if not re.match(_TOKEN_REGEX, component):
+            raise PatternDefinitionValidationError(err_msg.format(component))
+        if component not in base_tokens:
             raise PatternDefinitionValidationError(err_msg)
 
 def _validate_static_token_patterns(static_maps: list, base_tokens: Set[str]) -> None:
