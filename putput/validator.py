@@ -161,7 +161,6 @@ def validate_pattern_def(pattern_def: Mapping) -> None:
         if not ({'token_patterns', 'utterance_patterns'} <= set(pattern_def)):
             err_msg = 'At the top level, token_patterns and utterance_patterns must exist.'
             raise PatternDefinitionValidationError(err_msg)
-        # breakpoint()
 
         base_tokens = _get_base_keys(pattern_def, 'base_tokens')
         groups = _get_base_keys(pattern_def, 'groups')
