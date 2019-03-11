@@ -4,7 +4,6 @@ from functools import partial
 from itertools import repeat
 from typing import Callable
 from typing import Mapping
-from typing import Optional
 from typing import Sequence
 from typing import Tuple
 
@@ -35,8 +34,8 @@ def preset(*, model_name: str = 'word2vec.model', corpus: str = 'glove-twitter-2
         corpus: Text to train a Word2Vec model. The same corpus as in
             gensim.downloader.load.
 
-        chance: The chance between 0 (< will be clipped at 0) and 100 (> will be clipped at 100)
-            at every word of sampling a similar word vector.
+        chance: The chance between [0, 100] for each word to be replaced by
+            another word with a similar embedding.
 
     Returns:
         A Callable that when called returns parameters for instantiating a Pipeline.
@@ -63,7 +62,8 @@ def preset(*, model_name: str = 'word2vec.model', corpus: str = 'glove-twitter-2
         ('{ADD_ITEM([ADD(can she steal)] [ITEM(curry)])}', '{ADD_ITEM([ADD(can herself get)] [ITEM(fries)])}',
          '{None([CONJUNCTION(whilst)])}', '{None([ITEM(fries)])}')
     """
-    chance = min(max(chance, 0), 100)
+    if chance not in range(101):
+        raise ValueError('Invalid chance: {}. Chance accepts any integer between [0, 100]')
     logger = get_logger(__name__)
     base_dir = os.path.dirname(os.path.abspath(__file__))
     model_path = os.path.join(base_dir, model_name)

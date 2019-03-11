@@ -3,7 +3,7 @@ import logging
 import random
 import unittest
 from pathlib import Path
-from typing import Mapping
+from typing import Mapping # pylint: disable=unused-import
 from typing import Sequence
 from typing import Tuple
 
@@ -1105,6 +1105,15 @@ class TestPipeline(unittest.TestCase):
                  (actual_tokens_list, expected_tokens_list),
                  (actual_groups, expected_groups)]
         compare_all_pairs(self, pairs)
+
+    def test_stochastic_preset_invalid_chance(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        invalid_chances = [-1, 101]
+        for chance in invalid_chances:
+            with self.assertRaises(ValueError):
+                Pipeline.from_preset(stochastic.preset(model_name='word2vec.test.model', chance=chance),
+                                     pattern_def_path,
+                                     seed=0)
 
 def _just_groups(group_name: str, _: Sequence[str]) -> str:
     return '[{group_name}]'.format(group_name=group_name)
