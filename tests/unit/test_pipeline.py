@@ -3,6 +3,7 @@ import logging
 import random
 import unittest
 from pathlib import Path
+from typing import Mapping  # pylint: disable=unused-import
 from typing import Sequence
 from typing import Tuple
 
@@ -11,6 +12,7 @@ from putput import Pipeline
 from putput.presets import displaCy
 from putput.presets import iob2
 from putput.presets import luis
+from putput.presets import stochastic
 from tests.unit.helper_functions import compare_all_pairs
 
 
@@ -111,36 +113,6 @@ class TestPipeline(unittest.TestCase):
                            ('{None([START(she will want)])}', '{None([PLAY(to listen)])}',
                             '{None([ARTIST(the beatles)])}'),
                            ('{None([ARTIST(the beatles)])}',))
-
-        pairs = [(actual_utterances, expected_utterances),
-                 (actual_tokens_list, expected_tokens_list),
-                 (actual_groups, expected_groups)]
-        compare_all_pairs(self, pairs)
-
-    def test_final_hook(self) -> None:
-        pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
-        dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles',),),)
-        }
-        p = Pipeline(pattern_def_path,
-                     final_hook=lambda x, y, z: (x, y, z),
-                     dynamic_token_patterns_map=dynamic_token_patterns_map)
-        generator = p.flow(disable_progress_bar=self._disable_progress_bar)
-        actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
-        expected_utterances = ('he will want to play the beatles', 'he will want to listen the beatles',
-                               'she will want to play the beatles', 'she will want to listen the beatles')
-        expected_tokens_list = (('[START(he will want)]', '[PLAY(to play)]', '[ARTIST(the beatles)]'),
-                                ('[START(he will want)]', '[PLAY(to listen)]', '[ARTIST(the beatles)]'),
-                                ('[START(she will want)]', '[PLAY(to play)]', '[ARTIST(the beatles)]'),
-                                ('[START(she will want)]', '[PLAY(to listen)]', '[ARTIST(the beatles)]'))
-        expected_groups = (('{None([START(he will want)])}', '{None([PLAY(to play)])}',
-                            '{None([ARTIST(the beatles)])}'),
-                           ('{None([START(he will want)])}', '{None([PLAY(to listen)])}',
-                            '{None([ARTIST(the beatles)])}'),
-                           ('{None([START(she will want)])}', '{None([PLAY(to play)])}',
-                            '{None([ARTIST(the beatles)])}'),
-                           ('{None([START(she will want)])}', '{None([PLAY(to listen)])}',
-                            '{None([ARTIST(the beatles)])}'))
 
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
@@ -947,10 +919,13 @@ class TestPipeline(unittest.TestCase):
 
     def test_luis_preset_no_entities_one_intent(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        patterns_to_intents = {
+        intent_map = {
             'WAKE, PLAY_PHRASE': 'PLAY_INTENT'
         }
-        p = Pipeline.from_preset(luis.preset(patterns_to_intents=patterns_to_intents), pattern_def_path)
+        p = Pipeline.from_preset(luis.preset(intent_map=intent_map,
+                                             entities=[]),
+                                 pattern_def_path,
+                                 seed=0)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
         luis_tests = list(generator)
         expected_luis_tests = [
@@ -964,11 +939,13 @@ class TestPipeline(unittest.TestCase):
 
     def test_luis_preset_no_entities_multiple_intent(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        patterns_to_intents = {
+        intent_map = {
             'WAKE, PLAY_PHRASE': 'PLAY_INTENT',
             'WAKE': 'WAKE_INTENT'
         }
-        p = Pipeline.from_preset(luis.preset(patterns_to_intents=patterns_to_intents), pattern_def_path)
+        p = Pipeline.from_preset(luis.preset(intent_map=intent_map, entities=[]),
+                                 pattern_def_path,
+                                 seed=0)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
         luis_tests = list(generator)
         expected_luis_tests = [
@@ -981,15 +958,26 @@ class TestPipeline(unittest.TestCase):
         pairs = [(luis_tests, expected_luis_tests)]
         compare_all_pairs(self, pairs)
 
+    def test_luis_preset_no_intents(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        intent_map = {} # type: Mapping[str, str]
+        p = Pipeline.from_preset(luis.preset(intent_map=intent_map), pattern_def_path, seed=0)
+        generator = p.flow(disable_progress_bar=self._disable_progress_bar)
+        luis_tests = list(generator)
+        expected_luis_tests = [] # type: Sequence[Mapping]
+        pairs = [(luis_tests, expected_luis_tests)]
+        compare_all_pairs(self, pairs)
+
     def test_luis_preset_intent_and_entities(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        patterns_to_intents = {
+        intent_map = {
             'WAKE, PLAY_PHRASE': 'PLAY_INTENT'
         }
         entities = ('PLAY')
-        p = Pipeline.from_preset(luis.preset(patterns_to_intents=patterns_to_intents,
+        p = Pipeline.from_preset(luis.preset(intent_map=intent_map,
                                              entities=entities),
-                                 pattern_def_path)
+                                 pattern_def_path,
+                                 seed=0)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
         luis_tests = list(generator)
         expected_luis_tests = [
@@ -1017,6 +1005,48 @@ class TestPipeline(unittest.TestCase):
         pairs = [(luis_tests, expected_luis_tests)]
         compare_all_pairs(self, pairs)
 
+    def test_luis_preset_str(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        p = Pipeline.from_preset('LUIS', pattern_def_path, seed=0)
+        generator = p.flow(disable_progress_bar=self._disable_progress_bar)
+        luis_tests = list(generator)
+        expected_luis_tests = [
+            {'text': 'hi',
+             'intent': 'None',
+             'entities': [{'entity': 'WAKE', 'startPos': 0, 'endPos': 2}]},
+            {'text': 'hi he will want to play',
+             'intent': 'None',
+             'entities': [{'entity': 'WAKE', 'startPos': 0, 'endPos': 2},
+                          {'entity': 'START', 'startPos': 3, 'endPos': 15},
+                          {'entity': 'PLAY', 'startPos': 16, 'endPos': 23}]},
+            {'text': 'hi he will want to listen',
+             'intent': 'None',
+             'entities': [{'entity': 'WAKE', 'startPos': 0, 'endPos': 2},
+                          {'entity': 'START', 'startPos': 3, 'endPos': 15},
+                          {'entity': 'PLAY', 'startPos': 16, 'endPos': 25}]},
+            {'text': 'hi she will want to play',
+             'intent': 'None',
+             'entities': [{'entity': 'WAKE', 'startPos': 0, 'endPos': 2},
+                          {'entity': 'START', 'startPos': 3, 'endPos': 16},
+                          {'entity': 'PLAY', 'startPos': 17, 'endPos': 24}]},
+            {'text': 'hi she will want to listen',
+             'intent': 'None',
+             'entities': [{'entity': 'WAKE', 'startPos': 0, 'endPos':2},
+                          {'entity': 'START', 'startPos': 3, 'endPos': 16},
+                          {'entity': 'PLAY', 'startPos': 17, 'endPos': 26}]}]
+        pairs = [(luis_tests, expected_luis_tests)]
+        compare_all_pairs(self, pairs)
+
+    def test_luis_preset_reserved_word(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        intent_map = {
+            'WAKE, PLAY_PHRASE': '__DISCARD'
+        }
+        with self.assertRaises(ValueError):
+            Pipeline.from_preset(luis.preset(intent_map=intent_map),
+                                 pattern_def_path,
+                                 seed=0)
+
     def test_properties_getter_setters_access_level(self) -> None:
         pattern_def_path = self._base_dir / 'nested_group_tokens_and_ranges.yml'
         props = {} # type: dict
@@ -1038,7 +1068,6 @@ class TestPipeline(unittest.TestCase):
         props['combo_options_map'] = {
             'WAKE': ComboOptions(max_sample_size=2, with_replacement=False)
         }
-        props['final_hook'] = lambda x, y, z: (x, y, z)
         props['seed'] = 0
 
         p = Pipeline(pattern_def_path, **props)
@@ -1049,6 +1078,42 @@ class TestPipeline(unittest.TestCase):
             p.logger = "some value" # type: ignore
         with self.assertRaises(AttributeError):
             p.pattern_def_path = "some value" # type: ignore
+
+    def test_stochastic_preset_obj(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        p = Pipeline.from_preset(stochastic.preset(model_name='word2vec.test.model', chance=80),
+                                 pattern_def_path,
+                                 seed=0)
+        generator = p.flow(disable_progress_bar=self._disable_progress_bar)
+        actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
+        expected_utterances = ('hi',
+                               'tan nobody shall want would play',
+                               'tan nobody shall want trying listen',
+                               'tan bogart shall intend would play',
+                               'tan bogart shall intend trying listen')
+        expected_tokens_list = (('[WAKE(hi)]',),
+                                ('[WAKE(tan)]', '[START(nobody shall want)]', '[PLAY(would play)]'),
+                                ('[WAKE(tan)]', '[START(nobody shall want)]', '[PLAY(trying listen)]'),
+                                ('[WAKE(tan)]', '[START(bogart shall intend)]', '[PLAY(would play)]'),
+                                ('[WAKE(tan)]', '[START(bogart shall intend)]', '[PLAY(trying listen)]'))
+        expected_groups = (('{None([WAKE(hi)])}',),
+                           ('{None([WAKE(tan)])}', '{PLAY_PHRASE([START(nobody shall want)] [PLAY(would play)])}'),
+                           ('{None([WAKE(tan)])}', '{PLAY_PHRASE([START(nobody shall want)] [PLAY(trying listen)])}'),
+                           ('{None([WAKE(tan)])}', '{PLAY_PHRASE([START(bogart shall intend)] [PLAY(would play)])}'),
+                           ('{None([WAKE(tan)])}', '{PLAY_PHRASE([START(bogart shall intend)] [PLAY(trying listen)])}'))
+        pairs = [(actual_utterances, expected_utterances),
+                 (actual_tokens_list, expected_tokens_list),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
+
+    def test_stochastic_preset_invalid_chance(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        invalid_chances = [-1, 101]
+        for chance in invalid_chances:
+            with self.assertRaises(ValueError):
+                Pipeline.from_preset(stochastic.preset(model_name='word2vec.test.model', chance=chance),
+                                     pattern_def_path,
+                                     seed=0)
 
 def _just_groups(group_name: str, _: Sequence[str]) -> str:
     return '[{group_name}]'.format(group_name=group_name)

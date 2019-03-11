@@ -32,7 +32,7 @@ def main() -> None:
     # default format with before joining hook
     print('*' * 50 + 'BEFORE JOINING HOOK' + '*' * 50)
     expansion_hooks_map = {
-        'WAKE, PLAY_ARTIST, 1-3, ARTIST': (_sample_play, _sample_play)
+        'WAKE, PLAY_ARTIST, 7, QUEUE, PLAY_SONG, QUEUE, ARTIST': (_sample_play,)
     }
 
     p = Pipeline(pattern_def_path,
@@ -50,7 +50,7 @@ def main() -> None:
     # default format with after joining hook
     print('*' * 50 + 'AFTER JOINING HOOK' + '*' * 50)
     combo_hooks_map = {
-        'WAKE, PLAY, ARTIST': (_add_random_words_to_utterance,)
+        'WAKE, PLAY_ARTIST, 7, QUEUE, PLAY_SONG, QUEUE, ARTIST': (_add_random_words_to_utterance,)
     }
 
     p = Pipeline(pattern_def_path,

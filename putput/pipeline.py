@@ -34,7 +34,7 @@ except NameError:
 
 _E_H_MAP = Mapping[str, Sequence[Callable[[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
                                           Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]]]]
-_C_H_MAP = Mapping[str, Sequence[Callable[[Any, Any, Any], Tuple[Any, Any, Any]]]]
+_C_H_MAP = Mapping[str, Sequence[Callable]]
 _T_UP_KEY = TypeVar('_T_UP_KEY',
                     _C_H_MAP,
                     _E_H_MAP,
@@ -72,12 +72,6 @@ class Pipeline:
     specified for the current 'utterance_pattern', they are applied
     in order where the output of a previous hook becomes the input
     to the next hook.
-
-    Finally, if a 'final_hook' is specified, it will be applied to the
-    output of the combination stage, and 'flow' will yield its result.
-    If a 'final_hook' is not specified, 'flow' will yield the result
-    of the combination stage, a sequence of 'utterance', 'handled_tokens',
-    and 'handled_groups'.
 
     Examples:
         Default behavior
@@ -130,10 +124,10 @@ class Pipeline:
         ...     utterances.insert(insert_index, random_word)
         ...     utterance = ' '.join(utterances)
         ...     return utterance, handled_tokens, handled_groups
-        >>> def jsonify(utterance: str,
-        ...             handled_tokens: Sequence[str],
-        ...             handled_groups: Sequence[str]
-        ...             ) -> str:
+        >>> def _jsonify(utterance: str,
+        ...              handled_tokens: Sequence[str],
+        ...              handled_groups: Sequence[str]
+        ...              ) -> str:
         ...     return json.dumps(dict(utterance=utterance,
         ...                            handled_tokens=handled_tokens,
         ...                            handled_groups=handled_groups),
@@ -151,7 +145,8 @@ class Pipeline:
         >>> token_handler_map = {'ITEM': _just_tokens}
         >>> group_handler_map = {'ADD_ITEM': _just_groups}
         >>> expansion_hooks_map = {'ADD_ITEM, 2, CONJUNCTION, ITEM': (_sample_utterance_combo,)}
-        >>> combo_hooks_map = {'ADD_ITEM, 2, CONJUNCTION, ITEM': (_add_random_words, _add_random_words)}
+        >>> combo_hooks_map = {'ADD_ITEM, 2, CONJUNCTION, ITEM': (_add_random_words, _add_random_words, _jsonify),
+        ...                    'DEFAULT': (_jsonify,)}
         >>> combo_options_map = {'DEFAULT': ComboOptions(max_sample_size=2, with_replacement=False)}
         >>> p = Pipeline(pattern_def_path,
         ...              dynamic_token_patterns_map=dynamic_token_patterns_map,
@@ -160,7 +155,6 @@ class Pipeline:
         ...              expansion_hooks_map=expansion_hooks_map,
         ...              combo_hooks_map=combo_hooks_map,
         ...              combo_options_map=combo_options_map,
-        ...              final_hook=jsonify,
         ...              seed=0)
         >>> for json_result in p.flow(disable_progress_bar=True):
         ...     print(json_result)
@@ -200,7 +194,6 @@ class Pipeline:
                  expansion_hooks_map: Optional[_E_H_MAP] = None,
                  combo_hooks_map: Optional[_C_H_MAP] = None,
                  combo_options_map: Optional[Mapping[str, ComboOptions]] = None,
-                 final_hook: Optional[Callable[[Any, Any, Any], Any]] = None,
                  log_level: int = logging.WARNING,
                  seed: Optional[int] = None
                  ) -> None:
@@ -223,8 +216,6 @@ class Pipeline:
             combo_hooks_map: See property docstring.
 
             combo_options: See property docstring.
-
-            final_hook: See property docstring.
 
             log_level: Messages with this level or higher will be shown.
 
@@ -250,7 +241,6 @@ class Pipeline:
         self.expansion_hooks_map = expansion_hooks_map
         self.combo_hooks_map = combo_hooks_map
         self.combo_options_map = combo_options_map
-        self.final_hook = final_hook
 
     @property
     def pattern_def_path(self) -> Path:
@@ -349,18 +339,6 @@ class Pipeline:
                 options_map, groups_map) # type: Optional[Mapping[str, ComboOptions]]
         else:
             self._combo_options_map = options_map
-
-    @property
-    def final_hook(self) -> Optional[Callable[[Any, Any, Any], Any]]:
-        """A function with args (utterance, handled tokens, handled groups) that returns
-        a value that will be returned by the flow method. If combo_hooks_map is specified,
-        the input args to final_hook will be the return values of the last hook in combo_hooks_map.
-        """
-        return self._final_hook
-
-    @final_hook.setter
-    def final_hook(self, hook: Optional[Callable[[Any, Any, Any], Any]]) -> None:
-        self._final_hook = hook
 
     @property
     def logger(self) -> logging.Logger:
@@ -474,16 +452,12 @@ class Pipeline:
             '{None([CONJUNCTION(and)])}', '{None([ITEM(fries)])}')
         """
         for utterance_combo, tokens, groups in self._expand(disable_progress_bar=disable_progress_bar):
-            for utterance, handled_tokens, handled_groups in self._combine(utterance_combo,
-                                                                           tokens,
-                                                                           groups,
-                                                                           disable_progress_bar=disable_progress_bar):
-                if self._final_hook:
-                    final_result = self._final_hook(utterance, handled_tokens, handled_groups)
-                    if final_result:
-                        yield final_result
-                else:
-                    yield utterance, handled_tokens, handled_groups
+            for result in self._combine(utterance_combo,
+                                        tokens,
+                                        groups,
+                                        disable_progress_bar=disable_progress_bar):
+                if result is not None:
+                    yield result
 
     def _combine(self,
                  utterance_combo: Sequence[Sequence[str]],
@@ -508,12 +482,12 @@ class Pipeline:
                   miniters=1) as pbar:
             for utterance, handled_tokens, handled_groups in pbar:
                 if self._combo_hooks_map:
-                    utterance, handled_tokens, handled_groups = self._execute_joining_hooks(tokens,
-                                                                                            (utterance,
-                                                                                             handled_tokens,
-                                                                                             handled_groups),
-                                                                                            self._combo_hooks_map)
-                yield utterance, handled_tokens, handled_groups
+                    result = self._execute_hooks(tokens,
+                                                 (utterance, handled_tokens, handled_groups),
+                                                 self._combo_hooks_map)
+                else:
+                    result = (utterance, handled_tokens, handled_groups)
+                yield result
 
     def _expand(self,
                 *,
@@ -525,9 +499,9 @@ class Pipeline:
                 log_msg = '{}'.format(', '.join(tokens))
                 self._logger.info(log_msg)
                 if self._expansion_hooks_map:
-                    utterance_combo, tokens, groups = self._execute_joining_hooks(tokens,
-                                                                                  (utterance_combo, tokens, groups),
-                                                                                  self._expansion_hooks_map)
+                    utterance_combo, tokens, groups = self._execute_hooks(tokens,
+                                                                          (utterance_combo, tokens, groups),
+                                                                          self._expansion_hooks_map)
                 yield utterance_combo, tokens, groups
 
     def _get_combo_options(self,
@@ -541,32 +515,32 @@ class Pipeline:
         return options_map.get(key) or options_map.get('DEFAULT')
 
     @overload
-    def _execute_joining_hooks(self,
-                               tokens: Sequence[str],
-                               args: Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
-                               hooks_map: _E_H_MAP,
-                               ) -> Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]:
+    def _execute_hooks(self,
+                       tokens: Sequence[str],
+                       args: Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
+                       hooks_map: _E_H_MAP,
+                       ) -> Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]:
         # pylint: disable=no-self-use
         # pylint: disable=unused-argument
         pass # pragma: no cover
 
     @overload
-    def _execute_joining_hooks(self,
-                               tokens: Sequence[str],
-                               args: Tuple[Any, Any, Any],
-                               hooks_map: _C_H_MAP,
-                               ) -> Tuple[Any, Any, Any]:
+    def _execute_hooks(self,
+                       tokens: Sequence[str],
+                       args: Tuple[str, Sequence[str], Sequence[str]],
+                       hooks_map: _C_H_MAP,
+                       ) -> Any:
         # pylint: disable=no-self-use
         # pylint: disable=unused-argument
         pass # pragma: no cover
 
-    def _execute_joining_hooks(self,
-                               tokens: Sequence[str],
-                               args: Union[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
-                                           Tuple[Any, Any, Any]],
-                               hooks_map: Union[_E_H_MAP, _C_H_MAP]
-                               ) -> Union[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
-                                          Tuple[Any, Any, Any]]:
+    def _execute_hooks(self,
+                       tokens: Sequence[str],
+                       args: Union[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
+                                   Tuple[str, Sequence[str], Sequence[str]]],
+                       hooks_map: Union[_E_H_MAP, _C_H_MAP]
+                       ) -> Union[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
+                                  Any]:
         # pylint: disable=no-self-use
         key = ', '.join(tokens)
         if key not in hooks_map:

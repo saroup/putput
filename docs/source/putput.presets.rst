@@ -36,6 +36,14 @@ putput.presets.luis module
     :undoc-members:
     :show-inheritance:
 
+putput.presets.stochastic module
+--------------------------------
+
+.. automodule:: putput.presets.stochastic
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------
