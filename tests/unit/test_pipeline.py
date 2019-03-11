@@ -3,7 +3,7 @@ import logging
 import random
 import unittest
 from pathlib import Path
-from typing import Mapping # pylint: disable=unused-import
+from typing import Mapping  # pylint: disable=unused-import
 from typing import Sequence
 from typing import Tuple
 
