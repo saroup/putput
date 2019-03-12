@@ -1,0 +1,14 @@
+base_tokens:
+  - SUBJECT_PERSONAL_PRONOUN: [he, she]
+token_patterns:
+  - static:
+    - START:
+      - [(|SUBJECT_PERSONAL_PRONOUN), [will], [want]]
+    - PLAY:
+      - [[to], [play, listen]]
+    - ARTIST:
+      - [[nico, tom waits]]
+groups:
+  - PLAY_ARTISTS: [START, PLAY, ARTIST]
+utterance_patterns:
+  - [PLAY_ARTISTS]

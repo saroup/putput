@@ -225,5 +225,90 @@ class TestExpander(unittest.TestCase):
                  (actual_groups, expected_groups)]
         compare_all_pairs(self, pairs)
 
+    def test_single_optional_group(self) -> None:
+        pattern_def = _load_pattern_def(self._base_dir / 'single_optional_group.yml')
+        _, generator = expand(pattern_def)
+        actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
+        expected_utterance_combo = ((('hi',), ('she will want',), ('to play',)),
+                                    (('hi',), ('she will want',), ('to play',), ('nico',)))
+        expected_tokens = (('WAKE', 'START', 'PLAY'), ('WAKE', 'START', 'PLAY', 'ARTIST_1'))
+        expected_groups = ((('None', 1), ('PLAY_PHRASE', 2)), (('None', 1), ('PLAY_PHRASE', 3)))
+        pairs = [(actual_utterance_combo, expected_utterance_combo),
+                 (actual_tokens, expected_tokens),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
+
+    def test_single_optional_utterance_pattern(self) -> None:
+        pattern_def = _load_pattern_def(self._base_dir / 'single_optional_utterance_pattern.yml')
+        _, generator = expand(pattern_def)
+        actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
+        expected_utterance_combo = ((('hi',), ('she will want',), ('to play',)),
+                                    (('hi',), ('she will want',), ('to play',), ('nico',)))
+        expected_tokens = (('WAKE', 'START', 'PLAY'), ('WAKE', 'START', 'PLAY', 'ARTIST_1'))
+        expected_groups = ((('None', 1), ('PLAY_PHRASE', 2)), (('None', 1), ('PLAY_PHRASE', 2), ('None', 1)))
+        pairs = [(actual_utterance_combo, expected_utterance_combo),
+                 (actual_tokens, expected_tokens),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
+
+    def test_multiple_optional_group(self) -> None:
+        pattern_def = _load_pattern_def(self._base_dir / 'multiple_optional_group.yml')
+        _, generator = expand(pattern_def)
+        actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
+        expected_utterance_combo = ((('hi',), ('she will want',), ('to play',), ('nico',)),
+                                    (('hi',), ('she will want',), ('to play',), ('tom waits',)))
+        expected_tokens = (('WAKE', 'START', 'PLAY', 'ARTIST_1'), ('WAKE', 'START', 'PLAY', 'ARTIST_2'))
+        expected_groups = ((('None', 1), ('PLAY_PHRASE', 3)), (('None', 1), ('PLAY_PHRASE', 3)))
+        pairs = [(actual_utterance_combo, expected_utterance_combo),
+                 (actual_tokens, expected_tokens),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
+
+    def test_multiple_optional_utternace_pattern(self) -> None:
+        pattern_def = _load_pattern_def(self._base_dir / 'multiple_optional_utternace_pattern.yml')
+        _, generator = expand(pattern_def)
+        actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
+        expected_utterance_combo = ((('hi',), ('she will want',), ('to play',), ('nico',)),
+                                    (('hi',), ('she will want',), ('to play',), ('tom waits',)))
+        expected_tokens = (('WAKE', 'START', 'PLAY', 'ARTIST_1'), ('WAKE', 'START', 'PLAY', 'ARTIST_2'))
+        expected_groups = ((('None', 1), ('PLAY_PHRASE', 2), ('None', 1)),
+                           (('None', 1), ('PLAY_PHRASE', 2), ('None', 1)))
+        pairs = [(actual_utterance_combo, expected_utterance_combo),
+                 (actual_tokens, expected_tokens),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
+
+    def test_multiple_with_none_optional_group(self) -> None:
+        pattern_def = _load_pattern_def(self._base_dir / 'multiple_with_none_optional_group.yml')
+        _, generator = expand(pattern_def)
+        actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
+        expected_utterance_combo = ((('hi',), ('she will want',), ('to play',)),
+                                    (('hi',), ('she will want',), ('to play',), ('nico',)),
+                                    (('hi',), ('she will want',), ('to play',), ('tom waits',)))
+        expected_tokens = (('WAKE', 'START', 'PLAY'), ('WAKE', 'START', 'PLAY', 'ARTIST_1'),
+                           ('WAKE', 'START', 'PLAY', 'ARTIST_2'))
+        expected_groups = ((('None', 1), ('PLAY_PHRASE', 2)), (('None', 1), ('PLAY_PHRASE', 3)),
+                           (('None', 1), ('PLAY_PHRASE', 3)))
+        pairs = [(actual_utterance_combo, expected_utterance_combo),
+                 (actual_tokens, expected_tokens),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
+
+    def test_multiple_with_none_optional_utterance_pattern(self) -> None:
+        pattern_def = _load_pattern_def(self._base_dir / 'multiple_with_none_optional_utterance_pattern.yml')
+        _, generator = expand(pattern_def)
+        actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
+        expected_utterance_combo = ((('hi',), ('she will want',), ('to play',)),
+                                    (('hi',), ('she will want',), ('to play',), ('nico',)),
+                                    (('hi',), ('she will want',), ('to play',), ('tom waits',)))
+        expected_tokens = (('WAKE', 'START', 'PLAY'), ('WAKE', 'START', 'PLAY', 'ARTIST_1'),
+                           ('WAKE', 'START', 'PLAY', 'ARTIST_2'))
+        expected_groups = ((('None', 1), ('PLAY_PHRASE', 2)), (('None', 1), ('PLAY_PHRASE', 2), ('None', 1)),
+                           (('None', 1), ('PLAY_PHRASE', 2), ('None', 1)))
+        pairs = [(actual_utterance_combo, expected_utterance_combo),
+                 (actual_tokens, expected_tokens),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
+
 if __name__ == '__main__':
     unittest.main()

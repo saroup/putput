@@ -14,6 +14,7 @@ from typing import Union
 from typing import cast
 
 from putput.joiner import join_combo
+from putput.validator import OPTIONAL_REGEX
 from putput.validator import RANGE_REGEX
 
 
@@ -93,7 +94,8 @@ def expand_utterance_patterns_ranges_and_groups(utterance_patterns: Sequence[Seq
     return deduped_expanded_ranges_groups, groups
 
 def _expand_utterance_patterns_ranges(utterance_patterns: Sequence[Sequence[str]]) -> Sequence[Sequence[str]]:
-    return tuple(chain.from_iterable(map(_expand_ranges, utterance_patterns)))
+    utterance_patterns_expanded_optional = tuple(chain.from_iterable(map(_expand_optional, utterance_patterns)))
+    return tuple(chain.from_iterable(map(_expand_ranges, utterance_patterns_expanded_optional)))
 
 def _expand_ranges(utterance_pattern: Sequence[str]) -> Sequence[Sequence[str]]:
     ranges = tuple(map(_parse_ranges, utterance_pattern))
@@ -111,6 +113,12 @@ def _parse_ranges(token: str) -> Tuple[int, int]:
         min_range, max_range = token.split('-')
         return int(min_range), int(max_range) + 1
     return (0, 0)
+
+def _parse_optional(token: str) -> Sequence[str]:
+    if re.match(OPTIONAL_REGEX, token):
+        token_without_parantheses = token[1:-1]
+        return tuple(token_without_parantheses.split('|'))
+    return tuple([token])
 
 def _expand_tokens(range_token: Tuple[int, int, str]) -> Iterable[Sequence[str]]:
     min_range, max_range, token = range_token
@@ -197,10 +205,16 @@ def _expand_utterance_patterns_groups(utterance_patterns: Sequence[Sequence[str]
     return utterance_pattern_expanded_groups, expanded_groups
 
 def _expand_group_map(group_map: Mapping[str, Sequence[str]]) -> Mapping[str, Sequence[Sequence[str]]]:
-    group_map_expanded_ranges = {name: _expand_ranges(pattern) for name, pattern in group_map.items()}
-    expanded_group_map = {name : _expand_group_map_groups(patterns, group_map_expanded_ranges)
-                          for name, patterns in group_map_expanded_ranges.items()}
+    group_map_expanded_optional = {name: _expand_optional(pattern) for name, pattern in group_map.items()}
+    group_map_expanded_optional_and_range = {name: tuple(chain(*map(_expand_ranges, patterns)))
+                                             for name, patterns in group_map_expanded_optional.items()}
+    expanded_group_map = {name : _expand_group_map_groups(patterns, group_map_expanded_optional_and_range)
+                          for name, patterns in group_map_expanded_optional_and_range.items()}
     return expanded_group_map
+
+def _expand_optional(utterance_pattern: Sequence[str]) -> Sequence[Sequence[str]]:
+    optional_parsed = map(_parse_optional, utterance_pattern)
+    return cast(Sequence[Sequence[str]], tuple(map(lambda x: tuple(filter(None, x)), product(*optional_parsed))))
 
 def _expand_group_map_groups(patterns: Sequence[Sequence[str]],
                              expanded_group_map: Mapping[str, Sequence[Sequence[str]]]) -> Sequence[Sequence[str]]:

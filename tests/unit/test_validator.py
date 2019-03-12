@@ -134,6 +134,34 @@ class TestValidator(unittest.TestCase):
         input_file_name = 'reserved_name_in_groups.yml'
         self._raise_exception(input_file_name, PatternDefinitionValidationError)
 
+    def test_optional_in_token_patterns(self) -> None:
+        input_file_name = 'optional_in_token_patterns.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_optional_no_paretheses(self) -> None:
+        input_file_name = 'optional_no_paretheses.yml'
+        self._raise_exception(input_file_name, ScannerError)
+
+    def test_optional_one_paretheses(self) -> None:
+        input_file_name = 'optional_one_paretheses.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_optional_pipe_at_end(self) -> None:
+        input_file_name = 'optional_pipe_at_end.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_optional_too_many_pipes(self) -> None:
+        input_file_name = 'optional_too_many_pipes.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_optional_in_base_token(self) -> None:
+        input_file_name = 'optional_in_base_token.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_optional_in_token_pattern_base_token(self) -> None:
+        input_file_name = 'optional_in_token_pattern_base_token.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
     def test_single_range(self) -> None:
         # pylint: disable=no-self-use
         pattern_def = Path(__file__).parent / 'pattern_definitions' / 'valid' / 'groups_with_single_range.yml'

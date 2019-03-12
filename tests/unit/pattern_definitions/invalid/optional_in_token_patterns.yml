@@ -1,0 +1,12 @@
+token_patterns:
+  - static:
+    - START:
+      - [[(she|he)], [will], [want]]
+    - PLAY:
+      - [[to], [play, listen]]
+    - ARTIST:
+      - [[nico, tom waits]]
+groups:
+  - PLAY_ARTISTS: [START, PLAY, ARTIST]
+utterance_patterns:
+  - [PLAY_ARTISTS]
