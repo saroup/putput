@@ -1106,6 +1106,51 @@ class TestPipeline(unittest.TestCase):
                  (actual_groups, expected_groups)]
         compare_all_pairs(self, pairs)
 
+    def test_chaining_preset_obj(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        presets = (iob2.preset(tokens_to_include=('WAKE',)),
+                   luis.preset())
+        p = Pipeline.from_preset(presets,
+                                 pattern_def_path,
+                                 seed=0)
+        self.assertTrue(hasattr(p, 'combo_hooks_map'))
+        self.assertEqual(len(p.combo_hooks_map['DEFAULT']), 2)
+        self.assertTrue(hasattr(p, 'token_handler_map'))
+        self.assertTrue(hasattr(p, 'group_handler_map'))
+    
+    def test_chaining_preset_str(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        presets = ('DISPLACY', 'LUIS')
+        p = Pipeline.from_preset(presets,
+                                 pattern_def_path,
+                                 seed=0)
+        self.assertTrue(hasattr(p, 'combo_hooks_map'))
+        self.assertEqual(len(p.combo_hooks_map['DEFAULT']), 4)
+
+    def test_chaining_preset_str_obj(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        presets = ('DISPLACY', luis.preset())
+        p = Pipeline.from_preset(presets,
+                                 pattern_def_path,
+                                 seed=0)
+        self.assertTrue(hasattr(p, 'combo_hooks_map'))
+        self.assertEqual(len(p.combo_hooks_map['DEFAULT']), 4)
+
+    def test_preset_with_kwargs(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        combo_hooks_map = {"UNIQUE": (_add_random_words,)}
+        p = Pipeline.from_preset('DISPLACY',
+                                 pattern_def_path,
+                                 combo_hooks_map={"UNIQUE": (_add_random_words,)})
+        self.assertTrue(len(set(p.combo_hooks_map)), 2)
+
+    def test_chaining_invalid_overlap(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        presets = (iob2.preset(tokens_to_include=('WAKE',)),
+                   iob2.preset(tokens_to_include=('START',)))
+        with self.assertRaises(ValueError):
+            Pipeline.from_preset(presets, pattern_def_path)
+
     def test_stochastic_preset_invalid_chance(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
         invalid_chances = [-1, 101]
