@@ -1,6 +1,6 @@
-from copy import deepcopy
 import logging
 import random
+from copy import deepcopy
 from functools import reduce
 from pathlib import Path
 from typing import Any
@@ -359,7 +359,7 @@ class Pipeline:
 
     @classmethod
     def from_preset(cls: Type[T_PIPELINE],
-                    preset: Union[str, Callable],
+                    preset: Union[str, Callable, Sequence[Union[str, Callable]]],
                     *args: Any,
                     **kwargs: Any) -> T_PIPELINE:
         """Instantiates 'Pipeline' from a preset configuration.
@@ -370,13 +370,21 @@ class Pipeline:
         with the desired arguments.
 
         Args:
-            preset: A str that is the preset's name, or a Callable that is the
-                result of calling the preset's 'preset' function. The Callable
-                form allows more control over the preset's behavior.
+            preset: A str that is the preset's name, a Callable that is the
+                result of calling the preset's 'preset' function, or a Sequence
+                of the two. The Callable form allows more control over the
+                preset's behavior. If a Sequence is specified, the result of
+                calling the presets' 'preset' function may only overlap in
+                'combo_hooks_map' and 'expansion_hooks_map'. If there is overlap,
+                functions will be applied in the order of the Sequence.
 
             args: See __init__ docstring.
 
             kwargs: See __init__ docstring.
+
+        Raises:
+            ValueError: If presets or kwargs contain the same keys, and those
+                keys are not 'combo_hooks_map' or 'expansion_hooks_map'.
 
         Returns:
             An instance of Pipeline.
@@ -420,18 +428,20 @@ class Pipeline:
         """
         if isinstance(preset, str):
             init_kwargs = get_preset(preset)()
-        elif hasattr(preset, '__iter__'):
-            accumulated_init_kwargs = {}
-            for template in preset:
-                if isinstance(template, str):
-                    init_kwargs = get_preset(template)()
+        elif isinstance(preset, Sequence):
+            for pre in preset: # type: ignore
+                if isinstance(pre, str):
+                    init_kwargs = get_preset(pre)()
                 else:
-                    init_kwargs = template()
-                accumulated_init_kwargs = merge_kwargs(accumulated_init_kwargs, init_kwargs)
+                    init_kwargs = pre()
+                try:
+                    accumulated_init_kwargs = _merge_kwargs(accumulated_init_kwargs, init_kwargs)
+                except NameError:
+                    accumulated_init_kwargs = _merge_kwargs({}, init_kwargs)
             init_kwargs = accumulated_init_kwargs
         else:
             init_kwargs = preset()
-        init_kwargs = merge_kwargs(init_kwargs, kwargs)
+        init_kwargs = _merge_kwargs(init_kwargs, kwargs)
         return cls(*args, **init_kwargs)
 
     def flow(self, *, disable_progress_bar: bool = False) -> Iterable:
@@ -582,21 +592,23 @@ def _load_pattern_def(pattern_def_path: Path) -> Mapping:
         pattern_def = yaml.load(pattern_def_file, Loader=yaml.BaseLoader)
     return pattern_def
 
-def merge_kwargs(accumulated_kwargs: Mapping, new_kwargs: Mapping) -> Mapping:
-    accumulated_kwargs = deepcopy(accumulated_kwargs)
-    for key in new_kwargs:
+def _merge_kwargs(accumulated_kwargs: Mapping, kwargs_to_add: Mapping) -> Mapping:
+    accumulated_kwargs = dict(deepcopy(accumulated_kwargs))
+    for key in kwargs_to_add:
         if key in accumulated_kwargs:
             hooks_maps = ('expansion_hooks_map', 'combo_hooks_map')
             if key in hooks_maps:
                 acc_hooks_map = accumulated_kwargs[key]
-                new_kwargs_hooks_map = new_kwargs[key]
-                for utterance_pattern in new_kwargs_hooks_map:
+                kwargs_hooks_map = kwargs_to_add[key]
+                for utterance_pattern in kwargs_hooks_map:
                     if utterance_pattern in acc_hooks_map:
-                        acc_hooks_map[utterance_pattern] = acc_hooks_map[utterance_pattern] + new_kwargs_hooks_map[utterance_pattern]
+                        acc_hooks_map[utterance_pattern] = (acc_hooks_map[utterance_pattern] +
+                                                            kwargs_hooks_map[utterance_pattern])
                     else:
-                        acc_hooks_map[utterance_pattern] = new_kwargs_hooks_map[utterance_pattern]
+                        acc_hooks_map[utterance_pattern] = kwargs_hooks_map[utterance_pattern]
             else:
-                raise ValueError('Multiple presets return the key: {}. Only keys in {} may overlap.'.format(key, hooks_maps))
+                raise ValueError('Multiple presets return the key: {}. Only keys in {} may overlap.'.format(key,
+                                                                                                            hooks_maps))
         else:
-            accumulated_kwargs[key] = new_kwargs[key]
+            accumulated_kwargs[key] = kwargs_to_add[key]
     return accumulated_kwargs

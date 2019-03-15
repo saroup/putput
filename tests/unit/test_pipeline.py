@@ -1114,10 +1114,10 @@ class TestPipeline(unittest.TestCase):
                                  pattern_def_path,
                                  seed=0)
         self.assertTrue(hasattr(p, 'combo_hooks_map'))
-        self.assertEqual(len(p.combo_hooks_map['DEFAULT']), 2)
+        self.assertEqual(len(p.combo_hooks_map['DEFAULT']), 2) # type: ignore
         self.assertTrue(hasattr(p, 'token_handler_map'))
         self.assertTrue(hasattr(p, 'group_handler_map'))
-    
+
     def test_chaining_preset_str(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
         presets = ('DISPLACY', 'LUIS')
@@ -1125,7 +1125,7 @@ class TestPipeline(unittest.TestCase):
                                  pattern_def_path,
                                  seed=0)
         self.assertTrue(hasattr(p, 'combo_hooks_map'))
-        self.assertEqual(len(p.combo_hooks_map['DEFAULT']), 4)
+        self.assertEqual(len(p.combo_hooks_map['DEFAULT']), 4) # type: ignore
 
     def test_chaining_preset_str_obj(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
@@ -1134,15 +1134,23 @@ class TestPipeline(unittest.TestCase):
                                  pattern_def_path,
                                  seed=0)
         self.assertTrue(hasattr(p, 'combo_hooks_map'))
-        self.assertEqual(len(p.combo_hooks_map['DEFAULT']), 4)
+        self.assertEqual(len(p.combo_hooks_map['DEFAULT']), 4) # type: ignore
+
+    def test_chaining_order(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        presets = ('DISPLACY', 'LUIS')
+        p = Pipeline.from_preset(presets,
+                                 pattern_def_path,
+                                 seed=0)
+        self.assertTrue(hasattr(p, 'combo_hooks_map'))
+        self.assertEqual(p.combo_hooks_map['DEFAULT'][-1].func.__name__, '_handle_intents_and_entities') # type: ignore
 
     def test_preset_with_kwargs(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        combo_hooks_map = {"UNIQUE": (_add_random_words,)}
         p = Pipeline.from_preset('DISPLACY',
                                  pattern_def_path,
                                  combo_hooks_map={"UNIQUE": (_add_random_words,)})
-        self.assertTrue(len(set(p.combo_hooks_map)), 2)
+        self.assertTrue(len(set(p.combo_hooks_map)), 2) # type: ignore
 
     def test_chaining_invalid_overlap(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
