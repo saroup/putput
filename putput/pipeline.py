@@ -594,9 +594,9 @@ def _load_pattern_def(pattern_def_path: Path) -> Mapping:
 
 def _merge_kwargs(accumulated_kwargs: Mapping, kwargs_to_add: Mapping) -> Mapping:
     accumulated_kwargs = dict(deepcopy(accumulated_kwargs))
+    hooks_maps = ('expansion_hooks_map', 'combo_hooks_map')
     for key in kwargs_to_add:
         if key in accumulated_kwargs:
-            hooks_maps = ('expansion_hooks_map', 'combo_hooks_map')
             if key in hooks_maps:
                 acc_hooks_map = accumulated_kwargs[key]
                 kwargs_hooks_map = kwargs_to_add[key]
