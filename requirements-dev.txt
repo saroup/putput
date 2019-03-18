@@ -1,6 +1,6 @@
-pylint>=2.2.1
-codecov>=2.0.15
-mypy>=0.641
-pytest>=4.3.0
-pytest-cov>=2.6.1
-sphinx-rtd-theme>=0.4.3
+pylint==2.3.1
+codecov==2.0.15
+mypy==0.670
+pytest==4.3.0
+pytest-cov==2.6.1
+sphinx-rtd-theme==0.4.3
