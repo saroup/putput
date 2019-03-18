@@ -155,47 +155,44 @@ def validate_pattern_def(pattern_def: Mapping) -> None:
         >>> pattern_def = _load_pattern_def(pattern_def_path)
         >>> validate_pattern_def(pattern_def)
     """
-    try:
-        if not pattern_def:
-            raise PatternDefinitionValidationError('Pattern definition cannot be empty.')
-        if not ({'token_patterns', 'utterance_patterns'} <= set(pattern_def)):
-            err_msg = 'At the top level, token_patterns and utterance_patterns must exist.'
-            raise PatternDefinitionValidationError(err_msg)
+    if not pattern_def:
+        raise PatternDefinitionValidationError('Pattern definition cannot be empty.')
+    if not ({'token_patterns', 'utterance_patterns'} <= set(pattern_def)):
+        err_msg = 'At the top level, token_patterns and utterance_patterns must exist.'
+        raise PatternDefinitionValidationError(err_msg)
 
-        base_tokens = _get_base_keys(pattern_def, 'base_tokens')
-        groups = _get_base_keys(pattern_def, 'groups')
+    base_tokens = _get_base_keys(pattern_def, 'base_tokens')
+    groups = _get_base_keys(pattern_def, 'groups')
 
-        _validate_token_patterns(pattern_def, base_tokens)
-        _validate_utterance_patterns(pattern_def)
-        _validate_base_pattern(pattern_def, 'base_tokens')
-        _validate_base_pattern(pattern_def, 'groups')
+    _validate_token_patterns(pattern_def, base_tokens)
+    _validate_utterance_patterns(pattern_def)
+    _validate_base_pattern(pattern_def, 'base_tokens')
+    _validate_base_pattern(pattern_def, 'groups')
 
-        static_tokens = {
-            static_token
-            for token_type_dict in pattern_def['token_patterns']
-            for token_type in token_type_dict
-            if token_type == 'static'
-            for static_token_to_token_patterns in token_type_dict['static']
-            for static_token in static_token_to_token_patterns.keys()
-        }
-        dynamic_tokens = {
-            dynamic_token
-            for token_type_dict in pattern_def['token_patterns']
-            for token_type in token_type_dict
-            if token_type == 'dynamic'
-            for dynamic_token in token_type_dict['dynamic']
-        }
-        utterance_pattern_tokens = {
-            utterance_pattern_token
-            for utterance_pattern_tokens in pattern_def['utterance_patterns']
-            for utterance_pattern_token in utterance_pattern_tokens
-        }
-        _check_for_overlap([static_tokens, dynamic_tokens, base_tokens, groups])
-        _check_for_undefined_tokens(utterance_pattern_tokens, [static_tokens, dynamic_tokens, groups])
-        _check_for_reserved_null_token([static_tokens, dynamic_tokens, base_tokens, groups])
-        if 'groups' in pattern_def:
-            for base_token_dict in pattern_def['groups']:
-                group_values = set(list(base_token_dict.values())[0])
-                _check_for_undefined_tokens(group_values, [static_tokens, dynamic_tokens, groups])
-    except PatternDefinitionValidationError as e:
-        raise e
+    static_tokens = {
+        static_token
+        for token_type_dict in pattern_def['token_patterns']
+        for token_type in token_type_dict
+        if token_type == 'static'
+        for static_token_to_token_patterns in token_type_dict['static']
+        for static_token in static_token_to_token_patterns.keys()
+    }
+    dynamic_tokens = {
+        dynamic_token
+        for token_type_dict in pattern_def['token_patterns']
+        for token_type in token_type_dict
+        if token_type == 'dynamic'
+        for dynamic_token in token_type_dict['dynamic']
+    }
+    utterance_pattern_tokens = {
+        utterance_pattern_token
+        for utterance_pattern_tokens in pattern_def['utterance_patterns']
+        for utterance_pattern_token in utterance_pattern_tokens
+    }
+    _check_for_overlap([static_tokens, dynamic_tokens, base_tokens, groups])
+    _check_for_undefined_tokens(utterance_pattern_tokens, [static_tokens, dynamic_tokens, groups])
+    _check_for_reserved_null_token([static_tokens, dynamic_tokens, base_tokens, groups])
+    if 'groups' in pattern_def:
+        for base_token_dict in pattern_def['groups']:
+            group_values = set(list(base_token_dict.values())[0])
+            _check_for_undefined_tokens(group_values, [static_tokens, dynamic_tokens, groups])

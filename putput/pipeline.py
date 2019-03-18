@@ -223,10 +223,9 @@ class Pipeline:
             seed: See property docstring.
 
         Raises:
-            PatternDefinitionValidationError: If the pattern definition file is invalid.
-            ScannerError: If the pattern definition file is not YAML.
-            # TODO: find the rest of the yaml errors or wrap in common error
-            # TODO: attributes should be properties that expand when new keys are set
+            PatternDefinitionValidationError: If the pattern definition file fails
+                validation rules in validator.
+            yaml.YAMLError: If the pattern definition is invalid yaml.
         """
         self.seed = seed
 
@@ -234,7 +233,7 @@ class Pipeline:
         validate_pattern_def(pattern_def)
         self._pattern_def_path = pattern_def_path
         self._pattern_def = pattern_def
-        self._logger = get_logger(__name__, log_level)
+        self._logger = get_logger(__name__, level=log_level)
 
         self.dynamic_token_patterns_map = dynamic_token_patterns_map
         self.token_handler_map = token_handler_map
