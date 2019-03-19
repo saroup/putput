@@ -4,3 +4,4 @@ mypy==0.670
 pytest==4.3.0
 pytest-cov==2.6.1
 sphinx-rtd-theme==0.4.3
+pydocstyle==3.0.0

@@ -45,13 +45,26 @@ class Pylint(_BaseCommand):
             print('Unable to import pylint', file=sys.stderr)
         else:
             args = [path]
-            rcfile = self.root_dir / '.pylintrc'
-            if rcfile.is_file():
-                args.append('--rcfile={}'.format(rcfile))
             error = Run(args, do_exit=False).linter.msg_status
             if error:
                 sys.exit(error)
 
+class Pydocstyle(_BaseCommand):
+    description = 'Run pydocstyle on source files'
+
+    def _run(self, path):
+        try:
+            from pydocstyle import cli
+        except ImportError:
+            print('Unable to import pydocstyle', file=sys.stderr)
+        else:
+            sys.argv.append('putput')
+            try:
+                cli.main()
+            except SystemExit as e:
+                if e.code != 0:
+                    sys.exit(e.code)
+            sys.argv.pop()
 
 class Mypy(_BaseCommand):
     description = 'Run mypy on source files'
@@ -63,9 +76,6 @@ class Mypy(_BaseCommand):
             print('Unable to import mypy', file=sys.stderr)
         else:
             args = [path]
-            rcfile = self.root_dir / '.mypy.ini'
-            if rcfile.is_file():
-                args.append('--config-file={}'.format(rcfile))
             main(None, args)
 
 with open('README.md', 'r', encoding='utf-8') as fh:
@@ -110,6 +120,7 @@ setup(
     },
     cmdclass={
         'pylint': Pylint,
-        'mypy': Mypy
+        'mypy': Mypy,
+        'pydocstyle': Pydocstyle
     },
 )
