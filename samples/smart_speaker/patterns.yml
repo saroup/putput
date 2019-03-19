@@ -1,27 +1,17 @@
-base_tokens:
-  - SINGULAR_PRONOUNS: [i, we, they]
-  - PLURAL_PRONOUNS: [he, she]
 token_patterns:
   - static:
     - WAKE:
-      - [[hey, ok], [speaker, sound system]]
+      - [[hey], [speaker, sound system]]
     - PLAY:
-      - [SINGULAR_PRONOUNS, [want, need], [to play, to listen to]]
-      - [PLURAL_PRONOUNS, [wants, needs], [to play, to listen to]]
-      - [[play, turn on]]
-    - INDICATOR:
-      - [[by, performed by]]
+      - [[play]]
     - ARTIST:
-      - [[the beatles, kanye west]]
-    - QUEUE:
-      - [[then, and then, and after]]
-  - dynamic:
-    - SONG
+      - [[Tom Waits, Kanye]]
+    - SONG:
+      - [[Tabletop Joe, Flashing Lights]]
 groups:
   - PLAY_SONG: [PLAY, SONG]
-  - PLAY_SONGS: [PLAY, SONG, 2-5]
   - PLAY_ARTIST: [PLAY, ARTIST]
 utterance_patterns:
-  - [WAKE, PLAY_ARTIST, 7, QUEUE, PLAY_SONG, QUEUE, ARTIST]
-  - [WAKE, PLAY_ARTIST, 9, QUEUE, PLAY_SONG, QUEUE, ARTIST]
+  - [WAKE, PLAY_ARTIST]
+  - [WAKE, PLAY_SONG]
 
