@@ -1,4 +1,3 @@
-import logging
 import random
 from copy import deepcopy
 from functools import reduce
@@ -195,7 +194,6 @@ class Pipeline:
                  expansion_hooks_map: Optional[_E_H_MAP] = None,
                  combo_hooks_map: Optional[_C_H_MAP] = None,
                  combo_options_map: Optional[Mapping[str, ComboOptions]] = None,
-                 log_level: int = logging.WARNING,
                  seed: Optional[int] = None
                  ) -> None:
         """Instantiates 'Pipeline'.
@@ -218,8 +216,6 @@ class Pipeline:
 
             combo_options: See property docstring.
 
-            log_level: Messages with this level or higher will be shown.
-
             seed: See property docstring.
 
         Raises:
@@ -233,7 +229,6 @@ class Pipeline:
         validate_pattern_def(pattern_def)
         self._pattern_def_path = pattern_def_path
         self._pattern_def = pattern_def
-        self._logger = get_logger(__name__, level=log_level)
 
         self.dynamic_token_patterns_map = dynamic_token_patterns_map
         self.token_handler_map = token_handler_map
@@ -299,7 +294,7 @@ class Pipeline:
     def expansion_hooks_map(self, hooks_map: Optional[_E_H_MAP]) -> None:
         if hooks_map:
             groups_map = get_base_item_map(self._pattern_def, 'groups')
-            self._expansion_hooks_map = self._expand_map_with_utterance_pattern_as_key(
+            self._expansion_hooks_map = _expand_map_with_utterance_pattern_as_key(
                 hooks_map, groups_map) # type: Optional[_E_H_MAP]
         else:
             self._expansion_hooks_map = hooks_map
@@ -318,7 +313,7 @@ class Pipeline:
     def combo_hooks_map(self, hooks_map: Optional[_C_H_MAP]) -> None:
         if hooks_map:
             groups_map = get_base_item_map(self._pattern_def, 'groups')
-            self._combo_hooks_map = self._expand_map_with_utterance_pattern_as_key(
+            self._combo_hooks_map = _expand_map_with_utterance_pattern_as_key(
                 hooks_map, groups_map) # type: Optional[_C_H_MAP]
         else:
             self._combo_hooks_map = hooks_map
@@ -335,15 +330,10 @@ class Pipeline:
     def combo_options_map(self, options_map: Optional[Mapping[str, ComboOptions]]) -> None:
         if options_map:
             groups_map = get_base_item_map(self._pattern_def, 'groups')
-            self._combo_options_map = self._expand_map_with_utterance_pattern_as_key(
+            self._combo_options_map = _expand_map_with_utterance_pattern_as_key(
                 options_map, groups_map) # type: Optional[Mapping[str, ComboOptions]]
         else:
             self._combo_options_map = options_map
-
-    @property
-    def logger(self) -> logging.Logger:
-        """Read-only logger configured for Pipeline."""
-        return self._logger
 
     @property
     def seed(self) -> Optional[int]:
@@ -428,6 +418,11 @@ class Pipeline:
         if isinstance(preset, str):
             init_kwargs = get_preset(preset)()
         elif isinstance(preset, Sequence):
+            warning = ('Presets are not guaranteed to work together. Choose presets that logically fit together. '
+                       'When in doubt, check the shapes of the return values of the hooks '
+                       'as well the transformations done in the handlers.')
+            logger = get_logger(__name__)
+            logger.warning(warning)
             for pre in preset: # type: ignore
                 if isinstance(pre, str):
                     init_kwargs = get_preset(pre)()
@@ -486,7 +481,7 @@ class Pipeline:
                  *,
                  disable_progress_bar: bool = False
                  ) -> Iterable[Tuple[str, Sequence[str], Sequence[str]]]:
-        combo_options = self._get_combo_options(tokens, self._combo_options_map) if self._combo_options_map else None
+        combo_options = _get_combo_options(tokens, self._combo_options_map) if self._combo_options_map else None
 
         sample_size, combo_gen = combine(utterance_combo,
                                          tokens,
@@ -502,9 +497,9 @@ class Pipeline:
                   miniters=1) as pbar:
             for utterance, handled_tokens, handled_groups in pbar:
                 if self._combo_hooks_map:
-                    result = self._execute_hooks(tokens,
-                                                 (utterance, handled_tokens, handled_groups),
-                                                 self._combo_hooks_map)
+                    result = _execute_hooks(tokens,
+                                            (utterance, handled_tokens, handled_groups),
+                                            self._combo_hooks_map)
                 else:
                     result = (utterance, handled_tokens, handled_groups)
                 yield result
@@ -516,75 +511,63 @@ class Pipeline:
         ilen, exp_gen = expand(self._pattern_def, dynamic_token_patterns_map=self._dynamic_token_patterns_map)
         with tqdm(exp_gen, desc='Expansion...', total=ilen, disable=disable_progress_bar, miniters=1) as expansion_tqdm:
             for utterance_combo, tokens, groups in expansion_tqdm:
-                log_msg = '{}'.format(', '.join(tokens))
-                self._logger.info(log_msg)
                 if self._expansion_hooks_map:
-                    utterance_combo, tokens, groups = self._execute_hooks(tokens,
-                                                                          (utterance_combo, tokens, groups),
-                                                                          self._expansion_hooks_map)
+                    utterance_combo, tokens, groups = _execute_hooks(tokens,
+                                                                     (utterance_combo, tokens, groups),
+                                                                     self._expansion_hooks_map)
                 yield utterance_combo, tokens, groups
 
-    def _get_combo_options(self,
-                           tokens: Sequence[str],
-                           combo_options_map: Mapping[str, ComboOptions]
-                           ) -> Optional[ComboOptions]:
-        # pylint: disable=no-self-use
-        options_map = {} # type: Dict[str, ComboOptions]
-        options_map.update(combo_options_map)
-        key = ', '.join(tokens)
-        return options_map.get(key) or options_map.get('DEFAULT')
+@overload
+def _execute_hooks(tokens: Sequence[str],
+                   args: Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
+                   hooks_map: _E_H_MAP,
+                   ) -> Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]:
+    # pylint: disable=unused-argument
+    pass # pragma: no cover
 
-    @overload
-    def _execute_hooks(self,
-                       tokens: Sequence[str],
-                       args: Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
-                       hooks_map: _E_H_MAP,
-                       ) -> Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]:
-        # pylint: disable=no-self-use
-        # pylint: disable=unused-argument
-        pass # pragma: no cover
+@overload
+def _execute_hooks(tokens: Sequence[str],
+                   args: Tuple[str, Sequence[str], Sequence[str]],
+                   hooks_map: _C_H_MAP,
+                   ) -> Any:
+    # pylint: disable=unused-argument
+    pass # pragma: no cover
 
-    @overload
-    def _execute_hooks(self,
-                       tokens: Sequence[str],
-                       args: Tuple[str, Sequence[str], Sequence[str]],
-                       hooks_map: _C_H_MAP,
-                       ) -> Any:
-        # pylint: disable=no-self-use
-        # pylint: disable=unused-argument
-        pass # pragma: no cover
+def _execute_hooks(tokens: Sequence[str],
+                   args: Union[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
+                               Tuple[str, Sequence[str], Sequence[str]]],
+                   hooks_map: Union[_E_H_MAP, _C_H_MAP]
+                   ) -> Union[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]], Any]:
+    key = ', '.join(tokens)
+    if key not in hooks_map:
+        key = 'DEFAULT'
+    if key in hooks_map:
+        args = reduce(lambda args, hook: hook(*args), hooks_map[key], args)
+    return args
 
-    def _execute_hooks(self,
-                       tokens: Sequence[str],
-                       args: Union[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
-                                   Tuple[str, Sequence[str], Sequence[str]]],
-                       hooks_map: Union[_E_H_MAP, _C_H_MAP]
-                       ) -> Union[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]],
-                                  Any]:
-        # pylint: disable=no-self-use
-        key = ', '.join(tokens)
-        if key not in hooks_map:
-            key = 'DEFAULT'
-        if key in hooks_map:
-            args = reduce(lambda args, hook: hook(*args), hooks_map[key], args)
-        return args
+def _get_combo_options(tokens: Sequence[str],
+                       combo_options_map: Mapping[str, ComboOptions]
+                       ) -> Optional[ComboOptions]:
+    # pylint: disable=no-self-use
+    options_map = {} # type: Dict[str, ComboOptions]
+    options_map.update(combo_options_map)
+    key = ', '.join(tokens)
+    return options_map.get(key) or options_map.get('DEFAULT')
 
-    def _expand_map_with_utterance_pattern_as_key(self,
-                                                  map_with_utterance_pattern_as_key: _T_UP_KEY,
-                                                  groups_map: Mapping[str, Sequence[str]]
-                                                  ) -> _T_UP_KEY:
-        # pylint: disable=no-self-use
-        expanded_map = {}
-        for key, hooks in map_with_utterance_pattern_as_key.items():
-            if key == 'DEFAULT':
-                expanded_map[key] = hooks
-            else:
-                utterance_pattern = key.split(', ')
-                expanded_utterance_patterns, _ = expand_utterance_patterns_ranges_and_groups((utterance_pattern,),
-                                                                                             groups_map)
-                for expanded_utterance_pattern in expanded_utterance_patterns:
-                    expanded_map[', '.join(expanded_utterance_pattern)] = hooks
-        return expanded_map
+def _expand_map_with_utterance_pattern_as_key(map_with_utterance_pattern_as_key: _T_UP_KEY,
+                                              groups_map: Mapping[str, Sequence[str]]
+                                              ) -> _T_UP_KEY:
+    expanded_map = {}
+    for key, hooks in map_with_utterance_pattern_as_key.items():
+        if key == 'DEFAULT':
+            expanded_map[key] = hooks
+        else:
+            utterance_pattern = key.split(', ')
+            expanded_utterance_patterns, _ = expand_utterance_patterns_ranges_and_groups((utterance_pattern,),
+                                                                                         groups_map)
+            for expanded_utterance_pattern in expanded_utterance_patterns:
+                expanded_map[', '.join(expanded_utterance_pattern)] = hooks
+    return expanded_map
 
 def _load_pattern_def(pattern_def_path: Path) -> Mapping:
     with pattern_def_path.open(encoding='utf-8') as pattern_def_file:

@@ -1,10 +1,9 @@
 import logging
-from sys import stderr
-from sys import stdout
+import sys
 from typing import IO
 
 
-def get_logger(module_name: str, *, level: int = logging.INFO, stream: str = 'stderr') -> logging.Logger:
+def get_logger(module_name: str, *, level: int = logging.INFO, stream: IO[str] = sys.stderr) -> logging.Logger:
     """Returns a configured logger for the module.
 
     Args:
@@ -13,18 +12,17 @@ def get_logger(module_name: str, *, level: int = logging.INFO, stream: str = 'st
         level: Minimum logging level. Messages with this level or
             higher will be shown.
 
-        stream: Input to logging.StreamHandler, either 'stderr' or 'stdout'.
+        stream: 'stream' argument to logging.StreamHandler, typically sys.stdout or sys.stderr.
 
     Raises:
         ValueError: If stream is not 'stderr' or 'stdout'.
     """
-    out_stream = _get_out_stream(stream)
     logger = logging.getLogger(module_name)
     if not logger.handlers:
         logger.propagate = False
         logger.setLevel(level)
 
-        stream_handler = logging.StreamHandler(out_stream)
+        stream_handler = logging.StreamHandler(stream)
         stream_handler.setLevel(level)
 
         handler_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -33,11 +31,3 @@ def get_logger(module_name: str, *, level: int = logging.INFO, stream: str = 'st
 
         logger.addHandler(stream_handler)
     return logger
-
-def _get_out_stream(stream: str) -> IO[str]:
-    possible_streams = {'stderr', 'stdout'}
-    if stream not in possible_streams:
-        raise ValueError('Invalid value for stream. Valid values include: {}.'.format(possible_streams))
-    if stream == 'stdout':
-        return stdout
-    return stderr
