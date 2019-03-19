@@ -1,5 +1,8 @@
 [MESSAGES CONTROL]
-disable=invalid-name, missing-docstring, unnecessary-lambda, fixme, duplicate-code
+disable=invalid-name, missing-docstring, unnecessary-lambda
+
+[SIMILARITIES]
+ignore-imports=yes
 
 [FORMAT]
 max-line-length=120
