@@ -137,17 +137,12 @@ def _get_token_patterns_map(pattern_def: Mapping,
     return token_patterns_map
 
 def get_base_item_map(pattern_def: Mapping, base_key: str) -> Mapping[str, Sequence[str]]:
-    """Returns base item map.
-
-    # TODO: rename this function so it is clear what a base item map is
+    """Returns base item map or an empty dictionary if one does not exist.
 
     Args:
         pattern_def: A dictionary representation of the pattern definition.
 
         base_key: Key in pattern_def corresponding to the base item map.
-
-    Returns:
-        A base item map or empty dictionary if one does not exist.
 
     Examples:
         >>> from pathlib import Path

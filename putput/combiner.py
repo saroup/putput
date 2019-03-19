@@ -72,7 +72,6 @@ def combine(utterance_combo: Sequence[Sequence[str]],
         ('B-ADD I-ADD I-ADD', 'B-ITEM')
         ('[ADD_ITEM]',)
     """
-    # TODO: combo options should behave this way too in joiner
     sample_size = reduce(lambda x, y: x * y, (len(item) for item in utterance_combo))
     if combo_options:
         sample_size = combo_options.max_sample_size

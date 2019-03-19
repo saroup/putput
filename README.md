@@ -7,7 +7,7 @@
 [![PyPI - License](https://img.shields.io/pypi/l/putput.svg)](https://pypi.org/project/putput/)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/putput.svg)](https://pypi.org/project/putput/)
 
-```putput``` is a library that generates labeled data for chatbots. It's simple to use, highly customizable, and can handle big data generation on a consumer grade laptop. ```putput``` takes minutes to setup and seconds to generate millions of labeled data points.
+```putput``` is a library that generates labeled data for conversational AI. It's simple to use, highly customizable, and can handle big data generation on a consumer grade laptop. ```putput``` takes minutes to setup and seconds to generate millions of labeled data points.
 
 ```putput```'s labeled data could be used to:
 * train a ML model when you do not have real data.

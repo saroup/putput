@@ -1,5 +1,4 @@
 # pylint: disable=too-many-lines
-import logging
 import random
 import unittest
 from pathlib import Path
@@ -911,12 +910,6 @@ class TestPipeline(unittest.TestCase):
                  (actual_groups_visualizer, exp_groups_visualizer)]
         compare_all_pairs(self, pairs)
 
-    def test_default_read_only_properties(self) -> None:
-        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        p = Pipeline.from_preset(iob2.preset(groups_to_exclude=('PLAY_PHRASE',)), pattern_def_path)
-        self.assertEqual(p.logger.level, logging.WARNING) # pylint: disable=no-member
-        self.assertIn('multiple_group_patterns.yml', str(p.pattern_def_path))
-
     def test_luis_preset_no_entities_one_intent(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
         intent_map = {
@@ -1048,8 +1041,8 @@ class TestPipeline(unittest.TestCase):
                                  seed=0)
 
     def test_properties_getter_setters_access_level(self) -> None:
-        pattern_def_path = self._base_dir / 'nested_group_tokens_and_ranges.yml'
         props = {} # type: dict
+        props['pattern_def_path'] = self._base_dir / 'nested_group_tokens_and_ranges.yml'
         props['dynamic_token_patterns_map'] = {
             'ARTIST': ((('kanye west', 'the beatles'),),)
         }
@@ -1070,12 +1063,10 @@ class TestPipeline(unittest.TestCase):
         }
         props['seed'] = 0
 
-        p = Pipeline(pattern_def_path, **props)
+        p = Pipeline(**props)
         for name, value in props.items():
             prop = getattr(p, name)
             self.assertEqual(prop, value)
-        with self.assertRaises(AttributeError):
-            p.logger = "some value" # type: ignore
         with self.assertRaises(AttributeError):
             p.pattern_def_path = "some value" # type: ignore
 

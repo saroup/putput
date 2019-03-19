@@ -1,4 +1,5 @@
 import logging
+import sys
 import unittest
 
 from putput.logger import get_logger
@@ -22,3 +23,18 @@ class TestLogger(unittest.TestCase):
     def test_formatter_uses_time(self) -> None:
         logger = get_logger(__name__)
         self.assertTrue(logger.handlers[0].formatter.usesTime()) # type: ignore
+
+    def test_stdout(self) -> None:
+        logger = get_logger(__name__, stream=sys.stdout, level=logging.DEBUG)
+        with self.assertLogs(logger, level='INFO') as cm:
+            logger.error('stdout')
+            self.assertEqual(cm.output, ['ERROR:{}:stdout'.format(__name__)])
+
+    def test_stderr(self) -> None:
+        logger = get_logger(__name__, stream=sys.stderr, level=logging.DEBUG)
+        with self.assertLogs(logger, level='INFO') as cm:
+            logger.error('stderr')
+            self.assertEqual(cm.output, ['ERROR:{}:stderr'.format(__name__)])
+
+if __name__ == '__main__':
+    unittest.main()
