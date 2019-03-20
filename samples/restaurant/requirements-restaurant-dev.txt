@@ -1,4 +1,4 @@
-pandas==0.24.1
+pandas==0.24.2
 matplotlib==3.0.2
 seqeval==0.0.5
 scikit-learn==0.20.2
