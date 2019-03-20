@@ -6,7 +6,7 @@ jupyter==1.0.0
 tensorflow==2.0.0a0
 Keras==2.2.4
 h5py==2.9.0
-spacy==2.0.16
+spacy==2.1.1
 randomcolor==0.4.4.5
 numpy==1.15.4
 keras-tqdm==2.0.1
