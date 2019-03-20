@@ -1,6 +1,6 @@
 pandas==0.24.2
 matplotlib==3.0.3
-seqeval==0.0.5
+seqeval==0.0.6
 scikit-learn==0.20.2
 jupyter==1.0.0
 tensorflow==1.13.0rc1
