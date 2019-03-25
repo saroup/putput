@@ -1,4 +1,3 @@
-"""This module provides functionality to generate utterances and tokens after processing the pattern definition."""
 from functools import reduce
 from itertools import repeat
 from typing import Callable

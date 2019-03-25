@@ -1,4 +1,3 @@
-# https://en.wikipedia.org/wiki/Inside%E2%80%93outside%E2%80%93beginning_(tagging)
 from functools import partial
 from typing import Callable
 from typing import List

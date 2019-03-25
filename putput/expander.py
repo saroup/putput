@@ -1,4 +1,3 @@
-"""This module provides functionality to generate utterances and tokens after processing the pattern definition."""
 import re
 from functools import lru_cache
 from itertools import chain

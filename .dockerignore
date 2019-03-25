@@ -1,1 +1,2 @@
-.gitignore
+# if you run pytest locally and then in docker, files in __pycache__ result in errors
+**/__pycache__

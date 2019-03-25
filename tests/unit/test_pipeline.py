@@ -23,7 +23,7 @@ class TestPipeline(unittest.TestCase):
         self._base_dir = Path(__file__).parent / 'pattern_definitions' / 'valid'
         random.seed(0)
 
-    def test_before_joining_hooks_tokens(self) -> None:
+    def test_expansion_hooks_tokens(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
         dynamic_token_patterns_map = {
             'ARTIST': ((('kanye west', 'the beatles'),),)
@@ -51,7 +51,7 @@ class TestPipeline(unittest.TestCase):
                  (actual_groups, expected_groups)]
         compare_all_pairs(self, pairs)
 
-    def test_before_joining_hooks_default(self) -> None:
+    def test_expansion_hooks_default(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
         dynamic_token_patterns_map = {
             'ARTIST': ((('kanye west', 'the beatles'),),)
@@ -79,7 +79,7 @@ class TestPipeline(unittest.TestCase):
                  (actual_groups, expected_groups)]
         compare_all_pairs(self, pairs)
 
-    def test_before_joining_hooks_tokens_and_default(self) -> None:
+    def test_expansion_hooks_tokens_and_default(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_utterance_patterns.yml'
         dynamic_token_patterns_map = {
             'ARTIST': ((('kanye west', 'the beatles'),),)
@@ -118,7 +118,7 @@ class TestPipeline(unittest.TestCase):
                  (actual_groups, expected_groups)]
         compare_all_pairs(self, pairs)
 
-    def test_after_joining_hooks_tokens(self) -> None:
+    def test_combo_hooks_tokens(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
         dynamic_token_patterns_map = {
             'ARTIST': ((('the beatles',),),)
@@ -259,7 +259,7 @@ class TestPipeline(unittest.TestCase):
                  (actual_groups, expected_groups)]
         compare_all_pairs(self, pairs)
 
-    def test_after_joining_hooks_default(self) -> None:
+    def test_combo_hooks_default(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
         dynamic_token_patterns_map = {
             'ARTIST': ((('the beatles',),),)
@@ -296,7 +296,7 @@ class TestPipeline(unittest.TestCase):
                  (actual_groups, expected_groups)]
         compare_all_pairs(self, pairs)
 
-    def test_after_joining_hooks_tokens_and_default(self) -> None:
+    def test_combo_hooks_tokens_and_default(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_utterance_patterns.yml'
         dynamic_token_patterns_map = {
             'ARTIST': ((('the beatles',),),)

@@ -1,4 +1,3 @@
-"""This module provides functionality to validate the pattern definition."""
 import itertools
 import re
 from functools import reduce

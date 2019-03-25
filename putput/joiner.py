@@ -1,4 +1,3 @@
-"""This module provides functionality to join combos."""
 import itertools
 import random
 import sys
