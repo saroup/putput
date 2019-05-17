@@ -159,13 +159,13 @@ class Pipeline:
         >>> for json_result in p.flow(disable_progress_bar=True):
         ...     print(json_result)
         {"handled_groups": ["[ADD_ITEM]", "[ADD_ITEM]", "{None([CONJUNCTION(and)])}", "{None([ITEM])}"],
-         "handled_tokens": ["[ADD(may she get)]", "[ITEM]", "[ADD(may she get)]", "[ITEM]", "[CONJUNCTION(and)]",
-                            "[ITEM]"],
-         "utterance": "may she get fries please may um she get fries and fries"}
-        {"handled_groups": ["[ADD_ITEM]", "[ADD_ITEM]", "{None([CONJUNCTION(and)])}", "{None([ITEM])}"],
          "handled_tokens": ["[ADD(may she get)]", "[ITEM]", "[ADD(can she get)]", "[ITEM]", "[CONJUNCTION(and)]",
                             "[ITEM]"],
-         "utterance": "may she get fries can she get um fries uh and fries"}
+         "utterance": "may she get fries please can she hmmmm get fries and fries"}
+        {"handled_groups": ["[ADD_ITEM]", "[ADD_ITEM]", "{None([CONJUNCTION(and)])}", "{None([ITEM])}"],
+         "handled_tokens": ["[ADD(may she get)]", "[ITEM]", "[ADD(may she get)]", "[ITEM]", "[CONJUNCTION(and)]",
+                            "[ITEM]"],
+         "utterance": "may she get fries may she um um get fries and fries"}
 
         With a preset
 

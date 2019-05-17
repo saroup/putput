@@ -1,3 +1,4 @@
+import random
 import unittest
 from typing import Iterable
 from typing import List
@@ -9,6 +10,9 @@ from putput.joiner import join_combo
 
 
 class TestJoiner(unittest.TestCase):
+    def setUp(self):
+        random.seed(0)
+
     def _test_join_combo(self,
                          pattern: Sequence[Sequence],
                          expected_output: Iterable[Sequence],
@@ -99,10 +103,24 @@ class TestJoiner(unittest.TestCase):
 
     def test_num_unique_combinations_greater_than_max_size(self) -> None:
         pattern = tuple([tuple(range(50))] * 50)
-        expected_output = ((0,) * 50, ((0,) * 49) + (1,))
-        all_options = [ComboOptions(max_sample_size=2, with_replacement=True),
-                       ComboOptions(max_sample_size=2, with_replacement=False)]
-        self._test_join_combo(pattern, expected_output, all_options=all_options)
+        max_sample_size = 2
+        all_options = [ComboOptions(max_sample_size=max_sample_size, with_replacement=True),
+                       ComboOptions(max_sample_size=max_sample_size, with_replacement=False)]
+        for combo_options in all_options:
+            actual_output = list(join_combo(pattern, combo_options=combo_options))
+            self.assertEqual(len(actual_output), max_sample_size)
+
+    def test_unique_one_d_to_mult_d(self) -> None:
+        pattern = ((0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
+                   (10, 11, 12, 13, 14, 15, 16, 17, 18, 19),
+                   (20, 21, 22, 23, 24, 25, 26, 27, 28, 29))
+        num_unique_combinations = 1000
+        # Subtract 1 from num_unique_combinations because if max_sample_size == num_unique_combinations,
+        # the sampling will fall back to joining without sampling. This leads to a 0.1% chance that
+        # there is an error, given that num_unique_combinations is 1000.
+        combo_options = ComboOptions(max_sample_size=num_unique_combinations - 1, with_replacement=False)
+        actual_output = list(join_combo(pattern, combo_options=combo_options))
+        self.assertEqual(len(set(actual_output)), len(actual_output))
 
     def test_invalid_combo_options(self) -> None:
         with self.assertRaises(ValueError):

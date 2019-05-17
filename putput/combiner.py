@@ -64,10 +64,10 @@ def combine(utterance_combo: Sequence[Sequence[str]],
         ...     print(utterance)
         ...     print(handled_tokens)
         ...     print(handled_groups)
-        may she get fries
+        can she get fries
         ('B-ADD I-ADD I-ADD', 'B-ITEM')
         ('[ADD_ITEM]',)
-        can she get fries
+        may she get fries
         ('B-ADD I-ADD I-ADD', 'B-ITEM')
         ('[ADD_ITEM]',)
     """

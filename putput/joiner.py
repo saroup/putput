@@ -7,8 +7,6 @@ from typing import Optional
 from typing import Sequence
 from typing import TypeVar
 
-import numpy as np
-
 from putput.logger import get_logger
 
 T = TypeVar('T')
@@ -83,42 +81,53 @@ def _join_without_sampling(combo: Sequence[Sequence[T]]) -> Iterable[Sequence[T]
     return itertools.product(*combo)
 
 def _join_with_sampling(combo: Sequence[Sequence[T]], combo_options: ComboOptions) -> Iterable[Sequence[T]]:
+    # Given ((hey speaker, hi speaker), (play, start)), there are 4 possible combinations (2x2=4)
+    # choose a random number [0, 3] to represent a random combination.
+    # Map that chosen number back to the indices that make the combination.
+    # For instance, 0 could map to (0, 0), which would yield "hey speaker play"
+    # 1 could map to (1, 0), which would yield "hi speaker play", etc.
     component_lengths = tuple(len(item) for item in combo)
-    num_unique_samples = reduce(lambda x, y: x * y, component_lengths)
+    num_unique_samples = _mul(component_lengths)
 
     if combo_options.with_replacement:
         sample_size = combo_options.max_sample_size
+        flat_item_indices = tuple(random.randint(0, num_unique_samples - 1) for _ in range(sample_size))
     else:
-        sample_size = min(combo_options.max_sample_size, num_unique_samples)
-
-    can_be_sampled = num_unique_samples <= sys.maxsize and _is_valid_to_unravel(component_lengths)
-    if can_be_sampled:
-        if combo_options.with_replacement:
-            flat_item_indices = tuple(random.randint(0, num_unique_samples - 1)
-                                      for _ in range(sample_size))
+        if num_unique_samples <= sys.maxsize:
+            sample_size = min(combo_options.max_sample_size, num_unique_samples)
+            if sample_size == num_unique_samples:
+                yield from _join_without_sampling(combo)
+                return
         else:
-            flat_item_indices = tuple(random.sample(range(num_unique_samples), sample_size))
+            num_unique_samples = sys.maxsize
+            sample_size = min(combo_options.max_sample_size, num_unique_samples)
 
-        for flat_item_index in flat_item_indices:
-            component_indices = np.unravel_index(flat_item_index, component_lengths)
-            combo_components = tuple(combo[component_index][item_index]
-                                     for component_index, item_index in enumerate(component_indices))
-            yield combo_components
-    else:
-        logger = get_logger(__name__)
-        warning_msg = ('Number of possible combinations exceeds sys.maxsize OR np.unravel received invalid dimensions.'
-                       ' Defaulting to joining without sampling, capped to the specified sample size.')
-        logger.warning(warning_msg)
-        for i, c_components in enumerate(_join_without_sampling(combo)):
-            if i >= sample_size:
-                break
-            yield c_components
+            logger = get_logger(__name__)
+            warning_msg = ('Number of possible combinations exceeds sys.maxsize.'
+                           ' Sampling from the subset of combinations, sys.maxsize.')
+            logger.warning(warning_msg)
 
-def _is_valid_to_unravel(dimensions: Sequence[int]) -> bool:
-    try:
-        np.unravel_index(0, dimensions)
-        return True
-    except ValueError: # pragma: no cover
-        # not covered in unittests because creating components with large lengths takes too long.
-        # catches the following issue for certain large numbers: https://github.com/numpy/numpy/issues/9538.
-        return False
+            if sample_size == sys.maxsize: # pragma: no cover
+                yield from _join_without_sampling(combo)
+                return
+        flat_item_indices = tuple(random.sample(range(num_unique_samples), sample_size))
+
+    for flat_item_index in flat_item_indices:
+        component_indices = _one_d_to_mult_d(flat_item_index, component_lengths)
+        combo_components = tuple(combo[component_index][item_index]
+                                 for component_index, item_index in enumerate(component_indices))
+        yield combo_components
+
+def _one_d_to_mult_d(one_d: int, component_lengths: Sequence[int]) -> Sequence[int]:
+    # https://stackoverflow.com/questions/12429492/how-to-convert-a-monodimensional-index-to-corresponding-indices-in-a-multidimens
+    indices = []
+    for i, component_length in enumerate(component_lengths):
+        if component_lengths[i+1:]:
+            index = (one_d // _mul(component_lengths[i+1:])) % component_length
+        else:
+            index = one_d % component_length
+        indices.append(index)
+    return indices
+
+def _mul(component_lengths: Sequence[int]) -> int:
+    return reduce(lambda x, y: x * y, component_lengths)
