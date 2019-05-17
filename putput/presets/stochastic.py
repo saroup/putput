@@ -45,7 +45,7 @@ def preset(*, model_name: str = 'word2vec.model', corpus: str = 'glove-twitter-2
         >>> from pathlib import Path
         >>> from putput.pipeline import Pipeline
         >>> pattern_def_path = Path(__file__).parent.parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
-        >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
+        >>> dynamic_token_patterns_map = {'ITEM': ('fries',)}
         >>> p = Pipeline.from_preset(preset(model_name='word2vec.test.model', chance=50),
         ...                          pattern_def_path,
         ...                          dynamic_token_patterns_map=dynamic_token_patterns_map,

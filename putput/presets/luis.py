@@ -25,7 +25,7 @@ def preset(*,
         >>> import random
         >>> random.seed(0)
         >>> pattern_def_path = Path(__file__).parent.parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
-        >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
+        >>> dynamic_token_patterns_map = {'ITEM': ('fries',)}
         >>> intent_map = {'ADD_ITEM, 2, CONJUNCTION, ITEM': 'ADD_INTENT'}
         >>> p = Pipeline.from_preset(preset(intent_map=intent_map, entities=('ITEM',)),
         ...                          pattern_def_path,

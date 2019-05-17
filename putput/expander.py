@@ -19,7 +19,7 @@ from putput.validator import RANGE_REGEX
 
 def expand(pattern_def: Mapping,
            *,
-           dynamic_token_patterns_map: Optional[Mapping[str, Sequence[Sequence[Sequence[str]]]]] = None
+           dynamic_token_patterns_map: Optional[Mapping[str, Sequence[str]]] = None
            ) -> Tuple[int, Iterable[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]]]:
     """Expands the pattern_def to prepare for combination.
 
@@ -40,7 +40,7 @@ def expand(pattern_def: Mapping,
         >>> from putput.pipeline import _load_pattern_def
         >>> pattern_def_path = Path(__file__).parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
         >>> pattern_def = _load_pattern_def(pattern_def_path)
-        >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
+        >>> dynamic_token_patterns_map = {'ITEM': ('fries',)}
         >>> num_utterance_patterns, generator = expand(pattern_def,
         ...                                            dynamic_token_patterns_map=dynamic_token_patterns_map)
         >>> num_utterance_patterns
@@ -127,12 +127,13 @@ def _expand_tokens(range_token: Tuple[int, int, str]) -> Iterable[Sequence[str]]
 
 def _get_token_patterns_map(pattern_def: Mapping,
                             *,
-                            dynamic_token_patterns_map: Optional[Mapping[str, Sequence[Sequence[Sequence[str]]]]] = None
+                            dynamic_token_patterns_map: Optional[Mapping[str, Sequence[str]]] = None
                             ) -> Mapping[str, Sequence[Sequence[Sequence[str]]]]:
     token_patterns_map = {} # type: Dict[str, Sequence[Sequence[Sequence[str]]]]
     static_token_patterns_map = _get_static_token_patterns_map(pattern_def)
     token_patterns_map.update(static_token_patterns_map)
-    token_patterns_map.update(dynamic_token_patterns_map or {})
+    if dynamic_token_patterns_map:
+        token_patterns_map.update(_expand_dynamic_token_patterns_map(dynamic_token_patterns_map))
     return token_patterns_map
 
 def get_base_item_map(pattern_def: Mapping, base_key: str) -> Mapping[str, Sequence[str]]:
@@ -169,6 +170,10 @@ def _get_static_token_patterns_map(pattern_def: Mapping) -> Mapping[str, Sequenc
         for static_token_patterns_map in token_type_map['static']
         for token, token_patterns in static_token_patterns_map.items()
     }
+
+def _expand_dynamic_token_patterns_map(dynamic_token_patterns: Mapping[str, Sequence[str]]
+                                       ) -> Mapping[str, Sequence[Sequence[Sequence[str]]]]:
+    return {token: ((tuple(patterns),),) for token, patterns in dynamic_token_patterns.items()}
 
 def _expand_static_token_patterns(pattern_def: Mapping,
                                   token_patterns: Sequence[Sequence[Union[str, Sequence[str]]]]

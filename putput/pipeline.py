@@ -77,7 +77,7 @@ class Pipeline:
         Default behavior
 
         >>> pattern_def_path = Path(__file__).parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
-        >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
+        >>> dynamic_token_patterns_map = {'ITEM': ('fries',)}
         >>> p = Pipeline(pattern_def_path, dynamic_token_patterns_map=dynamic_token_patterns_map)
         >>> generator = p.flow(disable_progress_bar=True)
         >>> for utterance, tokens, groups in generator:
@@ -169,7 +169,7 @@ class Pipeline:
 
         With a preset
 
-        >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
+        >>> dynamic_token_patterns_map = {'ITEM': ('fries',)}
         >>> p = Pipeline.from_preset('IOB2',
         ...                          pattern_def_path,
         ...                          dynamic_token_patterns_map=dynamic_token_patterns_map)
@@ -188,7 +188,7 @@ class Pipeline:
     def __init__(self,
                  pattern_def_path: Path,
                  *,
-                 dynamic_token_patterns_map: Optional[Mapping[str, Sequence[Sequence[Sequence[str]]]]] = None,
+                 dynamic_token_patterns_map: Optional[Mapping[str, Sequence[str]]] = None,
                  token_handler_map: Optional[Mapping[str, Callable[[str, str], str]]] = None,
                  group_handler_map: Optional[Mapping[str, Callable[[str, Sequence[str]], str]]] = None,
                  expansion_hooks_map: Optional[_E_H_MAP] = None,
@@ -243,7 +243,7 @@ class Pipeline:
         return self._pattern_def_path
 
     @property
-    def dynamic_token_patterns_map(self) -> Optional[Mapping[str, Sequence[Sequence[Sequence[str]]]]]:
+    def dynamic_token_patterns_map(self) -> Optional[Mapping[str, Sequence[str]]]:
         """The dynamic counterpart to the static section in the pattern definition.
         This mapping between token and token patterns is useful in
         scenarios where tokens and token patterns cannot be known before runtime.
@@ -252,7 +252,7 @@ class Pipeline:
 
     @dynamic_token_patterns_map.setter
     def dynamic_token_patterns_map(self,
-                                   token_patterns_map: Optional[Mapping[str, Sequence[Sequence[Sequence[str]]]]]
+                                   token_patterns_map: Optional[Mapping[str, Sequence[str]]]
                                    ) -> None:
         self._dynamic_token_patterns_map = token_patterns_map
 
@@ -384,7 +384,7 @@ class Pipeline:
             >>> from pathlib import Path
             >>> from putput.pipeline import Pipeline
             >>> pattern_def_path = Path(__file__).parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
-            >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
+            >>> dynamic_token_patterns_map = {'ITEM': ('fries',)}
             >>> p = Pipeline.from_preset('IOB2',
             ...                          pattern_def_path,
             ...                          dynamic_token_patterns_map=dynamic_token_patterns_map)
@@ -452,7 +452,7 @@ class Pipeline:
             >>> from pathlib import Path
             >>> from putput.pipeline import Pipeline
             >>> pattern_def_path = Path(__file__).parent.parent / 'tests' / 'doc' / 'example_pattern_definition.yml'
-            >>> dynamic_token_patterns_map = {'ITEM': ((('fries',),),)}
+            >>> dynamic_token_patterns_map = {'ITEM': ('fries',)}
             >>> p = Pipeline(pattern_def_path, dynamic_token_patterns_map=dynamic_token_patterns_map)
             >>> generator = p.flow(disable_progress_bar=True)
             >>> for utterance, tokens, groups in generator:

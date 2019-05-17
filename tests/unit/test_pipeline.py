@@ -26,7 +26,7 @@ class TestPipeline(unittest.TestCase):
     def test_expansion_hooks_tokens(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('kanye west', 'the beatles'),),)
+            'ARTIST': ('kanye west', 'the beatles')
         }
 
         expansion_hooks_map = {
@@ -54,7 +54,7 @@ class TestPipeline(unittest.TestCase):
     def test_expansion_hooks_default(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('kanye west', 'the beatles'),),)
+            'ARTIST': ('kanye west', 'the beatles')
         }
 
         expansion_hooks_map = {
@@ -82,7 +82,7 @@ class TestPipeline(unittest.TestCase):
     def test_expansion_hooks_tokens_and_default(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_utterance_patterns.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('kanye west', 'the beatles'),),)
+            'ARTIST': ('kanye west', 'the beatles')
         }
 
         expansion_hooks_map = {
@@ -121,7 +121,7 @@ class TestPipeline(unittest.TestCase):
     def test_combo_hooks_tokens(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles',),),)
+            'ARTIST': ('the beatles',)
         }
 
         combo_hooks_map = {
@@ -212,7 +212,7 @@ class TestPipeline(unittest.TestCase):
         # pylint: disable=too-many-locals
         pattern_def_path = self._base_dir / 'nested_group_tokens_and_ranges.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles',),),)
+            'ARTIST': ('the beatles',)
         }
 
         expansion_hooks_map = {
@@ -262,7 +262,7 @@ class TestPipeline(unittest.TestCase):
     def test_combo_hooks_default(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles',),),)
+            'ARTIST': ('the beatles',)
         }
 
         combo_hooks_map = {
@@ -299,7 +299,7 @@ class TestPipeline(unittest.TestCase):
     def test_combo_hooks_tokens_and_default(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_utterance_patterns.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles',),),)
+            'ARTIST': ('the beatles',)
         }
 
         combo_hooks_map = {
@@ -340,7 +340,7 @@ class TestPipeline(unittest.TestCase):
     def test_token_handlers_token(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles',),),)
+            'ARTIST': ('the beatles',)
         }
         token_handler_map = {
             'START': _just_tokens,
@@ -369,7 +369,7 @@ class TestPipeline(unittest.TestCase):
     def test_token_handlers_default(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles',),),)
+            'ARTIST': ('the beatles',)
         }
         token_handler_map = {
             'DEFAULT': _just_tokens,
@@ -398,7 +398,7 @@ class TestPipeline(unittest.TestCase):
     def test_token_handlers_token_and_default(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles',),),)
+            'ARTIST': ('the beatles',)
         }
         token_handler_map = {
             'START': _just_tokens,
@@ -428,7 +428,7 @@ class TestPipeline(unittest.TestCase):
     def test_group_handlers_group(self) -> None:
         pattern_def_path = self._base_dir / 'static_and_base_tokens_and_group_tokens.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles',),),)
+            'ARTIST': ('the beatles',)
         }
         group_handler_map = {
             'PLAY_PHRASE': _remove_group,
@@ -457,7 +457,7 @@ class TestPipeline(unittest.TestCase):
     def test_group_handlers_default(self) -> None:
         pattern_def_path = self._base_dir / 'static_and_base_tokens_and_group_tokens.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles',),),)
+            'ARTIST': ('the beatles',)
         }
         group_handler_map = {
             'DEFAULT': _just_groups,
@@ -486,7 +486,7 @@ class TestPipeline(unittest.TestCase):
     def test_group_handlers_group_and_default(self) -> None:
         pattern_def_path = self._base_dir / 'static_and_base_tokens_and_group_tokens.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles',),),)
+            'ARTIST': ('the beatles',)
         }
         group_handler_map = {
             'None': _remove_group,
@@ -516,7 +516,7 @@ class TestPipeline(unittest.TestCase):
     def test_combo_options_without_replacement(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles',),),)
+            'ARTIST': ('the beatles',)
         }
         combo_options_map = {
             'START, PLAY, ARTIST': ComboOptions(max_sample_size=5, with_replacement=False)
@@ -550,7 +550,7 @@ class TestPipeline(unittest.TestCase):
     def test_combo_options_with_replacement(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles',),),)
+            'ARTIST': ('the beatles',)
         }
         max_sample_size = 5
         combo_options_map = {
@@ -590,7 +590,7 @@ class TestPipeline(unittest.TestCase):
     def test_combo_options_default(self) -> None:
         pattern_def_path = self._base_dir / 'dynamic_and_static_token_patterns.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles',),),)
+            'ARTIST': ('the beatles',)
         }
         max_sample_size = 5
         combo_options_map = {
@@ -631,7 +631,7 @@ class TestPipeline(unittest.TestCase):
     def test_combo_options_tokens_and_default(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_utterance_patterns.yml'
         dynamic_token_patterns_map = {
-            'ARTIST': ((('the beatles', 'kanye'),),)
+            'ARTIST': ('the beatles', 'kanye')
         }
         combo_options_map = {
             'ARTIST': ComboOptions(max_sample_size=1, with_replacement=True),

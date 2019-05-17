@@ -12,7 +12,7 @@ class TestExpander(unittest.TestCase):
         self._base_dir = Path(__file__).parent / 'pattern_definitions' / 'valid'
 
     def test_dynamic_token_patterns_only(self) -> None:
-        dynamic_token_patterns_map = {'ARTIST': ((('the beatles', 'kanye'),),)}
+        dynamic_token_patterns_map = {'ARTIST': ('the beatles', 'kanye')}
         pattern_def = _load_pattern_def(self._base_dir / 'dynamic_token_patterns_only.yml')
         expected_utterance_combo = ((('the beatles', 'kanye'),),)
         expected_tokens = (('ARTIST',),)
@@ -37,7 +37,7 @@ class TestExpander(unittest.TestCase):
         compare_all_pairs(self, pairs)
 
     def test_dynamic_and_static_token_patterns(self) -> None:
-        dynamic_token_patterns_map = {'ARTIST': ((('the beatles', 'kanye'),),)}
+        dynamic_token_patterns_map = {'ARTIST': ('the beatles', 'kanye')}
         pattern_def = _load_pattern_def(self._base_dir / 'dynamic_and_static_token_patterns.yml')
         _, generator = expand(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
@@ -76,7 +76,7 @@ class TestExpander(unittest.TestCase):
         compare_all_pairs(self, pairs)
 
     def test_keys_in_addition_to_utterance_patterns_token_patterns(self) -> None:
-        dynamic_token_patterns_map = {'ARTIST': ((('the beatles', 'kanye'),),)}
+        dynamic_token_patterns_map = {'ARTIST': ('the beatles', 'kanye')}
         pattern_def = _load_pattern_def(self._base_dir / 'keys_in_addition_to_utterance_patterns_tokens_patterns.yml')
         _, generator = expand(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
@@ -92,7 +92,7 @@ class TestExpander(unittest.TestCase):
 
     def test_groups_with_range(self) -> None:
         artists = ('the beatles', 'kanye', 'nico', 'tom waits')
-        dynamic_token_patterns_map = {'ARTIST': ((artists,),)}
+        dynamic_token_patterns_map = {'ARTIST': artists}
         pattern_def = _load_pattern_def(self._base_dir / 'groups_with_range.yml')
         _, generator = expand(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
@@ -112,7 +112,7 @@ class TestExpander(unittest.TestCase):
 
     def test_groups_with_single_range(self) -> None:
         artists = ('the beatles', 'kanye', 'nico', 'tom waits')
-        dynamic_token_patterns_map = {'ARTIST': ((artists,),)}
+        dynamic_token_patterns_map = {'ARTIST': artists}
         pattern_def = _load_pattern_def(self._base_dir / 'groups_with_single_range.yml')
         _, generator = expand(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
@@ -126,7 +126,7 @@ class TestExpander(unittest.TestCase):
 
     def test_utterance_patterns_with_range(self) -> None:
         artists = ('the beatles', 'kanye', 'nico', 'tom waits')
-        dynamic_token_patterns_map = {'ARTIST': ((artists,),)}
+        dynamic_token_patterns_map = {'ARTIST': artists}
         pattern_def = _load_pattern_def(self._base_dir / 'utterance_patterns_with_range.yml')
         _, generator = expand(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
@@ -147,7 +147,7 @@ class TestExpander(unittest.TestCase):
 
     def test_utterance_patterns_with_range_and_non_range(self) -> None:
         artists = ('the beatles', 'kanye', 'nico', 'tom waits')
-        dynamic_token_patterns_map = {'ARTIST': ((artists,),)}
+        dynamic_token_patterns_map = {'ARTIST': artists}
         pattern_def = _load_pattern_def(self._base_dir / 'utterance_patterns_with_range_and_non_range.yml')
         _, generator = expand(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
@@ -171,7 +171,7 @@ class TestExpander(unittest.TestCase):
 
     def test_groups_with_range_and_non_range(self) -> None:
         artists = ('the beatles', 'kanye', 'nico', 'tom waits')
-        dynamic_token_patterns_map = {'ARTIST': ((artists,),)}
+        dynamic_token_patterns_map = {'ARTIST': artists}
         pattern_def = _load_pattern_def(self._base_dir / 'groups_with_range_and_non_range.yml')
         _, generator = expand(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
         actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)

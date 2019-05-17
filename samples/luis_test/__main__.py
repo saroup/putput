@@ -11,19 +11,19 @@ random.seed(0)
 def main() -> None:
     pattern_def_path = Path(__file__).parent / 'patterns.yml'
     dynamic_token_patterns_map = {
-        'Field': ((('janitorial', 'fullstack typescript programming with azure',
-                    'fullstack typescript programming', 'database', 'machine learning', 'ml',
-                    'artificial intelligence', 'ai', 'backend development', 'frontend development',
-                    'program managment', 'pm', 'android software engineering'),),),
-        'Job': ((('software developer', 'programmer', 'engineeer', 'software engineer', 'politician',
-                  'garbage collector', 'fast food worker', 'fry cook', 'doctor', 'nurse', 'nurse practicioner',
-                  'pediatrician', 'actor', 'actress', 'farmer', 'baker', 'barber', 'hair dresser', 'bus driver',
-                  'chemical engineer', 'mechanical engineer', 'line cook', 'head chef', 'SQL database engineer',
-                  'anthropologist'),),),
-        'Locations': ((('new york', 'new york city', 'nyc', 'Los Angeles', 'LA',
-                        'Austin', 'West Coast', 'Boston'),),),
-        'datetimeV2': ((('today', 'this week', 'this month', 'next six months', 'upcoming',
-                         'next month', 'next year'),),),
+        'Field': ('janitorial', 'fullstack typescript programming with azure',
+                  'fullstack typescript programming', 'database', 'machine learning', 'ml',
+                  'artificial intelligence', 'ai', 'backend development', 'frontend development',
+                  'program managment', 'pm', 'android software engineering'),
+        'Job': ('software developer', 'programmer', 'engineeer', 'software engineer', 'politician',
+                'garbage collector', 'fast food worker', 'fry cook', 'doctor', 'nurse', 'nurse practicioner',
+                'pediatrician', 'actor', 'actress', 'farmer', 'baker', 'barber', 'hair dresser', 'bus driver',
+                'chemical engineer', 'mechanical engineer', 'line cook', 'head chef', 'SQL database engineer',
+                'anthropologist'),
+        'Locations': ('new york', 'new york city', 'nyc', 'Los Angeles', 'LA',
+                      'Austin', 'West Coast', 'Boston'),
+        'datetimeV2': ('today', 'this week', 'this month', 'next six months', 'upcoming',
+                       'next month', 'next year'),
     }
 
     combo_options_map = {

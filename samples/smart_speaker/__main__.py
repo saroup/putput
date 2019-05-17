@@ -10,7 +10,7 @@ from putput import Pipeline
 def main() -> None:
     pattern_def_path = Path(__file__).parent / 'patterns.yml'
     dynamic_token_patterns_map = {
-        'SONG': ((('here comes the sun', 'stronger'),),)
+        'SONG': ('here comes the sun', 'stronger')
     }
 
     combo_options_map = {
