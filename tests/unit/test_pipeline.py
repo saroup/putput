@@ -1071,27 +1071,35 @@ class TestPipeline(unittest.TestCase):
             p.pattern_def_path = "some value" # type: ignore
 
     def test_stochastic_preset_obj(self) -> None:
-        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        p = Pipeline.from_preset(stochastic.preset(model_name='word2vec.test.model', chance=80),
+        pattern_def_path = self._base_dir / 'all_pos.yml'
+        p = Pipeline.from_preset(stochastic.preset(chance=80),
                                  pattern_def_path,
                                  seed=0)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
         actual_utterances, actual_tokens_list, actual_groups = zip(*generator)
-        expected_utterances = ('hi',
-                               'tan nobody shall want would play',
-                               'tan nobody shall want trying listen',
-                               'tan bogart shall intend would play',
-                               'tan bogart shall intend trying listen')
+        expected_utterances = (('hi',
+                                'howdy he will real much desire to play the happy song',
+                                'hi he will rattling much want to listen the happy song',
+                                'howdy she will rattling much want to play the happy song',
+                                'hello she will very much desire to listen the happy vocal'))
         expected_tokens_list = (('[WAKE(hi)]',),
-                                ('[WAKE(tan)]', '[START(nobody shall want)]', '[PLAY(would play)]'),
-                                ('[WAKE(tan)]', '[START(nobody shall want)]', '[PLAY(trying listen)]'),
-                                ('[WAKE(tan)]', '[START(bogart shall intend)]', '[PLAY(would play)]'),
-                                ('[WAKE(tan)]', '[START(bogart shall intend)]', '[PLAY(trying listen)]'))
-        expected_groups = (('{None([WAKE(hi)])}',),
-                           ('{None([WAKE(tan)])}', '{PLAY_PHRASE([START(nobody shall want)] [PLAY(would play)])}'),
-                           ('{None([WAKE(tan)])}', '{PLAY_PHRASE([START(nobody shall want)] [PLAY(trying listen)])}'),
-                           ('{None([WAKE(tan)])}', '{PLAY_PHRASE([START(bogart shall intend)] [PLAY(would play)])}'),
-                           ('{None([WAKE(tan)])}', '{PLAY_PHRASE([START(bogart shall intend)] [PLAY(trying listen)])}'))
+                                ('[WAKE(howdy)]', '[START(he will real much desire)]', '[PLAY(to play)]',
+                                 '[MOD(the happy)]', '[SONG(song)]'),
+                                ('[WAKE(hi)]', '[START(he will rattling much want)]', '[PLAY(to listen)]',
+                                 '[MOD(the happy)]', '[SONG(song)]'),
+                                ('[WAKE(howdy)]', '[START(she will rattling much want)]', '[PLAY(to play)]',
+                                 '[MOD(the happy)]', '[SONG(song)]'),
+                                ('[WAKE(hello)]', '[START(she will very much desire)]', '[PLAY(to listen)]',
+                                 '[MOD(the happy)]', '[SONG(vocal)]'))
+        expected_groups = (('{[WAKE(hi)]}',),
+                           ('{[WAKE(howdy)]}',
+                            '{[START(he will real much desire)] [PLAY(to play)] [MOD(the happy)] [SONG(song)]}'),
+                           ('{[WAKE(hi)]}',
+                            '{[START(he will rattling much want)] [PLAY(to listen)] [MOD(the happy)] [SONG(song)]}'),
+                           ('{[WAKE(howdy)]}',
+                            '{[START(she will rattling much want)] [PLAY(to play)] [MOD(the happy)] [SONG(song)]}'),
+                           ('{[WAKE(hello)]}',
+                            '{[START(she will very much desire)] [PLAY(to listen)] [MOD(the happy)] [SONG(vocal)]}'))
         pairs = [(actual_utterances, expected_utterances),
                  (actual_tokens_list, expected_tokens_list),
                  (actual_groups, expected_groups)]
@@ -1155,7 +1163,7 @@ class TestPipeline(unittest.TestCase):
         invalid_chances = [-1, 101]
         for chance in invalid_chances:
             with self.assertRaises(ValueError):
-                Pipeline.from_preset(stochastic.preset(model_name='word2vec.test.model', chance=chance),
+                Pipeline.from_preset(stochastic.preset(chance=chance),
                                      pattern_def_path,
                                      seed=0)
 
