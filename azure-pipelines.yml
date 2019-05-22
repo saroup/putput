@@ -2,7 +2,34 @@ trigger:
 - master
 
 stages:
-  - stage: Install
+  - stage: Developer
+    jobs:
+    - job: Test
+      strategy:
+        matrix:
+          Docker-Python35:
+            python.version.major: '3'
+            python.version.minor: '5'
+          Docker-Python36:
+            python.version.major: '3'
+            python.version.minor: '6'
+          Docker-Python37:
+            python.version.major: '3'
+            python.version.minor: '7'
+            pool:
+      variables:
+      - name: DOCKER_PYTHON_VERSION
+      - value: '$(python.version.major).$(python.version.minor)'
+      pool:
+        vmImage: 'ubuntu-latest'
+      steps:
+      - script: |
+          docker build --target=build --build-arg PYTHON_VERSION="${DOCKER_PYTHON_VERSION}" -t "putput-py${DOCKER_PYTHON_VERSION}" .
+          docker build --build-arg PYTHON_VERSION="${DOCKER_PYTHON_VERSION}" .
+          export CODE_COV=`bash <(curl -s https://codecov.io/env)
+          docker run $CODE_COV "putput-py${DOCKER_PYTHON_VERSION}"
+
+  - stage: User
     jobs:
     - job: Install
       strategy:
@@ -43,7 +70,6 @@ stages:
             python.version.major: '3'
             python.version.minor: '7'
             os.image: 'ubuntu-latest'
-        maxParallel: 9
 
       pool:
         vmImage: $(os.image)
