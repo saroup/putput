@@ -16,7 +16,6 @@ stages:
           Docker-Python37:
             python.version.major: '3'
             python.version.minor: '7'
-            pool:
       variables:
       - name: DOCKER_PYTHON_VERSION
         value: '$(python.version.major).$(python.version.minor)'
@@ -28,9 +27,7 @@ stages:
           docker build --build-arg PYTHON_VERSION="${DOCKER_PYTHON_VERSION}" .
           export CODE_COV=`bash <(curl -s https://codecov.io/env)`
           docker run $CODE_COV "putput-py${DOCKER_PYTHON_VERSION}"
-
   - stage: User
-    dependsOn: Developer
     jobs:
     - job:
       strategy:
@@ -71,18 +68,14 @@ stages:
             python.version.major: '3'
             python.version.minor: '7'
             os.image: 'ubuntu-latest'
-
       pool:
         vmImage: $(os.image)
-
       steps:
       - task: UsePythonVersion@0
         inputs:
           versionSpec: '$(python.version.major).$(python.version.minor)'
         displayName: 'Use Python $(python.version.major).$(python.version.minor)'
-
       - script: python -m pip install --upgrade pip setuptools wheel
         displayName: 'Upgrade pip and setuptools'
-
       - script: pip install .
         displayName: 'Install putput'
