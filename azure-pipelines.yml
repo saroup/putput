@@ -3,7 +3,7 @@ trigger:
 
 stages:
   - stage: Install
-  jobs:
+    jobs:
     - job: Install
       strategy:
         matrix:
