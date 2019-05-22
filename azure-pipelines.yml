@@ -19,7 +19,7 @@ stages:
             pool:
       variables:
       - name: DOCKER_PYTHON_VERSION
-      - value: '$(python.version.major).$(python.version.minor)'
+        value: '$(python.version.major).$(python.version.minor)'
       pool:
         vmImage: 'ubuntu-latest'
       steps:
