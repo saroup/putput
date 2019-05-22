@@ -4,7 +4,7 @@ trigger:
 stages:
   - stage: Developer
     jobs:
-    - job: Test
+    - job:
       strategy:
         matrix:
           Docker-Python35:
@@ -30,8 +30,9 @@ stages:
           docker run $CODE_COV "putput-py${DOCKER_PYTHON_VERSION}"
 
   - stage: User
+    dependsOn: Developer
     jobs:
-    - job: Install
+    - job:
       strategy:
         matrix:
           Windows-Python35:
