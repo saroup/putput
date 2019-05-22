@@ -1,5 +1,6 @@
 # About
 [![Build Status](https://travis-ci.org/michaelperel/putput.svg?branch=master)](https://travis-ci.org/michaelperel/putput)
+[![Install Status](https://dev.azure.com/michaelsethperel/putput/_apis/build/status/michaelperel.putput?branchName=master)](https://dev.azure.com/michaelsethperel/putput/_build/latest?definitionId=1&branchName=master)
 [![codecov](https://codecov.io/gh/michaelperel/putput/branch/master/graph/badge.svg)](https://codecov.io/gh/michaelperel/putput)
 [![PyPI version](https://badge.fury.io/py/putput.svg)](https://badge.fury.io/py/putput)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/putput.svg)](https://pypi.org/project/putput/)

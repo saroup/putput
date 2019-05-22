@@ -4,18 +4,14 @@ from operator import itemgetter
 from typing import Callable
 from typing import List
 from typing import Mapping
-from typing import Optional
 from typing import Sequence
+from typing import Set
 from typing import Tuple
 
 import nltk
-from nltk.corpus import wordnet
 
-nltk.download('wordnet')
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-
-WORDNET_POS_TAGS = {wordnet.ADJ, wordnet.VERB, wordnet.NOUN, wordnet.ADV}
+WORDNET_POS_TAGS = set()  # type: Set[str]
+wordnet = None  # type: nltk.corpus.util.LazyCorpusLoader
 
 def preset(*, chance: int = 20) -> Callable:
     """Randomly replaces words with synonyms from wordnet synsets.
@@ -25,6 +21,9 @@ def preset(*, chance: int = 20) -> Callable:
     chosen word from the first synset with the same part of speech as the word
     to replace, subject to the specified chance. If no synset exists with the
     same part of speech, the original word will not be replaced.
+
+    Downloads nltk's wordnet, punkt, and averaged_perceptron_tagger if non-existent
+    on the host.
 
     Args:
         chance: The chance between [0, 100] for each word to be replaced by
@@ -59,7 +58,7 @@ def preset(*, chance: int = 20) -> Callable:
     """
     if chance not in range(101):
         raise ValueError('Invalid chance: {}. Chance accepts any integer between [0, 100]')
-
+    _init_nltk()
     return partial(_preset, chance=chance)
 
 
@@ -72,6 +71,16 @@ def _preset(chance: int) -> Mapping:
     }
 
 
+def _init_nltk() -> None:
+    global WORDNET_POS_TAGS  # pylint: disable=global-statement
+    global wordnet  # pylint: disable=global-statement
+    nltk.download('wordnet')
+    nltk.download('punkt')
+    nltk.download('averaged_perceptron_tagger')
+    from nltk.corpus import wordnet  # pylint: disable=redefined-outer-name
+    WORDNET_POS_TAGS = {wordnet.ADJ, wordnet.VERB, wordnet.NOUN, wordnet.ADV}
+
+
 def _replace_with_synonyms(utterance: str,
                            handled_tokens: Sequence[str],
                            handled_groups: Sequence[str],
@@ -80,6 +89,7 @@ def _replace_with_synonyms(utterance: str,
     _, _ = handled_tokens, handled_groups
     pos = _pos_tag_for_wordnet(utterance)
     return _replace_utterance_tokens_groups_with_synonyms(handled_groups, pos, chance)
+
 
 def _replace_utterance_tokens_groups_with_synonyms(handled_groups: Sequence[str],
                                                    pos: Sequence[str],

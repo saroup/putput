@@ -17,7 +17,7 @@ API Docs
 About
 =====
 
-| |Build Status| |codecov| |PyPI version| |PyPI - Python Version| |Read the Docs| |PyPI - License| |PyPI - Downloads|
+| |Build Status| |Install Status| |codecov| |PyPI version| |PyPI - Python Version| |Read the Docs| |PyPI - License| |PyPI - Downloads|
 
 ``putput`` is a library that generates labeled data for chatbots. It's
 simple to use, highly customizable, and can handle big data generation
@@ -259,6 +259,8 @@ Common ``preset`` configurations are covered in the ``preset``
 
 .. |Build Status| image:: https://travis-ci.org/michaelperel/putput.svg?branch=master
    :target: https://travis-ci.org/michaelperel/putput
+.. |Install Status| image:: https://dev.azure.com/michaelsethperel/putput/_apis/build/status/michaelperel.putput?branchName=master
+   :target: https://dev.azure.com/michaelsethperel/putput/_build/latest?definitionId=1&branchName=master
 .. |codecov| image:: https://codecov.io/gh/michaelperel/putput/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/michaelperel/putput
 .. |PyPI version| image:: https://badge.fury.io/py/putput.svg
