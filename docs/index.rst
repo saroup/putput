@@ -237,8 +237,8 @@ labeled data is instantiating ``putput``'s ``Pipeline`` and calling
 ::
 
     dynamic_token_patterns_map = {
-        'SONG': ((('here comes the sun', 'stronger'),),),
-        'ARTIST': ((('the beatles', 'kanye west'),),)
+        'SONG': ('here comes the sun', 'stronger'),
+        'ARTIST': ('the beatles', 'kanye west')
     }
     p = Pipeline(pattern_def_path, dynamic_token_patterns_map=dynamic_token_patterns_map)
     for utterance, tokens, groups in p.flow():
