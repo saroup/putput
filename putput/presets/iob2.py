@@ -1,4 +1,5 @@
 from functools import partial
+from typing import Any
 from typing import Callable
 from typing import List
 from typing import Mapping
@@ -65,11 +66,12 @@ def preset(*,
                    groups_to_include=groups_to_include,
                    groups_to_exclude=groups_to_exclude)
 
-def _preset(*,
+def _preset(*, # pylint: disable=W0613
             tokens_to_include: Optional[Sequence[str]] = None,
             tokens_to_exclude: Optional[Sequence[str]] = None,
             groups_to_include: Optional[Sequence[str]] = None,
-            groups_to_exclude: Optional[Sequence[str]] = None
+            groups_to_exclude: Optional[Sequence[str]] = None,
+            **kwargs: Any
             ) -> Mapping:
     if tokens_to_include and tokens_to_exclude:
         raise ValueError("Cannot specify tokens_to_include AND tokens_to_exclude.")

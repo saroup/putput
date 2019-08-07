@@ -1,4 +1,5 @@
 import re
+from typing import Any
 from typing import Callable
 from typing import Mapping
 from typing import Sequence
@@ -45,7 +46,7 @@ def preset() -> Callable:
     """
     return _preset
 
-def _preset() -> Mapping:
+def _preset(**kwargs: Any) -> Mapping: # pylint: disable=W0613
     combo_hooks_map = {}
     combo_hooks_map['DEFAULT'] = (_handled_tokens_to_ent, _handled_groups_to_ent, _convert_to_displaCy_visualizer)
     return {

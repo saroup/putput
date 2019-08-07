@@ -1,4 +1,5 @@
 # About
+
 [![Build Status](https://travis-ci.org/michaelperel/putput.svg?branch=master)](https://travis-ci.org/michaelperel/putput)
 [![Install Status](https://dev.azure.com/michaelsethperel/putput/_apis/build/status/michaelperel.putput?branchName=master)](https://dev.azure.com/michaelsethperel/putput/_build/latest?definitionId=1&branchName=master)
 [![codecov](https://codecov.io/gh/michaelperel/putput/branch/master/graph/badge.svg)](https://codecov.io/gh/michaelperel/putput)
@@ -11,6 +12,7 @@
 ```putput``` is a library that generates labeled data for conversational AI. It's simple to use, highly customizable, and can handle big data generation on a consumer grade laptop. ```putput``` takes minutes to setup and seconds to generate millions of labeled data points.
 
 ```putput```'s labeled data could be used to:
+
 * train a ML model when you do not have real data.
 * augment training specific patterns in a ML model.
 * test existing ML models for specific patterns.
@@ -24,9 +26,11 @@ Here is an example prediction from the LSTM trained with ```putput``` data:
 Note that the trained LSTM can deal with real life complexity such as handling multi-intent ("add" and "remove" ```groups```) and disambiguating between the same word in different contexts (the quantity "ten" vs. "ten" in the item "ten chicken strips").
 
 # Installation
+
 ```putput``` currently supports python >= 3.5. To install the production release, execute ```pip install putput```.
 
 # Samples
+
 ```putput``` ships with several dockerized samples that show how to generate data.
 
 * Clone the repo:
@@ -43,6 +47,7 @@ Note that the trained LSTM can deal with real life complexity such as handling m
 ```putput``` also ships with annotated jupyter notebooks in the ```samples/``` directory that use ```putput``` to solve real world NLU problems. Note: Github cannot correctly render certain graphics, so the notebooks should be viewed on [nbviewer](https://nbviewer.jupyter.org/).
 
 # Development
+
 There are various checks that Travis (our CI server) executes to ensure code quality.
 You can also run the checks locally:
 
@@ -54,11 +59,14 @@ You can also run the checks locally:
 Alternatively, you can run all the steps via Docker: ```docker build --target=build -t putput .```
 
 # Usage
+
 ```putput``` is a pipeline that works by reshaping the ```pattern definition```, a user defined yaml file of patterns, into labeled data.
 
 ## Example
+
 Here is an example of a ```pattern definition``` that generates labeled data for a smart speaker.
-```
+
+```yaml
 base_tokens:
   - PERSONAL_PRONOUNS: [he, she]
   - SPEAKER: [cortana, siri, alexa, google]
@@ -88,7 +96,9 @@ Focusing on the first ```utterance_pattern```, ```[WAKE, PLAY_SONG]```, ```putpu
 ![utterance 1](./docs/_static/utterance.png)
 
 ## Pattern definition reference
+
 In the ```pattern definition```, the two most important sections are ```token_patterns``` and ```utterance_patterns```. A ```token_pattern``` describes a sequence of components whose product constitutes a ```token```. For instance, the sole ```token_pattern``` for the ```WAKE``` ```token``` is ```[[hi, hey], [cortana, siri, alexa, google]]``` (the ```base_token```, ```SPEAKER```, is replaced with its value ```[cortana, siri, alexa, google]``` at runtime). The product of this ```token_pattern```:
+
 * hi cortana
 * hi siri
 * hi alexa
@@ -105,6 +115,7 @@ Within the ```token_patterns``` section, there are ```static``` and ```dynamic``
 Within each ```token_pattern```, ```base_tokens``` may be used to keep yourself from repeating the same components. For instance, in our example, we could potentially use ```PERSONAL_PRONOUNS``` in many different places, so we'd like to only have to define it once.
 
 An ```utterance_pattern``` describes the product of ```tokens``` that make up an ```utterance```. For instance, the first ```utterance_pattern```, ```[WAKE, PLAY, SONG]```, is a product of all of the products of ```token_patterns``` for ```WAKE```, ```PLAY```, and ```SONG``` (the ```group```, ```PLAY_SONG```, is replaced with its value ```[PLAY, SONG]```). Example ```utterances``` generated from this ```utterance_pattern``` would be:
+
 * hi cortana play here comes the sun
 * hi cortana he would like to play here comes the sun
 
@@ -118,17 +129,50 @@ Thinking in terms of commercial NLU providers, ```groups``` could be used to mat
 
 ```utterance_patterns``` and ```groups``` support range syntax. Looking at the last ```utterance_pattern```, ```[WAKE, 1-2, PLAY_SONG]```, we see the range, 1-2. Putput will expand this ```utterance_pattern``` to two ```utterance_patterns```, ```[WAKE, PLAY_SONG]``` and ```[WAKE, WAKE, PLAY_SONG]```. Ranges are inclusive and may also be specified as a single number, which would expand into one ```utterance_pattern```.
 
-Finally, ```groups``` may be defined within ```groups```. For instance: 
-```
+Finally, ```groups``` may be defined within ```groups```. For instance:
+
+```yaml
 - groups:
   - PLAY_SONG: [PLAY, SONG]
   - WAKE_PLAY_SONG: [WAKE, PLAY_SONG, 10]
 ```
+
 is valid syntax.
 
-## Pipeline
-After defining the ```pattern definition```, the final step to generating labeled data is instantiating ```putput```'s ```Pipeline``` and calling ```flow```.
+## Single Intent Providers (LUIS, Rasa, Lex, etc.)
+
+If your NLU provider only supports single intent utterances you can still use putput to generate utterances in the more familiar intent/entities paradigm. To specify single intents, simply add another level to the utterance patterns with the intent as the key and all it's utterance patterns beneath. To specify entities add a new section called 'entities' with a list of tokens that you want to be picked up as entities. For example:
+
+```yaml
+base_tokens:
+  - PERSONAL_PRONOUNS: [he, she]
+  - SPEAKER: [cortana, siri, alexa, google]
+token_patterns:
+  - static:
+    - WAKE:
+      - [[hi, hey], SPEAKER]
+    - PLAY:
+      - [PERSONAL_PRONOUNS, [wants, would like], [to], [play]]
+      - [[play]]
+  - dynamic:
+    - ARTIST
+    - SONG
+entities: [ARTIST, SONG] # Here we specify which tokens are our entities
+utterance_patterns:
+  - SONG_INTENT: # Here we specify our intents and which utterance patterns belong to them
+    - [WAKE, PLAY, SONG]
+    - [WAKE, 1-2, PLAY, SONG]
+  - ARTIST_INTENT:
+    - [WAKE, PLAY, ARTIST]
 ```
+
+For a full example using the single intent pattern checkout this [LUIS example](./samples/luis_test/)
+
+## Pipeline
+
+After defining the ```pattern definition```, the final step to generating labeled data is instantiating ```putput```'s ```Pipeline``` and calling ```flow```.
+
+```python
 dynamic_token_patterns_map = {
     'SONG': ('here comes the sun', 'stronger'),
     'ARTIST': ('the beatles', 'kanye west')
@@ -139,4 +183,5 @@ for utterance, tokens, groups in p.flow():
     print(tokens)
     print(groups)
 ```
+
 ```flow``` yields results one ```utterance``` at a time. While the results could be the tuple ```(utterance, tokens, groups)``` for each iteration, they could also be customized by specifying arguments to ```Pipeline```. Some common use cases are limiting the size of the output, oversampling/undersampling ```utterance_patterns```, specifying how ```tokens``` and ```groups``` are tokenized, etc. Customization of the ```Pipeline``` is extensive and is covered in the ```Pipeline```'s [docs](https://putput.readthedocs.io/en/latest/source/putput.html). Common ```preset``` configurations are covered in the ```preset``` [docs](https://putput.readthedocs.io/en/latest/source/putput.presets.html).

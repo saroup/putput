@@ -415,8 +415,15 @@ class Pipeline:
             ('O O O', 'B-ITEM', 'O O O', 'B-ITEM', 'O', 'B-ITEM')
             ('B-ADD_ITEM I-ADD_ITEM I-ADD_ITEM I-ADD_ITEM', 'B-ADD_ITEM I-ADD_ITEM I-ADD_ITEM I-ADD_ITEM', 'O', 'O')
         """
+        if args:
+            pattern_def = _load_pattern_def(args[0])
+        else:
+            pattern_def = _load_pattern_def(kwargs['pattern_def_path'])
+
+        intent_entities_kwargs = {'__intent_map_from_pipeline':_extract_intent_map(pattern_def),
+                                  '__entities_from_pipeline':_extract_entities(pattern_def)}
         if isinstance(preset, str):
-            init_kwargs = get_preset(preset)()
+            init_kwargs = get_preset(preset)(**intent_entities_kwargs)
         elif isinstance(preset, Sequence):
             warning = ('Presets are not guaranteed to work together. Choose presets that logically fit together. '
                        'When in doubt, check the shapes of the return values of the hooks '
@@ -425,16 +432,16 @@ class Pipeline:
             logger.warning(warning)
             for pre in preset: # type: ignore
                 if isinstance(pre, str):
-                    init_kwargs = get_preset(pre)()
+                    init_kwargs = get_preset(pre)(**intent_entities_kwargs)
                 else:
-                    init_kwargs = pre()
+                    init_kwargs = pre(**intent_entities_kwargs)
                 try:
                     accumulated_init_kwargs = _merge_kwargs(accumulated_init_kwargs, init_kwargs)
                 except NameError:
                     accumulated_init_kwargs = _merge_kwargs({}, init_kwargs)
             init_kwargs = accumulated_init_kwargs
         else:
-            init_kwargs = preset()
+            init_kwargs = preset(**intent_entities_kwargs)
         init_kwargs = _merge_kwargs(init_kwargs, kwargs)
         return cls(*args, **init_kwargs)
 
@@ -573,6 +580,21 @@ def _load_pattern_def(pattern_def_path: Path) -> Mapping:
     with pattern_def_path.open(encoding='utf-8') as pattern_def_file:
         pattern_def = yaml.load(pattern_def_file, Loader=yaml.BaseLoader)
     return pattern_def
+
+def _extract_intent_map(pattern_def: Mapping) -> Mapping[str, str]:
+    intent_map = {}
+    for utterance_pattern_tokens in pattern_def['utterance_patterns']:
+        if isinstance(utterance_pattern_tokens, dict):
+            for intent, utterance_patterns in utterance_pattern_tokens.items():
+                for utterance_pattern in utterance_patterns:
+                    utterance_pattern_key = ', '.join(utterance_pattern)
+                    intent_map[utterance_pattern_key] = intent
+    return intent_map
+
+def _extract_entities(pattern_def: Mapping) -> Sequence[str]:
+    if 'entities' in pattern_def:
+        return pattern_def['entities']
+    return []
 
 def _merge_kwargs(accumulated_kwargs: Mapping, kwargs_to_add: Mapping) -> Mapping:
     accumulated_kwargs = dict(deepcopy(accumulated_kwargs))

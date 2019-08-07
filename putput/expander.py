@@ -53,8 +53,9 @@ def expand(pattern_def: Mapping,
         ('ADD', 'ITEM', 'ADD', 'ITEM', 'CONJUNCTION', 'ITEM')
         (('ADD_ITEM', 2), ('ADD_ITEM', 2), ('None', 1), ('None', 1))
     """
+    utterance_patterns = tuple(_extract_utterance_patterns(pattern_def))
     utterance_patterns_expanded_ranges_and_groups, groups = expand_utterance_patterns_ranges_and_groups(
-        pattern_def['utterance_patterns'], get_base_item_map(pattern_def, 'groups'))
+        utterance_patterns, get_base_item_map(pattern_def, 'groups'))
 
     def _expand() -> Iterable[Tuple[Sequence[Sequence[str]], Sequence[str], Sequence[Tuple[str, int]]]]:
         token_patterns_map = _get_token_patterns_map(pattern_def, dynamic_token_patterns_map=dynamic_token_patterns_map)
@@ -62,6 +63,15 @@ def expand(pattern_def: Mapping,
             utterance_combo = _compute_utterance_combo(utterance_pattern, token_patterns_map)
             yield utterance_combo, tuple(utterance_pattern), tuple(group)
     return len(utterance_patterns_expanded_ranges_and_groups), _expand()
+
+def _extract_utterance_patterns(pattern_def: Mapping) -> Iterable[Sequence[str]]:
+    for utterance_pattern_or_intent in pattern_def['utterance_patterns']:
+        if isinstance(utterance_pattern_or_intent, dict):
+            for utterance_patterns in utterance_pattern_or_intent.values():
+                for utterance_pattern in utterance_patterns:
+                    yield utterance_pattern
+        else:
+            yield utterance_pattern_or_intent
 
 def expand_utterance_patterns_ranges_and_groups(utterance_patterns: Sequence[Sequence[str]],
                                                 group_map: Mapping[str, Sequence[str]]

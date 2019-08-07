@@ -162,6 +162,18 @@ class TestValidator(unittest.TestCase):
         input_file_name = 'optional_in_token_pattern_base_token.yml'
         self._raise_exception(input_file_name, PatternDefinitionValidationError)
 
+    def test_invalid_entities(self) -> None:
+        input_file_name = 'invalid_entities.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_entities_list_of_list(self) -> None:
+        input_file_name = 'entities_list_of_list.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
+    def test_malformed_entities(self) -> None:
+        input_file_name = 'malformed_entities.yml'
+        self._raise_exception(input_file_name, PatternDefinitionValidationError)
+
     def test_single_range(self) -> None:
         # pylint: disable=no-self-use
         pattern_def = Path(__file__).parent / 'pattern_definitions' / 'valid' / 'groups_with_single_range.yml'
