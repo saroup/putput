@@ -931,12 +931,8 @@ class TestPipeline(unittest.TestCase):
         compare_all_pairs(self, pairs)
 
     def test_luis_preset_no_entities_multiple_intent(self) -> None:
-        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        intent_map = {
-            'WAKE, PLAY_PHRASE': 'PLAY_INTENT',
-            'WAKE': 'WAKE_INTENT'
-        }
-        p = Pipeline.from_preset(luis.preset(intent_map=intent_map, entities=[]),
+        pattern_def_path = self._base_dir / 'no_entities_multiple_intent.yml'
+        p = Pipeline.from_preset('LUIS',
                                  pattern_def_path,
                                  seed=0)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
@@ -951,24 +947,32 @@ class TestPipeline(unittest.TestCase):
         pairs = [(luis_tests, expected_luis_tests)]
         compare_all_pairs(self, pairs)
 
-    def test_luis_preset_no_intents(self) -> None:
+    def test_luis_preset_only_entities(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        intent_map = {} # type: Mapping[str, str]
-        p = Pipeline.from_preset(luis.preset(intent_map=intent_map), pattern_def_path, seed=0)
+        entities = ['PLAY']
+        p = Pipeline.from_preset(luis.preset(entities=entities), pattern_def_path, seed=0)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
         luis_tests = list(generator)
-        expected_luis_tests = [] # type: Sequence[Mapping]
+        expected_luis_tests = [
+            {'text': 'hi', 'intent': 'None', 'entities': []},
+            {'text': 'hi he will want to play',
+             'intent': 'None',
+             'entities': [{'entity': 'PLAY', 'startPos': 16, 'endPos': 23}]},
+            {'text': 'hi he will want to listen',
+             'intent': 'None',
+             'entities': [{'entity': 'PLAY', 'startPos': 16, 'endPos': 25}]},
+            {'text': 'hi she will want to play',
+             'intent': 'None',
+             'entities': [{'entity': 'PLAY', 'startPos': 17, 'endPos': 24}]},
+            {'text': 'hi she will want to listen',
+             'intent': 'None',
+             'entities': [{'entity': 'PLAY', 'startPos': 17, 'endPos': 26}]}]
         pairs = [(luis_tests, expected_luis_tests)]
         compare_all_pairs(self, pairs)
 
     def test_luis_preset_intent_and_entities(self) -> None:
-        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        intent_map = {
-            'WAKE, PLAY_PHRASE': 'PLAY_INTENT'
-        }
-        entities = ('PLAY')
-        p = Pipeline.from_preset(luis.preset(intent_map=intent_map,
-                                             entities=entities),
+        pattern_def_path = self._base_dir / 'simple_intent_and_entity.yml'
+        p = Pipeline.from_preset('LUIS',
                                  pattern_def_path,
                                  seed=0)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
@@ -1000,7 +1004,17 @@ class TestPipeline(unittest.TestCase):
 
     def test_luis_preset_str(self) -> None:
         pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
-        p = Pipeline.from_preset('LUIS', pattern_def_path, seed=0)
+        p = Pipeline.from_preset('LUIS', pattern_def_path=pattern_def_path, seed=0)
+        generator = p.flow(disable_progress_bar=self._disable_progress_bar)
+        luis_tests = list(generator)
+        expected_luis_tests = [] # type: Sequence[Mapping]
+        pairs = [(luis_tests, expected_luis_tests)]
+        compare_all_pairs(self, pairs)
+
+    def test_luis_all_entities(self) -> None:
+        pattern_def_path = self._base_dir / 'multiple_group_patterns.yml'
+        entities = ['__ALL']
+        p = Pipeline.from_preset(luis.preset(entities=entities), pattern_def_path, seed=0)
         generator = p.flow(disable_progress_bar=self._disable_progress_bar)
         luis_tests = list(generator)
         expected_luis_tests = [

@@ -1,6 +1,7 @@
 import random
 from functools import partial
 from operator import itemgetter
+from typing import Any
 from typing import Callable
 from typing import List
 from typing import Mapping
@@ -62,7 +63,7 @@ def preset(*, chance: int = 20) -> Callable:
     return partial(_preset, chance=chance)
 
 
-def _preset(chance: int) -> Mapping:
+def _preset(chance: int, **kwargs: Any) -> Mapping: # pylint: disable=W0613
     combo_hooks_map = {
         'DEFAULT': (partial(_replace_with_synonyms, chance=chance),)
     }

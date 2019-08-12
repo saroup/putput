@@ -4,7 +4,6 @@ from pathlib import Path
 
 from putput import ComboOptions
 from putput import Pipeline
-from putput.presets import luis
 
 random.seed(0)
 
@@ -29,37 +28,7 @@ def main() -> None:
     combo_options_map = {
         'DEFAULT': ComboOptions(max_sample_size=50, with_replacement=False)
     }
-
-    intent_map = {
-        'QUESTION, AVAILABILITY, Field, POSITION, QUESTION_MARK': "GetJobInformation",
-        'QUESTION, Field, POSITION, AVAILABILITY, QUESTION_MARK': "GetJobInformation",
-        'QUESTION, AVAILABILITY, Field, POSITION, OR, Field, POSITION, QUESTION_MARK': "GetJobInformation",
-        'QUESTION, Field, POSITION, OR, Field, POSITION, AVAILABILITY, QUESTION_MARK': "GetJobInformation",
-        'QUESTION, AVAILABILITY, Field, POSITION, IN, Locations, QUESTION_MARK': "GetJobInformation",
-        'QUESTION, Field, POSITION, AVAILABILITY, IN, Locations, QUESTION_MARK': "GetJobInformation",
-        'QUESTION, AVAILABILITY, Field, POSITION, datetimeV2, QUESTION_MARK': "GetJobInformation",
-        'QUESTION, Field, POSITION, AVAILABILITY, datetimeV2, QUESTION_MARK': "GetJobInformation",
-        'QUESTION, AVAILABILITY, Field, POSITION, IN, Locations, datetimeV2, QUESTION_MARK': "GetJobInformation",
-        'QUESTION, Field, POSITION, AVAILABILITY, IN, Locations, datetimeV2, QUESTION_MARK': "GetJobInformation",
-        'FIND, Field, POSITION, AVAILABILITY': "GetJobInformation",
-        'FIND, Field, POSITION, AVAILABILITY, datetimeV2': "GetJobInformation",
-        'FIND, Field, POSITION, AVAILABILITY, IN, Locations': "GetJobInformation",
-        'FIND, Field, POSITION, AVAILABILITY, datetimeV2, IN, Locations': "GetJobInformation",
-        'GIVE, RESUME, FOR_THE, Job, POSITION': 'ApplyForJob',
-        'GIVE, RESUME, FOR_THE, Field, POSITION': 'ApplyForJob',
-        'GIVE, Field, RESUME': 'ApplyForJob',
-        'GIVE, Job, RESUME': 'ApplyForJob',
-        'GIVE, Field, POSITION, RESUME': 'ApplyForJob',
-        'GIVE, Job, POSITION, RESUME': 'ApplyForJob',
-        'APPLY, FOR_THE, Field, POSITION': 'ApplyForJob',
-        'APPLY, FOR_THE, Job, POSITION': 'ApplyForJob',
-        'CURRENT, Job, GIVE, RESUME': 'ApplyForJob',
-        'MY, RESUME, ATTACHED': 'ApplyForJob',
-        'MY, RESUME, FOR_THE, Job, ATTACHED': 'ApplyForJob',
-        'MY, RESUME, FOR_THE, Job, POSITION, ATTACHED': 'ApplyForJob'
-    }
-    entities = ('Job', 'datetimeV2', 'Locations')
-    p = Pipeline.from_preset(luis.preset(intent_map=intent_map, entities=entities),
+    p = Pipeline.from_preset('LUIS',
                              pattern_def_path,
                              combo_options_map=combo_options_map,
                              dynamic_token_patterns_map=dynamic_token_patterns_map)

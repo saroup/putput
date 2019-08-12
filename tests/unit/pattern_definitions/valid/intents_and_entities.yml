@@ -1,0 +1,18 @@
+token_patterns:
+  - static:
+    - START:
+      - [[he, she], [will], [want]]
+    - PLAY:
+      - [[to], [play, listen]]
+    - ARTIST:
+      - [[nico, kanye, tom waits]]
+    - SONG:
+      - [[sunday morning, all falls down, table top joe]]
+
+entities: [ARTIST, SONG]
+
+utterance_patterns:
+  - PLAY_ARTIST:
+    - [START, PLAY, ARTIST]
+  - PLAY_SONG:
+    - [START, PLAY, SONG]

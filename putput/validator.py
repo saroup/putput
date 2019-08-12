@@ -2,6 +2,7 @@ import itertools
 import re
 from functools import reduce
 from typing import Any
+from typing import Iterable
 from typing import Mapping
 from typing import Sequence
 from typing import Set
@@ -82,12 +83,12 @@ def _validate_base_pattern(pattern_def: Mapping, key: str) -> None:
             if key == 'groups':
                 _validate_pattern_with_range_or_optional(base_token_dict[base_token_group_name])
 
-def _validate_utterance_patterns(pattern_def: Mapping) -> None:
-    for utterance_pattern_tokens in pattern_def['utterance_patterns']:
-        _validate_instance(utterance_pattern_tokens, list, 'utterance_patterns must contain a list')
-        for token in utterance_pattern_tokens:
+def _validate_utterance_patterns(utterance_patterns: list) -> None:
+    for utterance_pattern in utterance_patterns:
+        _validate_instance(utterance_pattern, list, 'utterance_patterns must contain a list')
+        for token in utterance_pattern:
             _validate_instance(token, str, 'token must be string or int')
-        _validate_pattern_with_range_or_optional(utterance_pattern_tokens)
+        _validate_pattern_with_range_or_optional(utterance_pattern)
 
 def _validate_component(component: Union[list, str], base_tokens: Set[str]) -> None:
     err_msg = 'Invalid token: {}'
@@ -132,6 +133,16 @@ def _get_base_keys(pattern_def: Mapping, key: str) -> Set[str]:
         return set()
     return {base for base_dict in pattern_def[key] for base in base_dict}
 
+def _get_utterance_patterns(pattern_def: Mapping) -> Iterable[list]:
+    for utterance_pattern_tokens in pattern_def['utterance_patterns']:
+        if isinstance(utterance_pattern_tokens, dict):
+            for intent, utterance_patterns in utterance_pattern_tokens.items():
+                _validate_instance(intent, str, 'intent must be a string')
+                for utterance_pattern in utterance_patterns:
+                    yield utterance_pattern
+        else:
+            yield utterance_pattern_tokens
+
 def _parse_range_token(range_token: str) -> Tuple[Union[int, None], int]:
     if '-' not in range_token:
         return None, int(range_token)
@@ -162,9 +173,10 @@ def validate_pattern_def(pattern_def: Mapping) -> None:
 
     base_tokens = _get_base_keys(pattern_def, 'base_tokens')
     groups = _get_base_keys(pattern_def, 'groups')
+    utterance_patterns = list(_get_utterance_patterns(pattern_def))
 
     _validate_token_patterns(pattern_def, base_tokens)
-    _validate_utterance_patterns(pattern_def)
+    _validate_utterance_patterns(utterance_patterns)
     _validate_base_pattern(pattern_def, 'base_tokens')
     _validate_base_pattern(pattern_def, 'groups')
 
@@ -185,7 +197,7 @@ def validate_pattern_def(pattern_def: Mapping) -> None:
     }
     utterance_pattern_tokens = {
         utterance_pattern_token
-        for utterance_pattern_tokens in pattern_def['utterance_patterns']
+        for utterance_pattern_tokens in utterance_patterns
         for utterance_pattern_token in utterance_pattern_tokens
     }
     _check_for_overlap([static_tokens, dynamic_tokens, base_tokens, groups])
@@ -195,3 +207,9 @@ def validate_pattern_def(pattern_def: Mapping) -> None:
         for base_token_dict in pattern_def['groups']:
             group_values = set(list(base_token_dict.values())[0])
             _check_for_undefined_tokens(group_values, [static_tokens, dynamic_tokens, groups])
+    if 'entities' in pattern_def:
+        entities = pattern_def['entities']
+        _validate_instance(entities, list, 'entities must be a list and can\'t be empty')
+        for entity in entities:
+            _validate_instance(entity, str, 'entities must be strings')
+        _check_for_undefined_tokens(set(entities), [static_tokens, dynamic_tokens])

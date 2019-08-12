@@ -1,0 +1,18 @@
+base_tokens:
+  - PRONOUNS: [she]
+token_patterns:
+  - static:
+    - ADD:
+      - [[can, may], PRONOUNS, [get]]
+    - CONJUNCTION:
+      - [[and]]
+  - dynamic:
+    - ITEM
+groups:
+  - ADD_ITEM: [ADD, ITEM]
+
+entities: [ITEM]
+
+utterance_patterns:
+  - ADD_INTENT:
+    - [ADD_ITEM, 2, CONJUNCTION, ITEM]

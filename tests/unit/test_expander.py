@@ -7,6 +7,7 @@ from tests.unit.helper_functions import compare_all_pairs
 
 
 class TestExpander(unittest.TestCase):
+    # pylint: disable=too-many-public-methods
     def setUp(self) -> None:
         self.maxDiff = None
         self._base_dir = Path(__file__).parent / 'pattern_definitions' / 'valid'
@@ -305,6 +306,23 @@ class TestExpander(unittest.TestCase):
                            ('WAKE', 'START', 'PLAY', 'ARTIST_2'))
         expected_groups = ((('None', 1), ('PLAY_PHRASE', 2)), (('None', 1), ('PLAY_PHRASE', 2), ('None', 1)),
                            (('None', 1), ('PLAY_PHRASE', 2), ('None', 1)))
+        pairs = [(actual_utterance_combo, expected_utterance_combo),
+                 (actual_tokens, expected_tokens),
+                 (actual_groups, expected_groups)]
+        compare_all_pairs(self, pairs)
+
+    def test_intents_and_entities(self) -> None:
+        pattern_def = _load_pattern_def(self._base_dir / 'intents_and_entities.yml')
+        _, generator = expand(pattern_def)
+        actual_utterance_combo, actual_tokens, actual_groups = zip(*generator)
+        expected_utterance_combo = ((('he will want', 'she will want'),
+                                     ('to play', 'to listen'),
+                                     ('nico', 'kanye', 'tom waits')),
+                                    (('he will want', 'she will want'),
+                                     ('to play', 'to listen'),
+                                     ('sunday morning', 'all falls down', 'table top joe')))
+        expected_tokens = (('START', 'PLAY', 'ARTIST'), ('START', 'PLAY', 'SONG'))
+        expected_groups = ((('None', 1), ('None', 1), ('None', 1)), (('None', 1), ('None', 1), ('None', 1)))
         pairs = [(actual_utterance_combo, expected_utterance_combo),
                  (actual_tokens, expected_tokens),
                  (actual_groups, expected_groups)]
